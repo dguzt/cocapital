@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics=""><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"><style>
+:root{--bg:#0b0b0e;--card:#161619;--card2:#1c1c20;--bd:#27272c;--bd2:#323238;--fg:#fafafa;--mut:#a1a1aa;--faint:#71717a;--pri:#34d399;--prifg:#04170e;--track:#27272c;--c1:#34d399;--c2:#71717a;--c3:#3f3f46;--danger:#f87171;--danger-t:rgba(248,113,113,.14);--pri-t:rgba(52,211,153,.15)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;padding:34px 20px;background:#050507;font-family:'Geist',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.apphost{height:100%}
+.app{position:relative;height:100%;display:flex;flex-direction:column;background:var(--bg);color:var(--fg);font-family:'Geist',system-ui,sans-serif}
+.screen{height:100%;animation:scEnter .3s cubic-bezier(.22,.61,.36,1)}
+@keyframes scEnter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes panelIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes rowHi{0%,16%{background:var(--pri-t);box-shadow:0 0 0 9px var(--pri-t)}100%{background:transparent;box-shadow:0 0 0 9px transparent}}
+.scroll{flex:1;overflow:auto}
+.pad{padding-left:20px;padding-right:20px}
+.top{padding-top:58px}
+.mut{color:var(--mut)}.grn{color:var(--pri)}
+.big{font-family:'Geist Mono',monospace;font-size:52px;line-height:.98;font-weight:600;letter-spacing:-2.5px;font-feature-settings:'tnum'}
+.h1{font-size:25px;font-weight:600;letter-spacing:-.6px;line-height:1.18}
+.h2{font-size:18px;font-weight:600;letter-spacing:-.3px}
+.lbl{font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.p{font-size:14.5px;color:var(--mut);line-height:1.55}
+.mono{font-family:'Geist Mono',monospace}
+.tnum{font-feature-settings:'tnum'}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px}
+.btn{height:50px;border-radius:12px;border:none;font-family:'Geist';font-weight:600;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;width:100%}
+.btn-p{background:var(--pri);color:var(--prifg);box-shadow:0 8px 20px rgba(52,211,153,.18)}
+.btn-p:active{filter:brightness(.94)}
+.btn-g{background:var(--card2);color:var(--fg);border:1px solid var(--bd2)}
+.btn-t{background:none;color:var(--mut);font-weight:500;height:auto;padding:6px}
+.btn[disabled]{opacity:.4;pointer-events:none}
+.field{height:50px;border:1px solid var(--bd2);border-radius:11px;padding:0 15px;font-family:'Geist';font-weight:450;font-size:15px;width:100%;background:var(--card);color:var(--fg)}
+.field:focus{outline:none;border-color:var(--pri)}
+.field::placeholder{color:var(--faint)}
+.mark{width:48px;height:48px;border-radius:14px;background:var(--pri);display:flex;align-items:center;justify-content:center;color:var(--prifg);font-family:'Geist Mono';font-weight:600;font-size:17px;box-shadow:0 6px 18px rgba(52,211,153,.28)}
+.wordmark{font-size:20px;font-weight:600;letter-spacing:-.6px}
+.backbtn{width:38px;height:38px;border-radius:11px;background:var(--card2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:var(--fg)}
+.codebox{display:flex;align-items:center;gap:12px;padding:15px;border:1px dashed var(--bd2);border-radius:14px;background:var(--card)}
+.linktext{font-family:'Geist Mono';font-size:12.5px;color:var(--pri);word-break:break-all;flex:1;line-height:1.45}
+.iconbtn{width:38px;height:38px;border-radius:10px;background:var(--pri);border:none;color:var(--prifg);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;background:var(--card2);border:1px solid var(--bd);font-size:12px;font-weight:500;color:var(--mut);cursor:pointer}
+.chip.on-chip{border-color:var(--pri);background:var(--pri-t);color:var(--fg)}
+.selectbtn{width:100%;height:50px;border:1px solid var(--bd2);border-radius:11px;background:var(--card);color:var(--fg);display:flex;align-items:center;justify-content:space-between;padding:0 15px;font-family:'Geist';font-size:15px;font-weight:500;cursor:pointer}
+.selectbtn.ph{color:var(--faint);font-weight:450}
+.chev{color:var(--faint);font-size:13px}
+.selectpanel{margin-top:8px;border:1px solid var(--bd2);border-radius:13px;background:var(--card);padding:9px;display:flex;flex-direction:column;gap:8px;animation:panelIn .2s cubic-bezier(.22,.61,.36,1)}
+.selq{height:44px}
+.selist{display:flex;flex-direction:column;gap:2px;max-height:186px;overflow:auto}
+.selrow{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;border:none;background:none;color:var(--fg);font-family:'Geist';font-size:14.5px;font-weight:500;cursor:pointer;text-align:left;width:100%}
+.selrow:active{background:var(--card2)}
+.selrow.on{background:var(--pri-t)}
+.selav{width:28px;height:28px;border-radius:8px;background:var(--card2);color:var(--mut);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
+.selavnew{background:var(--pri-t);color:var(--pri)}
+.selck{color:var(--pri);font-size:13px}
+.selcreate{color:var(--pri)}
+.selempty{padding:13px 10px;color:var(--faint);font-size:13px;text-align:center}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--pri);box-shadow:0 0 0 3px var(--pri-t)}
+.av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;border:2px solid var(--bg)}
+.av1{background:var(--pri);color:var(--prifg)}.av2{background:var(--c2)}
+.bar{height:8px;border-radius:6px;overflow:hidden;display:flex;background:var(--track);gap:2px}
+.seg-cash{background:var(--c1)}.seg-inv{background:var(--c2)}.seg-lent{background:var(--c3)}
+.legrow{display:flex;align-items:center;gap:10px;padding:10px 0}
+.ld{width:9px;height:9px;border-radius:3px;flex-shrink:0}
+.act{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--bd)}
+.act.rowNew{animation:rowHi 1.2s ease;border-radius:10px}
+.actbadge{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.d-in{background:var(--pri-t);color:var(--c1)}.d-out{background:var(--danger-t);color:var(--danger)}.d-move{background:var(--card2);color:var(--mut)}
+.amt-v{font-family:'Geist Mono';font-weight:500;font-feature-settings:'tnum';font-size:14px;white-space:nowrap}
+.pos{color:var(--c1)}.neg{color:var(--danger)}.neu{color:var(--fg)}
+.daylbl{font-family:'Geist Mono';font-size:10.5px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;color:var(--faint);padding:16px 0 4px}
+.foot{padding:12px 20px 30px;background:linear-gradient(to top,var(--bg) 64%,rgba(11,11,14,0))}
+.fab{height:52px;border-radius:13px;background:var(--pri);color:var(--prifg);font-weight:600;font-size:15px;border:none;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-shadow:0 10px 26px rgba(52,211,153,.28)}
+.fab:active{filter:brightness(.94)}
+.plus{font-size:21px;font-weight:500;line-height:1}
+.empty{border:1px dashed var(--bd2);border-radius:16px;padding:34px 22px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
+.emptymark{width:52px;height:52px;border-radius:14px;background:var(--pri-t);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--pri);margin-bottom:6px}
+.sheethd{display:flex;align-items:center;justify-content:space-between;padding:56px 20px 6px}
+.xbtn{width:36px;height:36px;border-radius:10px;background:var(--card2);border:1px solid var(--bd);font-size:15px;color:var(--fg);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.topt{padding:12px;border-radius:13px;border:1px solid var(--bd2);background:var(--card);text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:9px}
+.topt.on{border-color:var(--pri);background:var(--pri-t)}
+.tdot{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center}
+.d-in.tdot,.d-move.tdot,.d-out.tdot{}
+.toptl{font-size:14px;font-weight:600}
+.toptl2{font-size:11px;color:var(--faint);font-weight:450}
+.amtfield{border:1px solid var(--bd2);border-radius:14px;padding:13px 15px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;background:var(--card)}
+.amtfield.on{border-color:var(--pri);background:var(--pri-t)}
+.amtnum{font-family:'Geist Mono';font-size:28px;font-weight:600;letter-spacing:-1px;font-feature-settings:'tnum'}
+.amtz{color:var(--faint)}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.key{height:50px;border-radius:12px;background:var(--card2);border:1px solid var(--bd);font-family:'Geist Mono';font-weight:500;font-size:21px;color:var(--fg);display:flex;align-items:center;justify-content:center;cursor:pointer;font-feature-settings:'tnum'}
+.key:active{background:var(--bd2)}
+.toast{position:absolute;left:20px;right:20px;bottom:46px;background:var(--card2);border:1px solid var(--bd2);color:var(--fg);padding:13px 16px;border-radius:12px;font-weight:500;font-size:14px;text-align:center;z-index:80;box-shadow:0 12px 30px rgba(0,0,0,.5);animation:toastIn .26s cubic-bezier(.22,.61,.36,1)}
+.schedrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd)}
+.scn{font-weight:600;font-size:14px;width:74px}
+.scd{font-size:12px;color:var(--faint);flex:1;font-family:'Geist Mono'}
+.schamt{height:42px;width:104px;text-align:right;font-family:'Geist Mono';font-size:14px;padding:0 12px}
+.sumrow{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--mut);padding:14px 2px;font-family:'Geist Mono'}
+.loanrow{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--bd);border-radius:14px;background:var(--card);margin-bottom:10px;cursor:pointer;width:100%;text-align:left}
+.badge-warn{color:var(--danger);font-weight:600}
+.stpill{font-size:10px;font-weight:600;padding:3px 8px;border-radius:999px;display:inline-block;margin-top:5px}
+.st-cob{background:var(--pri-t);color:var(--c1)}
+.st-pen{background:var(--card2);color:var(--mut)}
+.st-ven{background:var(--danger-t);color:var(--danger)}
+.instrow{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--bd)}
+.summ{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sumcell{padding:13px 14px;border:1px solid var(--bd);border-radius:13px;background:var(--card)}
+.sumk{font-size:10px;color:var(--faint);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.sumv{font-family:'Geist Mono';font-weight:600;font-size:19px;margin-top:5px;font-feature-settings:'tnum'}
+.collectbtn{border:none;border-radius:9px;height:32px;padding:0 14px;font-family:'Geist';font-weight:600;font-size:12px;cursor:pointer;background:var(--pri);color:var(--prifg)}
+.collectbtn[disabled]{background:var(--card2);color:var(--c1);border:1px solid var(--bd);pointer-events:none}
+</style></helmet><x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px"><div class="apphost"><div class="app">
+<sc-if value="{{ isLogin }}" hint-placeholder-val="{{ true }}"><div class="screen"><div class="scroll pad top" style="display:flex;flex-direction:column"><div style="flex:1;display:flex;flex-direction:column;justify-content:center"><div class="fx ac gap12"><div class="mark">S/</div><span class="wordmark">cocapital</span></div><div class="h1" style="margin-top:26px">Capital compartido, claro para los dos.</div><p class="p" style="margin-top:10px">Aportes, ventas y préstamos en un solo lugar. Mira cuánto tienen y dónde está, al instante.</p></div><div style="display:flex;flex-direction:column;gap:11px;padding-bottom:26px"><input class="field" placeholder="Correo"><input class="field" type="password" placeholder="Contraseña"><button class="btn btn-p" onClick="{{ loginDemo }}">Iniciar sesión</button><button class="btn btn-g" onClick="{{ goRegister }}">Crear cuenta</button></div></div></div></sc-if>
+<sc-if value="{{ isRegister }}" hint-placeholder-val="{{ false }}"><div class="screen"><div class="scroll pad top" style="display:flex;flex-direction:column"><button class="backbtn" onClick="{{ goLogin }}">‹</button><div style="margin-top:22px"><div class="h1">Crea tu cuenta</div><p class="p" style="margin-top:8px">Con tu nombre tus movimientos quedan firmados para tu socio.</p></div><div style="display:flex;flex-direction:column;gap:11px;margin-top:24px;flex:1"><input class="field" placeholder="Tu nombre" value="{{ userName }}" onChange="{{ onUserName }}"><input class="field" placeholder="Correo"><input class="field" type="password" placeholder="Crea una contraseña"></div><div style="padding-bottom:26px"><button class="btn btn-p" onClick="{{ goCreate }}">Continuar</button></div></div></div></sc-if>
+<sc-if value="{{ isCreate }}" hint-placeholder-val="{{ false }}"><div class="screen"><div class="scroll pad top" style="display:flex;flex-direction:column"><button class="backbtn" onClick="{{ goRegister }}">‹</button><div style="margin-top:22px"><div class="h1">Crea tu grupo</div><p class="p" style="margin-top:8px">Un espacio para el capital que manejan juntos. Podrás invitar a tu socio enseguida.</p></div><div style="margin-top:24px;flex:1"><div class="lbl" style="margin-bottom:8px">Nombre del grupo</div><input class="field" value="{{ groupName }}" onChange="{{ onGroupName }}" placeholder="Ej. Amigos"></div><div style="padding-bottom:26px"><button class="btn btn-p" onClick="{{ goInvite }}">Crear grupo</button></div></div></div></sc-if>
+<sc-if value="{{ isInvite }}" hint-placeholder-val="{{ false }}"><div class="screen"><div class="scroll pad top" style="display:flex;flex-direction:column"><button class="backbtn" onClick="{{ goCreate }}">‹</button><div style="margin-top:22px"><div class="chip" style="margin-bottom:14px"><span class="dot"></span>{{ groupName }} · creado</div><div class="h1">Invita a tu socio</div><p class="p" style="margin-top:8px">Comparte este enlace. Solo la primera persona que lo abra podrá unirse a {{ groupName }}.</p></div><div style="margin-top:20px;display:flex;flex-direction:column;gap:12px;flex:1"><div class="codebox"><span class="linktext">{{ inviteLink }}</span><button class="iconbtn" onClick="{{ copyLink }}">⧉</button></div><div style="display:flex;gap:10px"><button class="btn btn-p" style="flex:1" onClick="{{ copyLink }}">Copiar enlace</button><button class="btn btn-g" style="flex:1" onClick="{{ shareWa }}">WhatsApp</button></div><div class="chip">⏳ Caduca en 7 días · un solo uso</div><button class="btn-t" style="margin-top:2px;align-self:flex-start" onClick="{{ goJoin }}">Ver cómo lo ve tu socio →</button></div><div style="padding-bottom:26px"><button class="btn btn-p" onClick="{{ goDashEmpty }}">Ir al panel</button></div></div></div></sc-if>
+<sc-if value="{{ isJoin }}" hint-placeholder-val="{{ false }}"><div class="screen"><div class="scroll pad top" style="display:flex;flex-direction:column"><button class="backbtn" onClick="{{ goInvite }}">‹</button><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center"><div class="mark" style="width:60px;height:60px;border-radius:18px;font-size:22px">S/</div><p class="p" style="margin:22px 0 2px">Diego te invitó a</p><div class="big" style="font-size:44px;letter-spacing:-1.5px">{{ groupName }}</div><div class="chip" style="margin-top:16px">2 socios · capital compartido</div></div><div style="padding-bottom:26px"><button class="btn btn-p" onClick="{{ joinDemo }}">Unirme a {{ groupName }}</button><p class="p" style="text-align:center;font-size:13px;margin-top:12px">Al unirte se creará tu cuenta y verás el capital del grupo.</p></div></div></div></sc-if>
+<sc-if value="{{ isDash }}" hint-placeholder-val="{{ false }}"><div class="screen app"><div class="scroll pad top"><div class="fx ac jb" style="padding-bottom:6px"><div class="fx ac gap8"><div class="mark" style="width:34px;height:34px;border-radius:11px;font-size:13px">S/</div><div><div style="font-weight:800;font-size:17px;letter-spacing:-.3px">{{ groupName }}</div><div class="fx ac" style="gap:5px"><span class="dot"></span><span style="font-size:11px;color:#8a847b;font-weight:600">2 socios</span></div></div></div><div class="fx ac" style="margin-left:auto;gap:10px"><div class="fx"><sc-for list="{{ members }}" as="m" hint-placeholder-count="2"><div class="{{ m.c }}" style="margin-left:-8px">{{ m.i }}</div></sc-for></div><button class="backbtn" onClick="{{ goLoans }}">☰</button></div></div>
+<div style="padding:22px 0 6px"><div class="lbl">Capital total</div><div class="big" style="margin-top:8px">{{ totalStr }}</div></div>
+<div class="card" style="padding:16px;margin-top:18px"><div class="fx ac jb"><span class="lbl">Dónde está</span></div><div class="bar" style="margin-top:12px"><div class="seg-cash" style="width: {{ cashPct }}"></div><div class="seg-inv" style="width: {{ invPct }}"></div><div class="seg-lent" style="width: {{ lentPct }}"></div></div><div style="margin-top:6px"><div class="legrow" style="border-bottom:1px solid rgba(255,255,255,.05)"><span class="ld seg-cash"></span><span style="flex:1;font-weight:600;font-size:14px">Efectivo disponible</span><span class="amt-v tnum">{{ cashStr }}</span></div><div class="legrow" style="border-bottom:1px solid rgba(255,255,255,.05)"><span class="ld seg-inv"></span><span style="flex:1;font-weight:600;font-size:14px">Inventario</span><span class="amt-v tnum">{{ invStr }}</span></div><div class="legrow" onClick="{{ goLoans }}" style="cursor:pointer"><span class="ld seg-lent"></span><span style="flex:1;font-weight:600;font-size:14px">Prestado ›</span><span class="amt-v tnum">{{ lentStr }}</span></div></div></div>
+<div style="margin-top:22px;padding-bottom:8px"><span class="lbl">Actividad reciente</span></div>
+<sc-if value="{{ hasMovements }}" hint-placeholder-val="{{ true }}"><div style="padding-bottom:110px"><sc-for list="{{ groups }}" as="g" hint-placeholder-count="1"><div class="daylbl">{{ g.label }}</div><sc-for list="{{ g.items }}" as="it" hint-placeholder-count="3"><div class="act {{ it.newCls }}"><div class="actbadge {{ it.badge }}">{{ it.icon }}</div><div style="flex:1;min-width:0"><div class="fx ac gap8"><span style="font-weight:700;font-size:15px">{{ it.title }}</span><span style="font-size:11px;color:#a29b90;font-weight:600">· {{ it.by }}</span></div><div style="font-size:13px;color:#8a847b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.concept }}</div></div><div style="text-align:right"><div class="amt-v {{ it.cls }}">{{ it.amt }}</div><div style="font-size:11px;color:#a29b90;font-weight:600">{{ it.note }}</div></div></div></sc-for></sc-for></div></sc-if>
+<sc-if value="{{ noMovements }}" hint-placeholder-val="{{ false }}"><div class="empty" style="margin-bottom:110px"><div class="emptymark">＋</div><div class="h2">Aún no hay movimientos</div><p class="p" style="font-size:14px">Registra el primer aporte para ver crecer el capital del grupo.</p></div></sc-if>
+</div><div class="foot" style="position:absolute;left:0;right:0;bottom:0"><button class="fab" onClick="{{ openAdd }}"><span class="plus">＋</span> Agregar movimiento</button></div></div></sc-if>
+<sc-if value="{{ isAdd }}" hint-placeholder-val="{{ false }}"><div class="screen app"><div class="sheethd"><span class="h2">Nuevo movimiento</span><button class="xbtn" onClick="{{ closeAdd }}">✕</button></div><div class="scroll pad" style="padding-top:6px"><div class="lbl" style="margin:8px 0 10px">Tipo de movimiento</div><div class="tgrid"><sc-for list="{{ types }}" as="t" hint-placeholder-count="6"><button class="topt {{ t.activeClass }}" onClick="{{ t.on }}"><div class="{{ t.dotClass }}">{{ t.icon }}</div><div><div class="toptl">{{ t.label }}</div><div class="toptl2">{{ t.hint }}</div></div></button></sc-for></div>
+<div class="lbl" style="margin:22px 0 8px">Monto</div><div class="amtfield {{ amountFocusClass }}" onClick="{{ focusAmountFn }}"><span class="amtnum {{ amountZeroClass }}">{{ amountDisplay }}</span><span style="font-size:12px;color:#a29b90;font-weight:700">{{ typeLabel }}</span></div>
+<sc-if value="{{ needsCost }}" hint-placeholder-val="{{ false }}"><div class="lbl" style="margin:16px 0 8px">{{ costLabel }}</div><div class="amtfield {{ costFocusClass }}" onClick="{{ focusCostFn }}"><span class="amtnum {{ costZeroClass }}" style="font-size:24px">{{ costDisplay }}</span><span style="font-size:12px;color:#a29b90;font-weight:700">para calcular ganancia</span></div></sc-if>
+<div class="lbl" style="margin:16px 0 8px">Concepto</div><input class="field" placeholder="Ej. 3 perfumes · feria" value="{{ concept }}" onChange="{{ onConcept }}"><div style="height:12px"></div></div>
+<div class="foot" style="padding-bottom:12px"><div class="keys" style="margin-bottom:12px"><sc-for list="{{ keys }}" as="k" hint-placeholder-count="12"><button class="key" onClick="{{ k.on }}">{{ k.label }}</button></sc-for></div><button class="btn btn-p" onClick="{{ save }}" disabled="{{ saveDisabled }}">Guardar movimiento</button></div></div></sc-if>
+<sc-if value="{{ isLoanWizard }}" hint-placeholder-val="{{ false }}"><div class="screen app"><div class="sheethd"><span class="h2">Nuevo préstamo</span><button class="xbtn" onClick="{{ goDash }}">✕</button></div><div class="scroll pad" style="padding-top:6px;padding-bottom:34px">
+<div class="lbl" style="margin:8px 0 8px">Prestatario</div><button class="selectbtn {{ wzLabelClass }}" onClick="{{ wzTogglePicker }}"><span>{{ wzPickerLabel }}</span><span class="chev">▼</span></button><sc-if value="{{ wzPickerOpen }}" hint-placeholder-val="{{ false }}"><div class="selectpanel"><input class="field selq" placeholder="Buscar o escribir un nombre nuevo" value="{{ wzQuery }}" onInput="{{ onWzQuery }}"><div class="selist"><sc-for list="{{ wzBorrowerRows }}" as="b" hint-placeholder-count="2"><button class="selrow {{ b.selCls }}" onClick="{{ b.pick }}"><span class="selav">{{ b.initial }}</span><span style="flex:1">{{ b.name }}</span><span class="selck">{{ b.check }}</span></button></sc-for><sc-if value="{{ wzShowCreate }}" hint-placeholder-val="{{ false }}"><button class="selrow selcreate" onClick="{{ wzCreate }}"><span class="selav selavnew">＋</span><span style="flex:1">Crear «{{ wzCreateName }}»</span></button></sc-if><sc-if value="{{ wzPickerEmpty }}" hint-placeholder-val="{{ false }}"><div class="selempty">Escribe un nombre para registrar al primero</div></sc-if></div></div></sc-if>
+<div class="tgrid" style="margin-top:16px"><div><div class="lbl" style="margin-bottom:6px">Monto (S/)</div><input class="field" inputmode="numeric" placeholder="300" value="{{ wzCap }}" onChange="{{ onWzCap }}"></div><div><div class="lbl" style="margin-bottom:6px">Interés total (%)</div><input class="field" inputmode="numeric" placeholder="10" value="{{ wzRate }}" onChange="{{ onWzRate }}"></div></div>
+<div class="lbl" style="margin:16px 0 6px"># de cuotas</div><input class="field" inputmode="numeric" placeholder="4" value="{{ wzCount }}" onChange="{{ onWzCount }}">
+<div class="lbl" style="margin:16px 0 8px">Frecuencia</div><div style="display:flex;gap:8px;flex-wrap:wrap"><sc-for list="{{ wzFreqs }}" as="f" hint-placeholder-count="4"><button class="chip {{ f.on2 }}" onClick="{{ f.pick }}">{{ f.label }}</button></sc-for></div>
+<div class="card" style="padding:13px 15px;margin-top:16px"><span class="lbl">Resumen</span><div class="p" style="margin-top:5px;font-size:13.5px;color:var(--fg)">{{ wzLive }}</div></div>
+<sc-if value="{{ wzHasSched }}" hint-placeholder-val="{{ false }}"><div style="margin-top:22px"><div class="lbl" style="margin-bottom:6px">Cronograma · edítalo si quieres</div><sc-for list="{{ wzSched }}" as="s" hint-placeholder-count="4"><div class="schedrow"><span class="scn">Cuota {{ s.n }}</span><span class="scd">{{ s.dateStr }}</span><input class="field schamt" inputmode="numeric" value="{{ s.amountStr }}" onChange="{{ s.onAmt }}"></div></sc-for><div class="sumrow"><span>Programado {{ wzSumStr }}</span><span>Préstamo {{ wzTotalStr }} · {{ wzDiffTag }}</span></div><button class="btn btn-p" onClick="{{ wizConfirm }}">Confirmar préstamo</button></div></sc-if>
+</div></div></sc-if>
+<sc-if value="{{ isLoanList }}" hint-placeholder-val="{{ false }}"><div class="screen app"><div class="scroll pad top"><div class="fx ac" style="gap:10px"><button class="backbtn" onClick="{{ goDash }}">‹</button><span class="h1" style="font-size:22px">Préstamos</span></div>
+<sc-if value="{{ hasLoans }}" hint-placeholder-val="{{ true }}"><div style="margin-top:20px;padding-bottom:24px"><sc-for list="{{ loansList }}" as="l" hint-placeholder-count="1"><button class="loanrow" onClick="{{ l.open }}"><div class="actbadge d-move" style="font-weight:700">{{ l.initial }}</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:15px">{{ l.borrower }}</div><div style="font-size:12.5px;color:var(--faint)">{{ l.sub }}</div></div><div style="text-align:right"><div class="amt-v">{{ l.pend }}</div><div style="font-size:11px;font-weight:600" class="{{ l.warnClass }}">{{ l.warn }}</div></div></button></sc-for></div></sc-if>
+<sc-if value="{{ noLoans }}" hint-placeholder-val="{{ false }}"><div class="empty" style="margin-top:26px"><div class="emptymark">S/</div><div class="h2">Aún no hay préstamos</div><p class="p" style="font-size:14px">Créalo desde “＋ → Préstamo”.</p></div></sc-if>
+</div></div></sc-if>
+<sc-if value="{{ isLoanDetail }}" hint-placeholder-val="{{ false }}"><div class="screen app"><div class="scroll pad top" style="padding-bottom:30px"><div class="fx ac" style="gap:10px"><button class="backbtn" onClick="{{ goLoans }}">‹</button><span class="h1" style="font-size:22px">{{ loanBorrower }}</span></div>
+<div class="summ" style="margin-top:18px"><div class="sumcell"><div class="sumk">Prestado</div><div class="sumv">{{ loanPrestado }}</div></div><div class="sumcell"><div class="sumk">Ganancia esperada</div><div class="sumv grn">{{ loanEsper }}</div></div><div class="sumcell"><div class="sumk">Cobrado</div><div class="sumv">{{ loanCobrado }}</div></div><div class="sumcell"><div class="sumk">Pendiente</div><div class="sumv">{{ loanPend }}</div></div></div>
+<div class="chip" style="margin-top:12px">Interés anual ~{{ loanAnnual }} · referencia</div>
+<div class="lbl" style="margin:22px 0 4px">Cuotas</div><div><sc-for list="{{ loanInsts }}" as="it" hint-placeholder-count="4"><div class="instrow"><div style="width:60px"><div style="font-weight:600;font-size:14px">Cuota {{ it.n }}</div></div><div style="flex:1"><div class="scd" style="font-size:12.5px">{{ it.dateStr }}</div><span class="stpill {{ it.stClass }}">{{ it.stLabel }}</span></div><div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:7px"><span class="amt-v">{{ it.amt }}</span><button class="collectbtn" onClick="{{ it.collect }}" disabled="{{ it.btnDisabled }}">{{ it.btnLabel }}</button></div></div></sc-for></div>
+</div></div></sc-if>
+<sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}"><div class="toast">{{ toast }}</div></sc-if>
+</div></div></x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { screen:'login', movements:[], loans:[], borrowers:[], user:'', groupName:'Amigos',
+    mType:'contribute', amountStr:'', costStr:'', concept:'', focus:'amount', toast:'', curLoan:null, justAdded:false,
+    wzBorrower:'', wzNewName:'', wzCap:'', wzRate:'', wzCount:'4', wzFreq:'mensual', wzOverrides:{}, wzPickerOpen:false, wzQuery:'' };
+
+  get typeMeta(){return {
+    buy:{label:'Compra',hint:'Efectivo → inventario',dir:'move'},
+    sell:{label:'Venta',hint:'Inventario → efectivo',dir:'in'},
+    lend:{label:'Préstamo',hint:'Cronograma de cuotas',dir:'move'},
+    repaid:{label:'Cobro',hint:'Cobrar una cuota',dir:'in'},
+    contribute:{label:'Aporte',hint:'Agregar efectivo',dir:'in'},
+    expense:{label:'Gasto',hint:'Sale efectivo',dir:'out'}};}
+
+  icon(type,size){const paths=({
+    contribute:['M8 3.2v9.6','M3.2 8h9.6'],
+    expense:['M3.4 8h9.2'],
+    buy:['M4 5.6h8v6.8H4z','M8 7.4v3.2','M6.3 9.2 8 10.9l1.7-1.7'],
+    sell:['M4 5.6h8v6.8H4z','M8 10.6V7.4','M6.3 9 8 7.3l1.7 1.7'],
+    lend:['M2.8 8h8.6','M8.4 4.9 11.6 8l-3.2 3.1'],
+    repaid:['M13.2 8H4.6','M7.6 4.9 4.4 8l3.2 3.1']
+  }[type]||['M3.4 8h9.2']);
+    return React.createElement('svg',{width:size||17,height:size||17,viewBox:'0 0 16 16',fill:'none',stroke:'currentColor',strokeWidth:1.9,strokeLinecap:'round',strokeLinejoin:'round'},
+      paths.map((d,i)=>React.createElement('path',{key:i,d})));}
+
+  today(){const d=new Date();d.setHours(0,0,0,0);return d;}
+  addDays(d,n){const r=new Date(d.getTime());r.setDate(r.getDate()+n);return r;}
+  periodDays(f){return ({diario:1,semanal:7,quincenal:15,mensual:30})[f]||30;}
+  fmtDate(d){const M=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];return d.getDate()+' '+M[d.getMonth()];}
+  money(n){return (Math.round(n*100)/100).toString();}
+
+  seed(){return [
+    {type:'contribute',amount:500,concept:'Aporte inicial · Diego',by:'Diego',day:'Esta semana'},
+    {type:'contribute',amount:500,concept:'Aporte inicial · Rosa',by:'Rosa',day:'Esta semana'},
+    {type:'buy',amount:480,concept:'12 perfumes surtidos',by:'Diego',day:'Esta semana'},
+    {type:'lend',amount:300,concept:'Préstamo a Karina · 4 cuotas',by:'Diego',day:'Esta semana'},
+    {type:'sell',amount:210,cost:120,concept:'3 perfumes · feria',by:'Rosa',day:'Ayer'},
+    {type:'expense',amount:15,concept:'Movilidad delivery',by:'Rosa',day:'Ayer'},
+    {type:'repaid',amount:82.5,cost:75,concept:'Karina · cuota 1',by:'Diego',day:'Hoy'},
+    {type:'sell',amount:150,cost:80,concept:'2 perfumes',by:'Rosa',day:'Hoy'}];}
+  seedBorrowers(){return [{id:'b1',name:'Karina',phone:''}];}
+  seedLoans(){const t=this.today();const mk=o=>this.addDays(t,o);
+    const insts=[
+      {n:1,date:mk(-45),amount:82.5,principal:75,interest:7.5,status:'cobrada'},
+      {n:2,date:mk(-15),amount:82.5,principal:75,interest:7.5,status:'pendiente'},
+      {n:3,date:mk(15),amount:82.5,principal:75,interest:7.5,status:'pendiente'},
+      {n:4,date:mk(45),amount:82.5,principal:75,interest:7.5,status:'pendiente'}];
+    return [{id:'L1',borrowerId:'b1',borrowerName:'Karina',capital:300,rate:10,freq:'mensual',start:mk(-75),installments:insts}];}
+
+  fmt(n){return 'S/ '+Math.round(n).toLocaleString('en-US');}
+
+  buckets(list){let cash=0,inv=0,lent=0;for(const m of list){const a=m.amount,c=m.cost||0;switch(m.type){
+    case 'contribute':cash+=a;break;case 'buy':cash-=a;inv+=a;break;case 'sell':cash+=a;inv-=c;break;
+    case 'lend':cash-=a;lent+=a;break;case 'repaid':cash+=a;lent-=c;break;case 'expense':cash-=a;break;}}
+    return {cash,inv,lent};}
+
+  decorate(m){const T=this.typeMeta[m.type];let cls,badge,amt,note='';
+    if(m.type==='expense'){cls='neg';badge='d-out';amt='– '+this.fmt(m.amount);}
+    else if(['contribute','sell','repaid'].includes(m.type)){cls='pos';badge='d-in';amt='+ '+this.fmt(m.amount);}
+    else {cls='neu';badge='d-move';amt=this.fmt(m.amount);}
+    if(m.type==='sell')note='Ganancia '+this.fmt(m.amount-(m.cost||0));
+    else if(m.type==='repaid')note='Interés '+this.fmt(m.amount-(m.cost||0));
+    else if(m.type==='buy')note='→ Inventario';else if(m.type==='lend')note='→ Prestado';
+    return {title:T.label,concept:m.concept,note,amt,cls,badge,icon:this.icon(m.type,19),by:(m.by||'?')[0],newCls:''};}
+
+  buildGroups(list){const order=['Hoy','Ayer','Esta semana'];let count=0;const out=[];
+    for(const lbl of order){const items=list.filter(m=>m.day===lbl).slice().reverse();const take=[];
+      for(const it of items){if(count>=10)break;take.push(this.decorate(it));count++;}
+      if(take.length)out.push({label:lbl,items:take});}
+    return out;}
+
+  press(k){const key=this.state.focus==='amount'?'amountStr':'costStr';let cur=this.state[key]||'';
+    if(cur.replace(/\D/g,'').length>=7)return;let next=(cur+k).replace(/^0+(?=\d)/,'');this.setState({[key]:next});}
+  del(){const key=this.state.focus==='amount'?'amountStr':'costStr';this.setState({[key]:(this.state[key]||'').slice(0,-1)});}
+  flash(msg){this.setState({toast:msg});clearTimeout(this._t);this._t=setTimeout(()=>this.setState({toast:''}),1800);}
+
+  save(){const amt=parseInt(this.state.amountStr||'0');if(amt<=0)return;
+    const t=this.state.mType;const needsCost=t==='sell'||t==='repaid';
+    const mv={type:t,amount:amt,cost:needsCost?parseInt(this.state.costStr||'0'):undefined,
+      concept:this.state.concept||this.typeMeta[t].label,by:this.state.user||'Rosa',day:'Hoy'};
+    this.setState({movements:[...this.state.movements,mv],screen:'dashboard',justAdded:true});this.flash('Movimiento registrado');clearTimeout(this._na);this._na=setTimeout(()=>this.setState({justAdded:false}),1300);}
+
+  openWizard(){this.setState({screen:'loanWizard',wzBorrower:'',wzNewName:'',wzCap:'',wzRate:'',wzCount:'4',wzFreq:'mensual',wzOverrides:{},wzPickerOpen:false,wzQuery:'',toast:''});}
+
+  buildSched(){const s=this.state;const cap=parseFloat(s.wzCap)||0,rate=parseFloat(s.wzRate)||0,count=parseInt(s.wzCount)||0;
+    if(cap<=0||count<=0)return [];
+    const total=cap*(1+rate/100),each=total/count,pEach=cap/count;
+    const pd=this.periodDays(s.wzFreq);const start=this.today();const sched=[];const ov=s.wzOverrides||{};
+    for(let i=1;i<=count;i++){const dt=this.addDays(start,pd*i);
+      sched.push({n:i,date:dt,dateStr:this.fmtDate(dt),principal:pEach,amountStr:(ov[i]!==undefined?ov[i]:this.money(each))});}
+    return sched;}
+
+  wzEdit(i,val){const ov={...(this.state.wzOverrides||{})};ov[i]=val;this.setState({wzOverrides:ov});}
+
+  wizConfirm(){const s=this.state;const sched=this.buildSched();if(!sched.length){this.flash('Ingresa monto y # de cuotas');return;}
+    let borrowers=s.borrowers,bId=s.wzBorrower,bName='';
+    if(s.wzNewName&&s.wzNewName.trim()){const nb={id:'b'+(borrowers.length+1),name:s.wzNewName.trim(),phone:''};
+      borrowers=[...borrowers,nb];bId=nb.id;bName=nb.name;}
+    else{const b=borrowers.find(x=>x.id===bId);if(!b){this.flash('Elige o escribe un prestatario');return;}bName=b.name;}
+    const cap=parseFloat(s.wzCap)||0,rate=parseFloat(s.wzRate)||0;
+    const insts=sched.map(it=>{const amt=parseFloat(it.amountStr)||0;
+      return {n:it.n,date:it.date,amount:amt,principal:it.principal,interest:amt-it.principal,status:'pendiente'};});
+    const loan={id:'L'+(s.loans.length+1),borrowerId:bId,borrowerName:bName,capital:cap,rate,freq:s.wzFreq,start:this.today(),installments:insts};
+    const mv={type:'lend',amount:cap,concept:'Préstamo a '+bName+' · '+insts.length+' cuotas',by:s.user||'Rosa',day:'Hoy'};
+    this.setState({loans:[...s.loans,loan],borrowers,movements:[...s.movements,mv],screen:'loanDetail',curLoan:loan.id,wzOverrides:{}});
+    this.flash('Préstamo registrado');}
+
+  collect(loanId,n){const s=this.state;const loan=s.loans.find(l=>l.id===loanId);if(!loan)return;
+    const it=loan.installments.find(x=>x.n===n);if(!it||it.status==='cobrada')return;
+    const loans=s.loans.map(l=>l.id!==loanId?l:{...l,installments:l.installments.map(x=>x.n===n?{...x,status:'cobrada'}:x)});
+    const mv={type:'repaid',amount:it.amount,cost:it.principal,concept:loan.borrowerName+' · cuota '+n,by:s.user||'Rosa',day:'Hoy'};
+    this.setState({loans,movements:[...s.movements,mv]});this.flash('Cobro registrado');}
+
+  renderVals(){
+    const s=this.state;const go=x=>()=>this.setState({screen:x,toast:''});
+    const b=this.buckets(s.movements);const total=b.cash+b.inv+b.lent;
+    const posT=Math.max(b.cash,0)+Math.max(b.inv,0)+Math.max(b.lent,0);
+    const pct=v=>(posT>0?(Math.max(v,0)/posT*100):0).toFixed(1)+'%';
+    const u=s.user||'Rosa';
+    const amt=parseInt(s.amountStr||'0');const cost=parseInt(s.costStr||'0');
+    const needsCost=s.mType==='sell'||s.mType==='repaid';
+    const types=Object.keys(this.typeMeta).map(k=>{const m=this.typeMeta[k];
+      const on=k==='lend'?()=>this.openWizard():k==='repaid'?()=>this.setState({screen:'loanList',toast:''}):()=>this.setState({mType:k,focus:'amount'});
+      return {key:k,label:m.label,hint:m.hint,activeClass:s.mType===k?'on':'',dotClass:'tdot d-'+m.dir,icon:this.icon(k,15),on};});
+    const keys=['1','2','3','4','5','6','7','8','9','00','0','del'].map(k=>({
+      label:k==='del'?'⌫':k,on:k==='del'?()=>this.del():()=>this.press(k)}));
+
+    // wizard
+    const wcap=parseFloat(s.wzCap)||0,wrate=parseFloat(s.wzRate)||0,wcount=parseInt(s.wzCount)||0;
+    const wtotal=wcap*(1+wrate/100);const wdays=this.periodDays(s.wzFreq)*(wcount||1);
+    const wann=wdays>0?(wrate*365/wdays):0;
+    const wzLive=wcap>0?('Total S/ '+this.fmt(wtotal).replace('S/ ','')+'  ·  '+(wcount||0)+' cuotas '+s.wzFreq+'  ·  interés anual ~'+wann.toFixed(0)+'%'):'Completa monto e interés para ver el total.';
+    const q=(s.wzQuery||'').trim().toLowerCase();
+    const filtered=s.borrowers.filter(bo=>!q||bo.name.toLowerCase().includes(q));
+    const wzBorrowerRows=filtered.map(bo=>({name:bo.name,initial:(bo.name||'?')[0].toUpperCase(),
+      selCls:s.wzBorrower===bo.id?'on':'',check:s.wzBorrower===bo.id?'✓':'',
+      pick:()=>this.setState({wzBorrower:bo.id,wzNewName:'',wzQuery:'',wzPickerOpen:false})}));
+    const exact=s.borrowers.some(bo=>bo.name.toLowerCase()===q);
+    const wzCreateName=(s.wzQuery||'').trim();
+    const selName=s.wzNewName?s.wzNewName:((s.borrowers.find(bo=>bo.id===s.wzBorrower)||{}).name||'');
+    const wzFreqs=[['diario','Diario'],['semanal','Semanal'],['quincenal','Quincenal'],['mensual','Mensual']].map(p=>({label:p[1],on2:s.wzFreq===p[0]?'on-chip':'',pick:()=>this.setState({wzFreq:p[0],wzOverrides:{}})}));
+    const built=this.buildSched();
+    const wzSched=built.map((it,i)=>({n:it.n,dateStr:it.dateStr,amountStr:it.amountStr,onAmt:e=>this.wzEdit(i+1,e.target.value)}));
+    const wzSum=built.reduce((a,it)=>a+(parseFloat(it.amountStr)||0),0);
+    const wzDiff=Math.abs(wzSum-wtotal);
+
+    // loans list
+    const tdy=this.today();
+    const loansList=s.loans.map(l=>{const pend=l.installments.filter(x=>x.status==='pendiente');
+      const cob=l.installments.filter(x=>x.status==='cobrada').length;
+      const over=pend.filter(x=>x.date<tdy).length;
+      const pendAmt=pend.reduce((a,it)=>a+it.amount,0);
+      return {borrower:l.borrowerName,initial:(l.borrowerName||'?')[0],
+        sub:cob+'/'+l.installments.length+' cobradas'+(over>0?' · '+over+' vencida'+(over>1?'s':''):''),
+        pend:this.fmt(pendAmt),warn:over>0?('⚠ '+over+' vencida'+(over>1?'s':'')):'al día',warnClass:over>0?'badge-warn':'mut',
+        open:()=>this.setState({screen:'loanDetail',curLoan:l.id,toast:''})};});
+
+    // loan detail
+    let loanBorrower='',loanPrestado='',loanEsper='',loanCobrado='',loanPend='',loanAnnual='',loanInsts=[];
+    const cl=s.loans.find(l=>l.id===s.curLoan);
+    if(cl){const insts=cl.installments;
+      loanBorrower=cl.borrowerName;loanPrestado=this.fmt(cl.capital);
+      loanEsper=this.fmt(insts.reduce((a,it)=>a+it.interest,0));
+      loanCobrado=this.fmt(insts.filter(x=>x.status==='cobrada').reduce((a,it)=>a+it.amount,0));
+      loanPend=this.fmt(insts.filter(x=>x.status==='pendiente').reduce((a,it)=>a+it.amount,0));
+      const days=this.periodDays(cl.freq)*insts.length;loanAnnual=(days>0?cl.rate*365/days:0).toFixed(0)+'%';
+      loanInsts=insts.map(it=>{const overdue=it.status==='pendiente'&&it.date<tdy;
+        const stLabel=it.status==='cobrada'?'Cobrada':(overdue?'Vencida':'Pendiente');
+        const stClass=it.status==='cobrada'?'st-cob':(overdue?'st-ven':'st-pen');
+        return {n:it.n,dateStr:this.fmtDate(it.date),amt:this.fmt(it.amount),stLabel,stClass,
+          btnLabel:it.status==='cobrada'?'✓ Cobrada':'Cobrar',btnDisabled:it.status==='cobrada',
+          collect:it.status==='cobrada'?()=>{}:()=>this.collect(cl.id,it.n)};});}
+
+    const dashGroups=this.buildGroups(s.movements);
+    if(s.justAdded&&dashGroups[0]&&dashGroups[0].items[0])dashGroups[0].items[0].newCls='rowNew';
+    return {
+      isLogin:s.screen==='login',isRegister:s.screen==='register',isCreate:s.screen==='create',
+      isInvite:s.screen==='invite',isJoin:s.screen==='join',isDash:s.screen==='dashboard',isAdd:s.screen==='add',
+      isLoanWizard:s.screen==='loanWizard',isLoanList:s.screen==='loanList',isLoanDetail:s.screen==='loanDetail',
+      goLogin:go('login'),goRegister:go('register'),goCreate:go('create'),goInvite:go('invite'),
+      goJoin:go('join'),goDashEmpty:go('dashboard'),closeAdd:go('dashboard'),goDash:go('dashboard'),goLoans:go('loanList'),
+      loginDemo:()=>this.setState({screen:'dashboard',movements:this.seed(),loans:this.seedLoans(),borrowers:this.seedBorrowers(),user:s.user||'Rosa'}),
+      joinDemo:()=>this.setState({screen:'dashboard',movements:this.seed(),loans:this.seedLoans(),borrowers:this.seedBorrowers(),user:s.user||'Rosa'}),
+      openAdd:()=>this.setState({screen:'add',mType:'contribute',amountStr:'',costStr:'',concept:'',focus:'amount',toast:''}),
+      userName:s.user,onUserName:e=>this.setState({user:e.target.value}),
+      groupName:s.groupName||'Amigos',onGroupName:e=>this.setState({groupName:e.target.value}),
+      inviteLink:'cocapital.pe/j/K7X2M9',copyLink:()=>{try{navigator.clipboard&&navigator.clipboard.writeText('cocapital.pe/j/K7X2M9');}catch(e){}this.flash('Enlace copiado');},
+      shareWa:()=>this.flash('Abriendo WhatsApp…'),
+      members:[{i:'D',c:'av av1'},{i:u[0].toUpperCase(),c:'av av2'}],
+      hasMovements:s.movements.length>0,noMovements:s.movements.length===0,
+      totalStr:this.fmt(total),cashStr:this.fmt(b.cash),invStr:this.fmt(b.inv),lentStr:this.fmt(b.lent),
+      cashPct:pct(b.cash),invPct:pct(b.inv),lentPct:pct(b.lent),
+      groups:dashGroups,types,keys,
+      typeLabel:this.typeMeta[s.mType].label,typeHint:this.typeMeta[s.mType].hint,
+      needsCost,costLabel:s.mType==='sell'?'Costo de lo vendido':'Capital prestado',
+      amountDisplay:this.fmt(amt),amountZeroClass:amt<=0?'amtz':'',amountFocusClass:s.focus==='amount'?'on':'',
+      costDisplay:this.fmt(cost),costZeroClass:cost<=0?'amtz':'',costFocusClass:s.focus==='cost'?'on':'',
+      focusAmountFn:()=>this.setState({focus:'amount'}),focusCostFn:()=>this.setState({focus:'cost'}),
+      concept:s.concept,onConcept:e=>this.setState({concept:e.target.value}),
+      canSave:amt>0,saveDisabled:amt<=0,save:()=>this.save(),
+      // wizard bindings
+      wzBorrowerRows,wzQuery:s.wzQuery,onWzQuery:e=>this.setState({wzQuery:e.target.value,wzBorrower:''}),
+      wzPickerOpen:s.wzPickerOpen,wzTogglePicker:()=>this.setState({wzPickerOpen:!s.wzPickerOpen}),
+      wzPickerLabel:selName||'Elegir o crear prestatario',wzLabelClass:selName?'':'ph',
+      wzShowCreate:wzCreateName.length>0&&!exact,wzCreateName,
+      wzCreate:()=>this.setState({wzNewName:wzCreateName,wzBorrower:'',wzQuery:'',wzPickerOpen:false}),
+      wzPickerEmpty:filtered.length===0&&wzCreateName.length===0,
+      wzCap:s.wzCap,onWzCap:e=>this.setState({wzCap:e.target.value,wzOverrides:{}}),
+      wzRate:s.wzRate,onWzRate:e=>this.setState({wzRate:e.target.value,wzOverrides:{}}),
+      wzCount:s.wzCount,onWzCount:e=>this.setState({wzCount:e.target.value,wzOverrides:{}}),
+      wzFreqs,wzLive,wzHasSched:built.length>0,wzSched,
+      wzSumStr:this.fmt(wzSum),wzTotalStr:this.fmt(wtotal),wzDiffTag:wzDiff<0.5?'coincide ✓':('Δ '+this.fmt(wzDiff)),
+      wizConfirm:()=>this.wizConfirm(),
+      // loans
+      hasLoans:s.loans.length>0,noLoans:s.loans.length===0,loansList,
+      loanBorrower,loanPrestado,loanEsper,loanCobrado,loanPend,loanAnnual,loanInsts,
+      toast:s.toast,
+    };
+  }
+}
+</script>
+</body>
+</html>
