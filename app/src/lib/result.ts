@@ -41,9 +41,12 @@
  *       err: (e) => `error: ${e.message}`,
  *     });
  */
+/** An object type carrying no extra properties — the default for `Extra`. */
+type NoExtraFields = Record<never, never>;
+
 export type AppError<
   Kind extends string = string,
-  Extra extends Record<string, unknown> = {},
+  Extra extends object = NoExtraFields,
 > = {
   readonly kind: Kind;
   readonly message: string;
