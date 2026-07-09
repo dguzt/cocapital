@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics=""><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet"><style>
+:root{--bg:#0b0b0e;--panel:#0f0f13;--card:#161619;--card2:#1c1c20;--bd:#27272c;--bd2:#323238;--fg:#fafafa;--mut:#a1a1aa;--faint:#71717a;--pri:#34d399;--prifg:#04170e;--track:#27272c;--c1:#34d399;--c2:#71717a;--c3:#3f3f46;--danger:#f87171;--danger-t:rgba(248,113,113,.14);--pri-t:rgba(52,211,153,.15)}
+*{box-sizing:border-box}
+body{margin:0;background:#050507;font-family:'Geist',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--pri);text-decoration:none}a:hover{color:#5fe0b3}
+.win{width:1440px;height:900px;display:flex;background:var(--bg);color:var(--fg);overflow:hidden}
+.mono{font-family:'Geist Mono',monospace}
+.tnum{font-feature-settings:'tnum'}
+.lbl{font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--faint)}
+.mut{color:var(--mut)}.grn{color:var(--pri)}.faint{color:var(--faint)}
+/* sidebar */
+.side{width:256px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:22px 16px}
+.brand{display:flex;align-items:center;gap:11px;padding:6px 8px 0}
+.mark{width:38px;height:38px;border-radius:11px;background:var(--pri);display:flex;align-items:center;justify-content:center;color:var(--prifg);font-family:'Geist Mono';font-weight:600;font-size:15px;box-shadow:0 6px 18px rgba(52,211,153,.28)}
+.wordmark{font-size:19px;font-weight:600;letter-spacing:-.6px}
+.groupchip{display:flex;align-items:center;gap:10px;margin:22px 0 8px;padding:11px 12px;border:1px solid var(--bd);border-radius:13px;background:var(--card);cursor:pointer}
+.gname{font-weight:700;font-size:14px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--pri);box-shadow:0 0 0 3px var(--pri-t)}
+.avstack{display:flex}
+.av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;border:2px solid var(--card)}
+.av1{background:var(--pri);color:var(--prifg)}.av2{background:var(--c2)}
+.nav{display:flex;flex-direction:column;gap:3px;margin-top:14px}
+.navi{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:11px;background:none;border:none;color:var(--mut);font-family:'Geist';font-weight:500;font-size:14.5px;cursor:pointer;text-align:left;width:100%}
+.navi:hover{background:var(--card)}
+.navi.on{background:var(--pri-t);color:var(--fg);font-weight:600}
+.navi.on svg{color:var(--pri)}
+.navi svg{color:var(--faint);flex-shrink:0}
+.badgeN{margin-left:auto;font-family:'Geist Mono';font-size:11px;font-weight:600;background:var(--danger-t);color:var(--danger);padding:2px 7px;border-radius:999px}
+.usercard{margin-top:auto;display:flex;align-items:center;gap:11px;padding:11px 10px;border-top:1px solid var(--bd)}
+.uname{font-weight:600;font-size:13.5px}
+.uemail{font-size:11.5px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px}
+.iconghost{width:32px;height:32px;border-radius:9px;background:none;border:1px solid var(--bd);color:var(--mut);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.iconghost:hover{background:var(--card);color:var(--fg)}
+/* main */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:72px;flex-shrink:0;border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 32px;gap:16px}
+.h1{font-size:23px;font-weight:700;letter-spacing:-.5px}
+.subtle{font-size:13px;color:var(--faint);margin-top:2px}
+.btn-p{height:44px;border-radius:11px;background:var(--pri);color:var(--prifg);font-family:'Geist';font-weight:600;font-size:14px;border:none;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;padding:0 18px;box-shadow:0 8px 20px rgba(52,211,153,.18)}
+.btn-p:hover{filter:brightness(1.05)}.btn-p:active{filter:brightness(.94)}
+.btn-g{height:44px;border-radius:11px;background:var(--card2);color:var(--fg);border:1px solid var(--bd2);font-family:'Geist';font-weight:600;font-size:14px;cursor:pointer;padding:0 16px;display:flex;align-items:center;gap:8px}
+.btn-g:hover{background:var(--bd2)}
+.plus{font-size:19px;line-height:1;font-weight:500}
+.body{flex:1;overflow:auto;padding:28px 32px 40px}
+.grid2{display:grid;grid-template-columns:1.55fr 1fr;gap:22px;align-items:start}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:24px}
+.card-tight{padding:20px}
+.hero{background:linear-gradient(150deg,var(--card),#121215);border:1px solid var(--bd);border-radius:18px;padding:26px}
+.big{font-family:'Geist Mono',monospace;font-size:52px;line-height:.98;font-weight:600;letter-spacing:-2.5px;font-feature-settings:'tnum'}
+.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:22px}
+.stat{border:1px solid var(--bd);border-radius:14px;padding:16px 16px;background:var(--panel)}
+.stat .k{display:flex;align-items:center;gap:8px}
+.sw{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.seg-cash,.sw.seg-cash{background:var(--c1)}.seg-inv,.sw.seg-inv{background:var(--c2)}.seg-lent,.sw.seg-lent{background:var(--c3)}
+.stv{font-family:'Geist Mono';font-weight:600;font-size:22px;margin-top:12px;font-feature-settings:'tnum'}
+.stpc{font-family:'Geist Mono';font-size:11.5px;color:var(--faint);margin-top:3px}
+.bar{height:12px;border-radius:7px;overflow:hidden;display:flex;background:var(--track);gap:3px;margin-top:20px}
+.seghint{display:flex;justify-content:space-between;margin-top:10px;font-family:'Geist Mono';font-size:11px;color:var(--faint)}
+.secttl{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
+.h2{font-size:16px;font-weight:700;letter-spacing:-.2px}
+.link{font-size:13px;color:var(--pri);font-weight:600;cursor:pointer;background:none;border:none;font-family:'Geist'}
+/* activity table */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{text-align:left;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);padding:0 12px 12px;border-bottom:1px solid var(--bd)}
+.tbl td{padding:13px 12px;border-bottom:1px solid var(--bd);font-size:14px;vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(255,255,255,.02)}
+.tcell{display:flex;align-items:center;gap:12px}
+.actbadge{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.d-in{background:var(--pri-t);color:var(--c1)}.d-out{background:var(--danger-t);color:var(--danger)}.d-move{background:var(--card2);color:var(--mut)}
+.ttl{font-weight:600;font-size:14px}
+.tconcept{font-size:13px;color:var(--mut);max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.by{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--mut)}
+.byav{width:22px;height:22px;border-radius:50%;background:var(--card2);color:var(--mut);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600}
+.amt-v{font-family:'Geist Mono';font-weight:500;font-feature-settings:'tnum';font-size:14.5px;white-space:nowrap;text-align:right}
+.note{font-size:11px;color:var(--faint);text-align:right;margin-top:2px}
+.pos{color:var(--c1)}.neg{color:var(--danger)}.neu{color:var(--fg)}
+/* loans master-detail */
+.loangrid{display:grid;grid-template-columns:340px 1fr;gap:22px;align-items:start}
+.loanrow{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--bd);border-radius:14px;background:var(--card);margin-bottom:10px;cursor:pointer;width:100%;text-align:left}
+.loanrow:hover{border-color:var(--bd2)}
+.loanrow.on{border-color:var(--pri);background:var(--pri-t)}
+.badge-warn{color:var(--danger);font-weight:600}
+.summ{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:6px}
+.sumcell{padding:15px 16px;border:1px solid var(--bd);border-radius:14px;background:var(--panel)}
+.sumk{font-size:10px;color:var(--faint);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.sumv{font-family:'Geist Mono';font-weight:600;font-size:22px;margin-top:6px;font-feature-settings:'tnum'}
+.instrow{display:flex;align-items:center;gap:16px;padding:14px 4px;border-bottom:1px solid var(--bd)}
+.stpill{font-size:10px;font-weight:600;padding:3px 8px;border-radius:999px;display:inline-block}
+.st-cob{background:var(--pri-t);color:var(--c1)}.st-pen{background:var(--card2);color:var(--mut)}.st-ven{background:var(--danger-t);color:var(--danger)}
+.collectbtn{border:none;border-radius:9px;height:34px;padding:0 16px;font-family:'Geist';font-weight:600;font-size:13px;cursor:pointer;background:var(--pri);color:var(--prifg)}
+.collectbtn:hover{filter:brightness(1.05)}
+.collectbtn[disabled]{background:var(--card2);color:var(--c1);border:1px solid var(--bd);pointer-events:none}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;background:var(--card2);border:1px solid var(--bd);font-size:12px;font-weight:500;color:var(--mut)}
+.empty{border:1px dashed var(--bd2);border-radius:16px;padding:48px 22px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
+.emptymark{width:56px;height:56px;border-radius:15px;background:var(--pri-t);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--pri);margin-bottom:4px}
+.p{font-size:14px;color:var(--mut);line-height:1.55;max-width:340px}
+/* modal */
+.scrim{position:absolute;inset:0;background:rgba(4,4,7,.66);display:flex;align-items:center;justify-content:center;z-index:60;animation:fade .18s ease}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.modal{width:520px;max-height:86%;overflow:auto;background:var(--card);border:1px solid var(--bd2);border-radius:20px;padding:26px;box-shadow:0 30px 80px rgba(0,0,0,.6);animation:pop .22s cubic-bezier(.22,.61,.36,1)}
+@keyframes pop{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+.mhd{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.xbtn{width:34px;height:34px;border-radius:10px;background:var(--card2);border:1px solid var(--bd);font-size:14px;color:var(--fg);cursor:pointer}
+.xbtn:hover{background:var(--bd2)}
+.tgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+.topt{padding:13px 12px;border-radius:13px;border:1px solid var(--bd2);background:var(--panel);text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:9px}
+.topt:hover{border-color:var(--faint)}
+.topt.on{border-color:var(--pri);background:var(--pri-t)}
+.tdot{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center}
+.toptl{font-size:13.5px;font-weight:600}
+.toptl2{font-size:11px;color:var(--faint);font-weight:450}
+.field{height:48px;border:1px solid var(--bd2);border-radius:11px;padding:0 15px;font-family:'Geist';font-size:15px;width:100%;background:var(--panel);color:var(--fg)}
+.field:focus{outline:none;border-color:var(--pri)}
+.field::placeholder{color:var(--faint)}
+.amtinput{height:60px;font-family:'Geist Mono';font-size:26px;font-weight:600;letter-spacing:-.5px;padding:0 18px}
+.toast{position:absolute;left:50%;bottom:34px;transform:translateX(-50%);background:var(--card2);border:1px solid var(--bd2);color:var(--fg);padding:13px 20px;border-radius:12px;font-weight:500;font-size:14px;z-index:80;box-shadow:0 12px 30px rgba(0,0,0,.5);animation:toastIn .26s cubic-bezier(.22,.61,.36,1)}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+</style></helmet><div class="win"><div class="side"><div class="brand"><div class="mark">S/</div><span class="wordmark">cocapital</span></div><button class="groupchip"><div class="avstack"><div class="av av1">D</div><div class="av av2" style="margin-left:-8px">{{ userInitial }}</div></div><div style="flex:1;min-width:0"><div class="gname">{{ groupName }}</div><div class="fx ac gap8" style="margin-top:2px"><span class="dot"></span><span style="font-size:11px;color:var(--faint);font-weight:600">2 socios</span></div></div><span class="chev faint">⌄</span></button><div class="nav"><button class="navi {{ navPanel }}" onClick="{{ goPanel }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></svg>Panel</button><button class="navi {{ navLoans }}" onClick="{{ goLoansNav }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18v12H3z"></path><path d="M3 7l3-4h12l3 4"></path><path d="M9 12h6"></path></svg>Préstamos<sc-if value="{{ overdueCount }}" hint-placeholder-val="{{ false }}"><span class="badgeN">{{ overdueCount }}</span></sc-if></button><button class="navi {{ navActivity }}" onClick="{{ goActivityNav }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h4l2 6 4-14 2 8h4"></path></svg>Actividad</button></div><div class="usercard"><div class="av av1" style="width:34px;height:34px;border:none">{{ userInitial }}</div><div style="flex:1;min-width:0"><div class="uname">{{ userName }}</div><div class="uemail">{{ userEmail }}</div></div><button class="iconghost" title="Cerrar sesión"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"></path><path d="M10 16l4-4-4-4"></path><path d="M14 12H3"></path></svg></button></div></div>
+
+<div class="main"><div class="topbar"><div style="flex:1"><div class="h1">{{ pageTitle }}</div><div class="subtle">{{ pageSub }}</div></div><button class="btn-g" onClick="{{ goActivityNav }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h4l2 6 4-14 2 8h4"></path></svg>Actividad</button><button class="btn-p" onClick="{{ openAdd }}"><span class="plus">＋</span> Agregar movimiento</button></div>
+
+<div class="body"><sc-if value="{{ isPanel }}" hint-placeholder-val="{{ true }}"><div class="grid2"><div style="display:flex;flex-direction:column;gap:22px"><div class="hero"><div class="lbl">Capital total</div><div class="big" style="margin-top:12px">{{ totalStr }}</div><div class="bar"><div class="seg-cash" style="width: {{ cashPct }}"></div><div class="seg-inv" style="width: {{ invPct }}"></div><div class="seg-lent" style="width: {{ lentPct }}"></div></div><div class="statgrid"><div class="stat"><div class="k"><span class="sw seg-cash"></span><span class="lbl">Efectivo</span></div><div class="stv">{{ cashStr }}</div><div class="stpc">{{ cashPct }} del capital</div></div><div class="stat"><div class="k"><span class="sw seg-inv"></span><span class="lbl">Inventario</span></div><div class="stv">{{ invStr }}</div><div class="stpc">{{ invPct }} del capital</div></div><div class="stat"><div class="k"><span class="sw seg-lent"></span><span class="lbl">Prestado</span></div><div class="stv">{{ lentStr }}</div><div class="stpc">{{ lentPct }} del capital</div></div></div></div>
+<div class="card card-tight"><div class="secttl"><span class="h2">Actividad reciente</span><button class="link" onClick="{{ goActivityNav }}">Ver todo →</button></div><table class="tbl" style="margin-top:10px"><thead><tr><th>Movimiento</th><th>Por</th><th>Cuándo</th><th style="text-align:right">Monto</th></tr></thead><tbody><sc-for list="{{ recent }}" as="it" hint-placeholder-count="6"><tr><td><div class="tcell"><div class="actbadge {{ it.badge }}">{{ it.icon }}</div><div style="min-width:0"><div class="ttl">{{ it.title }}</div><div class="tconcept">{{ it.concept }}</div></div></div></td><td><span class="by"><span class="byav">{{ it.byInit }}</span>{{ it.by }}</span></td><td class="mut" style="font-size:13px">{{ it.day }}</td><td><div class="amt-v {{ it.cls }}">{{ it.amt }}</div><div class="note">{{ it.note }}</div></td></tr></sc-for></tbody></table></div></div>
+<div style="display:flex;flex-direction:column;gap:22px"><div class="card"><div class="h2" style="margin-bottom:4px">Dónde está</div><p class="p" style="font-size:13px">Cómo se reparte el capital del grupo ahora mismo.</p><div style="margin-top:18px;display:flex;flex-direction:column;gap:2px"><div class="fx ac gap12" style="padding:12px 0;border-bottom:1px solid var(--bd)"><span class="sw seg-cash"></span><span style="flex:1;font-weight:600;font-size:14px">Efectivo disponible</span><span class="amt-v tnum">{{ cashStr }}</span></div><div class="fx ac gap12" style="padding:12px 0;border-bottom:1px solid var(--bd)"><span class="sw seg-inv"></span><span style="flex:1;font-weight:600;font-size:14px">Inventario</span><span class="amt-v tnum">{{ invStr }}</span></div><button class="fx ac gap12" onClick="{{ goLoansNav }}" style="padding:12px 0;background:none;border:none;color:var(--fg);cursor:pointer;width:100%"><span class="sw seg-lent"></span><span style="flex:1;font-weight:600;font-size:14px;text-align:left">Prestado ›</span><span class="amt-v tnum">{{ lentStr }}</span></button></div></div>
+<div class="card"><div class="h2" style="margin-bottom:14px">Ganancia acumulada</div><div class="summ" style="grid-template-columns:1fr 1fr"><div class="sumcell"><div class="sumk">Por ventas</div><div class="sumv grn">{{ profitSales }}</div></div><div class="sumcell"><div class="sumk">Por intereses</div><div class="sumv grn">{{ profitInterest }}</div></div></div><div class="chip" style="margin-top:14px">Ganancia total del grupo · {{ profitTotal }}</div></div></div></div></sc-if>
+
+<sc-if value="{{ isActivity }}" hint-placeholder-val="{{ false }}"><div class="card card-tight" style="max-width:900px"><table class="tbl"><thead><tr><th>Movimiento</th><th>Por</th><th>Cuándo</th><th style="text-align:right">Monto</th></tr></thead><tbody><sc-for list="{{ allActivity }}" as="it" hint-placeholder-count="8"><tr><td><div class="tcell"><div class="actbadge {{ it.badge }}">{{ it.icon }}</div><div style="min-width:0"><div class="ttl">{{ it.title }}</div><div class="tconcept">{{ it.concept }}</div></div></div></td><td><span class="by"><span class="byav">{{ it.byInit }}</span>{{ it.by }}</span></td><td class="mut" style="font-size:13px">{{ it.day }}</td><td><div class="amt-v {{ it.cls }}">{{ it.amt }}</div><div class="note">{{ it.note }}</div></td></tr></sc-for></tbody></table></div></sc-if>
+
+<sc-if value="{{ isLoans }}" hint-placeholder-val="{{ false }}"><div class="loangrid"><div><sc-for list="{{ loansList }}" as="l" hint-placeholder-count="2"><button class="loanrow {{ l.onCls }}" onClick="{{ l.open }}"><div class="actbadge d-move" style="font-weight:700">{{ l.initial }}</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:15px">{{ l.borrower }}</div><div style="font-size:12.5px;color:var(--faint)">{{ l.sub }}</div></div><div style="text-align:right"><div class="amt-v">{{ l.pend }}</div><div style="font-size:11px;font-weight:600" class="{{ l.warnClass }}">{{ l.warn }}</div></div></button></sc-for></div>
+<div class="card"><div class="fx ac gap12" style="margin-bottom:4px"><div class="actbadge d-move" style="width:40px;height:40px;font-weight:700;font-size:15px">{{ loanInit }}</div><div><div class="h2" style="font-size:18px">{{ loanBorrower }}</div><div class="subtle" style="font-size:12.5px">Interés anual ~{{ loanAnnual }} · referencia</div></div></div><div class="summ" style="margin-top:16px"><div class="sumcell"><div class="sumk">Prestado</div><div class="sumv">{{ loanPrestado }}</div></div><div class="sumcell"><div class="sumk">Ganancia esperada</div><div class="sumv grn">{{ loanEsper }}</div></div><div class="sumcell"><div class="sumk">Cobrado</div><div class="sumv">{{ loanCobrado }}</div></div><div class="sumcell"><div class="sumk">Pendiente</div><div class="sumv">{{ loanPend }}</div></div></div>
+<div class="lbl" style="margin:24px 0 6px">Cuotas</div><div><sc-for list="{{ loanInsts }}" as="it" hint-placeholder-count="4"><div class="instrow"><div style="width:70px"><div style="font-weight:600;font-size:14px">Cuota {{ it.n }}</div></div><div style="flex:1"><div class="mono" style="font-size:12.5px;color:var(--faint);margin-bottom:5px">{{ it.dateStr }}</div><span class="stpill {{ it.stClass }}">{{ it.stLabel }}</span></div><span class="amt-v" style="width:100px">{{ it.amt }}</span><button class="collectbtn" onClick="{{ it.collect }}" disabled="{{ it.btnDisabled }}">{{ it.btnLabel }}</button></div></sc-for></div></div></div></sc-if>
+</div></div>
+
+<sc-if value="{{ addOpen }}" hint-placeholder-val="{{ false }}"><div class="scrim" onClick="{{ closeAdd }}"><div class="modal" onClick="{{ stop }}"><div class="mhd"><span class="h2" style="font-size:18px">Nuevo movimiento</span><button class="xbtn" onClick="{{ closeAdd }}">✕</button></div><div class="lbl" style="margin-bottom:10px">Tipo de movimiento</div><div class="tgrid"><sc-for list="{{ types }}" as="t" hint-placeholder-count="6"><button class="topt {{ t.activeClass }}" onClick="{{ t.on }}"><div class="{{ t.dotClass }}">{{ t.icon }}</div><div><div class="toptl">{{ t.label }}</div><div class="toptl2">{{ t.hint }}</div></div></button></sc-for></div>
+<div class="lbl" style="margin:22px 0 8px">Monto (S/)</div><input class="field amtinput" inputmode="numeric" placeholder="0" value="{{ amountStr }}" onChange="{{ onAmount }}">
+<sc-if value="{{ needsCost }}" hint-placeholder-val="{{ false }}"><div class="lbl" style="margin:16px 0 8px">{{ costLabel }}</div><input class="field" inputmode="numeric" placeholder="0" value="{{ costStr }}" onChange="{{ onCost }}"></sc-if>
+<div class="lbl" style="margin:16px 0 8px">Concepto</div><input class="field" placeholder="Ej. 3 perfumes · feria" value="{{ concept }}" onChange="{{ onConcept }}">
+<div style="display:flex;gap:10px;margin-top:24px"><button class="btn-g" style="flex:1;justify-content:center" onClick="{{ closeAdd }}">Cancelar</button><button class="btn-p" style="flex:2;justify-content:center" onClick="{{ save }}" disabled="{{ saveDisabled }}">Guardar movimiento</button></div></div></div></sc-if>
+<sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}"><div class="toast">{{ toast }}</div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = { nav:'panel', movements:[], loans:[], user:'Rosa', groupName:'Amigos',
+    addOpen:false, mType:'contribute', amountStr:'', costStr:'', concept:'', curLoan:'L1', toast:'' };
+
+  componentDidMount(){ this.setState({ movements:this.seed(), loans:this.seedLoans() }); }
+
+  get typeMeta(){return {
+    buy:{label:'Compra',hint:'Efectivo → inventario',dir:'move'},
+    sell:{label:'Venta',hint:'Inventario → efectivo',dir:'in'},
+    lend:{label:'Préstamo',hint:'Cronograma',dir:'move'},
+    repaid:{label:'Cobro',hint:'Cobrar cuota',dir:'in'},
+    contribute:{label:'Aporte',hint:'Agregar efectivo',dir:'in'},
+    expense:{label:'Gasto',hint:'Sale efectivo',dir:'out'}};}
+
+  icon(type,size){const paths=({
+    contribute:['M8 3.2v9.6','M3.2 8h9.6'],
+    expense:['M3.4 8h9.2'],
+    buy:['M4 5.6h8v6.8H4z','M8 7.4v3.2','M6.3 9.2 8 10.9l1.7-1.7'],
+    sell:['M4 5.6h8v6.8H4z','M8 10.6V7.4','M6.3 9 8 7.3l1.7 1.7'],
+    lend:['M2.8 8h8.6','M8.4 4.9 11.6 8l-3.2 3.1'],
+    repaid:['M13.2 8H4.6','M7.6 4.9 4.4 8l3.2 3.1']
+  }[type]||['M3.4 8h9.2']);
+    return React.createElement('svg',{width:size||18,height:size||18,viewBox:'0 0 16 16',fill:'none',stroke:'currentColor',strokeWidth:1.9,strokeLinecap:'round',strokeLinejoin:'round'},
+      paths.map((d,i)=>React.createElement('path',{key:i,d})));}
+
+  today(){const d=new Date();d.setHours(0,0,0,0);return d;}
+  addDays(d,n){const r=new Date(d.getTime());r.setDate(r.getDate()+n);return r;}
+  periodDays(f){return ({diario:1,semanal:7,quincenal:15,mensual:30})[f]||30;}
+  fmtDate(d){const M=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];return d.getDate()+' '+M[d.getMonth()];}
+  fmt(n){return 'S/ '+Math.round(n).toLocaleString('en-US');}
+
+  seed(){return [
+    {type:'contribute',amount:500,concept:'Aporte inicial · Diego',by:'Diego',day:'Esta semana'},
+    {type:'contribute',amount:500,concept:'Aporte inicial · Rosa',by:'Rosa',day:'Esta semana'},
+    {type:'buy',amount:480,concept:'12 perfumes surtidos',by:'Diego',day:'Esta semana'},
+    {type:'lend',amount:300,concept:'Préstamo a Karina · 4 cuotas',by:'Diego',day:'Esta semana'},
+    {type:'sell',amount:210,cost:120,concept:'3 perfumes · feria',by:'Rosa',day:'Ayer'},
+    {type:'expense',amount:15,concept:'Movilidad delivery',by:'Rosa',day:'Ayer'},
+    {type:'repaid',amount:82.5,cost:75,concept:'Karina · cuota 1',by:'Diego',day:'Hoy'},
+    {type:'sell',amount:150,cost:80,concept:'2 perfumes',by:'Rosa',day:'Hoy'}];}
+  seedLoans(){const t=this.today();const mk=o=>this.addDays(t,o);
+    const insts=[
+      {n:1,date:mk(-45),amount:82.5,principal:75,interest:7.5,status:'cobrada'},
+      {n:2,date:mk(-15),amount:82.5,principal:75,interest:7.5,status:'pendiente'},
+      {n:3,date:mk(15),amount:82.5,principal:75,interest:7.5,status:'pendiente'},
+      {n:4,date:mk(45),amount:82.5,principal:75,interest:7.5,status:'pendiente'}];
+    const insts2=[
+      {n:1,date:mk(-10),amount:110,principal:100,interest:10,status:'cobrada'},
+      {n:2,date:mk(20),amount:110,principal:100,interest:10,status:'pendiente'},
+      {n:3,date:mk(50),amount:110,principal:100,interest:10,status:'pendiente'}];
+    return [
+      {id:'L1',borrowerName:'Karina',capital:300,rate:10,freq:'mensual',installments:insts},
+      {id:'L2',borrowerName:'Marco',capital:300,rate:10,freq:'mensual',installments:insts2}];}
+
+  buckets(list){let cash=0,inv=0,lent=0;for(const m of list){const a=m.amount,c=m.cost||0;switch(m.type){
+    case 'contribute':cash+=a;break;case 'buy':cash-=a;inv+=a;break;case 'sell':cash+=a;inv-=c;break;
+    case 'lend':cash-=a;lent+=a;break;case 'repaid':cash+=a;lent-=c;break;case 'expense':cash-=a;break;}}
+    return {cash,inv,lent};}
+
+  decorate(m){const T=this.typeMeta[m.type];let cls,badge,amt,note='';
+    if(m.type==='expense'){cls='neg';badge='d-out';amt='– '+this.fmt(m.amount);}
+    else if(['contribute','sell','repaid'].includes(m.type)){cls='pos';badge='d-in';amt='+ '+this.fmt(m.amount);}
+    else {cls='neu';badge='d-move';amt=this.fmt(m.amount);}
+    if(m.type==='sell')note='Ganancia '+this.fmt(m.amount-(m.cost||0));
+    else if(m.type==='repaid')note='Interés '+this.fmt(m.amount-(m.cost||0));
+    else if(m.type==='buy')note='→ Inventario';else if(m.type==='lend')note='→ Prestado';
+    return {title:T.label,concept:m.concept,note,amt,cls,badge,icon:this.icon(m.type,18),by:m.by||'?',byInit:(m.by||'?')[0].toUpperCase(),day:m.day};}
+
+  ordered(list){const order=['Hoy','Ayer','Esta semana'];const out=[];
+    for(const lbl of order){const items=list.filter(m=>m.day===lbl).slice().reverse();for(const it of items)out.push(this.decorate(it));}
+    return out;}
+
+  flash(msg){this.setState({toast:msg});clearTimeout(this._t);this._t=setTimeout(()=>this.setState({toast:''}),1800);}
+
+  save(){const amt=parseInt(this.state.amountStr||'0');if(amt<=0)return;
+    const t=this.state.mType;const needsCost=t==='sell'||t==='repaid';
+    const mv={type:t,amount:amt,cost:needsCost?parseInt(this.state.costStr||'0'):undefined,
+      concept:this.state.concept||this.typeMeta[t].label,by:this.state.user,day:'Hoy'};
+    this.setState({movements:[...this.state.movements,mv],addOpen:false});this.flash('Movimiento registrado');}
+
+  collect(loanId,n){const s=this.state;const loan=s.loans.find(l=>l.id===loanId);if(!loan)return;
+    const it=loan.installments.find(x=>x.n===n);if(!it||it.status==='cobrada')return;
+    const loans=s.loans.map(l=>l.id!==loanId?l:{...l,installments:l.installments.map(x=>x.n===n?{...x,status:'cobrada'}:x)});
+    const mv={type:'repaid',amount:it.amount,cost:it.principal,concept:loan.borrowerName+' · cuota '+n,by:s.user,day:'Hoy'};
+    this.setState({loans,movements:[...s.movements,mv]});this.flash('Cobro registrado');}
+
+  renderVals(){
+    const s=this.state;const tdy=this.today();
+    const b=this.buckets(s.movements);const total=b.cash+b.inv+b.lent;
+    const posT=Math.max(b.cash,0)+Math.max(b.inv,0)+Math.max(b.lent,0);
+    const pct=v=>(posT>0?(Math.max(v,0)/posT*100):0).toFixed(1)+'%';
+    const u=s.user;const userInitial=u[0].toUpperCase();
+    const all=this.ordered(s.movements);
+    const profitSales=s.movements.filter(m=>m.type==='sell').reduce((a,m)=>a+(m.amount-(m.cost||0)),0);
+    const profitInterest=s.movements.filter(m=>m.type==='repaid').reduce((a,m)=>a+(m.amount-(m.cost||0)),0);
+
+    const types=Object.keys(this.typeMeta).map(k=>{const m=this.typeMeta[k];
+      return {key:k,label:m.label,hint:m.hint,activeClass:s.mType===k?'on':'',dotClass:'tdot d-'+m.dir,icon:this.icon(k,15),
+        on:()=>this.setState({mType:k})};});
+    const needsCost=s.mType==='sell'||s.mType==='repaid';
+
+    const overdueCount=s.loans.reduce((a,l)=>a+l.installments.filter(x=>x.status==='pendiente'&&x.date<tdy).length,0);
+
+    const loansList=s.loans.map(l=>{const pend=l.installments.filter(x=>x.status==='pendiente');
+      const cob=l.installments.filter(x=>x.status==='cobrada').length;
+      const over=pend.filter(x=>x.date<tdy).length;
+      const pendAmt=pend.reduce((a,it)=>a+it.amount,0);
+      return {borrower:l.borrowerName,initial:(l.borrowerName||'?')[0],onCls:s.curLoan===l.id?'on':'',
+        sub:cob+'/'+l.installments.length+' cobradas'+(over>0?' · '+over+' vencida'+(over>1?'s':''):''),
+        pend:this.fmt(pendAmt),warn:over>0?('⚠ '+over+' vencida'+(over>1?'s':'')):'al día',warnClass:over>0?'badge-warn':'mut',
+        open:()=>this.setState({curLoan:l.id})};});
+
+    let loanBorrower='',loanInit='',loanPrestado='',loanEsper='',loanCobrado='',loanPend='',loanAnnual='',loanInsts=[];
+    const cl=s.loans.find(l=>l.id===s.curLoan)||s.loans[0];
+    if(cl){const insts=cl.installments;
+      loanBorrower=cl.borrowerName;loanInit=(cl.borrowerName||'?')[0];loanPrestado=this.fmt(cl.capital);
+      loanEsper=this.fmt(insts.reduce((a,it)=>a+it.interest,0));
+      loanCobrado=this.fmt(insts.filter(x=>x.status==='cobrada').reduce((a,it)=>a+it.amount,0));
+      loanPend=this.fmt(insts.filter(x=>x.status==='pendiente').reduce((a,it)=>a+it.amount,0));
+      const days=this.periodDays(cl.freq)*insts.length;loanAnnual=(days>0?cl.rate*365/days:0).toFixed(0)+'%';
+      loanInsts=insts.map(it=>{const overdue=it.status==='pendiente'&&it.date<tdy;
+        const stLabel=it.status==='cobrada'?'Cobrada':(overdue?'Vencida':'Pendiente');
+        const stClass=it.status==='cobrada'?'st-cob':(overdue?'st-ven':'st-pen');
+        return {n:it.n,dateStr:this.fmtDate(it.date),amt:this.fmt(it.amount),stLabel,stClass,
+          btnLabel:it.status==='cobrada'?'✓ Cobrada':'Cobrar',btnDisabled:it.status==='cobrada',
+          collect:it.status==='cobrada'?()=>{}:()=>this.collect(cl.id,it.n)};});}
+
+    const titles={panel:['Panel','Resumen del capital compartido'],loans:['Préstamos','Capital prestado y cronogramas'],activity:['Actividad','Todos los movimientos del grupo']};
+    const tt=titles[s.nav]||titles.panel;
+
+    return {
+      isPanel:s.nav==='panel',isLoans:s.nav==='loans',isActivity:s.nav==='activity',
+      navPanel:s.nav==='panel'?'on':'',navLoans:s.nav==='loans'?'on':'',navActivity:s.nav==='activity'?'on':'',
+      goPanel:()=>this.setState({nav:'panel'}),goLoansNav:()=>this.setState({nav:'loans'}),goActivityNav:()=>this.setState({nav:'activity'}),
+      pageTitle:tt[0],pageSub:tt[1],
+      groupName:s.groupName,userName:u,userInitial,userEmail:'rosa@cocapital.pe',
+      overdueCount:overdueCount>0?overdueCount:null,
+      totalStr:this.fmt(total),cashStr:this.fmt(b.cash),invStr:this.fmt(b.inv),lentStr:this.fmt(b.lent),
+      cashPct:pct(b.cash),invPct:pct(b.inv),lentPct:pct(b.lent),
+      recent:all.slice(0,6),allActivity:all,
+      profitSales:this.fmt(profitSales),profitInterest:this.fmt(profitInterest),profitTotal:this.fmt(profitSales+profitInterest),
+      loansList,loanBorrower,loanInit,loanPrestado,loanEsper,loanCobrado,loanPend,loanAnnual,loanInsts,
+      addOpen:s.addOpen,openAdd:()=>this.setState({addOpen:true,mType:'contribute',amountStr:'',costStr:'',concept:''}),
+      closeAdd:()=>this.setState({addOpen:false}),stop:e=>e.stopPropagation(),
+      types,needsCost,costLabel:s.mType==='sell'?'Costo de lo vendido (S/)':'Capital prestado (S/)',
+      amountStr:s.amountStr,onAmount:e=>this.setState({amountStr:e.target.value.replace(/\D/g,'')}),
+      costStr:s.costStr,onCost:e=>this.setState({costStr:e.target.value.replace(/\D/g,'')}),
+      concept:s.concept,onConcept:e=>this.setState({concept:e.target.value}),
+      saveDisabled:parseInt(s.amountStr||'0')<=0,save:()=>this.save(),
+      toast:s.toast,
+    };
+  }
+}
+</script>
+</body>
+</html>
