@@ -15,13 +15,3 @@ export async function createGroupAction(formData: FormData) {
   revalidatePath("/");
   redirect("/");
 }
-
-export async function joinGroupAction(code: string) {
-  const user = await requireUser();
-  const result = await data.joinGroup(user.id, code);
-  if (!result.ok) {
-    return { ok: false as const, error: result.error.kind };
-  }
-  revalidatePath("/");
-  redirect("/");
-}

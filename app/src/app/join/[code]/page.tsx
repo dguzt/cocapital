@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { requireUser } from "@/backend/modules/accounts/current-user";
-import { joinGroupAction } from "@/backend/modules/groups/actions";
+import { joinGroup } from "@/backend/modules/groups/data";
 import { Button } from "@/components/ui/button";
 
 const ERROR_TEXT: Record<string, { title: string; body: string }> = {
@@ -23,11 +24,15 @@ export default async function JoinPage({
 }: {
   params: Promise<{ code: string }>;
 }) {
-  await requireUser();
+  const user = await requireUser();
   const { code } = await params;
-  // joinGroupAction redirects to "/" on success; returns only on error.
-  const result = await joinGroupAction(code.toUpperCase());
-  const err = ERROR_TEXT[result?.error ?? ""] ?? ERROR_TEXT.InviteNotFound;
+  // Direct data-layer call: pages render — they never go through actions
+  // (actions revalidate, and revalidation is illegal during render).
+  const result = await joinGroup(user.id, code.toUpperCase());
+  if (result.ok) {
+    redirect("/");
+  }
+  const err = ERROR_TEXT[result.error.kind] ?? ERROR_TEXT.InviteNotFound;
 
   return (
     <main className="flex min-h-screen items-center justify-center p-4">
