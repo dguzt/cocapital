@@ -8,6 +8,7 @@ import { Activity, LayoutGrid, LogOut, Package } from "lucide-react";
 import Link from "next/link";
 import type { SessionUser } from "@/backend/modules/accounts/current-user";
 import type { GroupWithMembers } from "@/backend/modules/groups/data";
+import { MobileMenu } from "@/components/shell/mobile-menu";
 import { Button } from "@/components/ui/button";
 
 export type NavKey = "panel" | "loans" | "activity";
@@ -160,19 +161,13 @@ export function AppShell({
             <p className="truncate font-semibold leading-tight">{group.name}</p>
             <p className="text-[12px] text-muted-foreground">{title}</p>
           </div>
-          {NAV.filter((n) => n.key !== active).map((n) => (
-            <Link
-              key={n.key}
-              href={n.href}
-              className="relative text-muted-foreground"
-              aria-label={n.label}
-            >
-              {n.icon}
-              {n.key === "loans" && overdueCount > 0 && (
-                <span className="absolute -right-1.5 -top-1.5 size-2 rounded-full bg-red-400" />
-              )}
-            </Link>
-          ))}
+          <MobileMenu
+            items={NAV.map(({ key, href, label }) => ({ key, href, label }))}
+            active={active}
+            overdueCount={overdueCount}
+            userName={user.name}
+            userEmail={user.email}
+          />
         </header>
 
         {/* desktop topbar */}

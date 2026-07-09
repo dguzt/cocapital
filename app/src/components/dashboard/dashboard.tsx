@@ -76,24 +76,29 @@ export function PanelContent({
               />
             ))}
           </div>
-          <div className="mt-5 grid grid-cols-3 gap-3.5">
+          {/* Phones: full-width rows (nothing can truncate). ≥sm: 3 columns. */}
+          <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3.5">
             {buckets.map((b) => (
               <div
                 key={b.label}
-                className="rounded-xl border border-border bg-sidebar p-4"
+                className="flex items-center gap-3 rounded-xl border border-border bg-sidebar p-3.5 sm:block sm:p-4"
               >
-                <div className="flex items-center gap-2">
-                  <span className={`size-2.5 rounded-sm ${b.swatch}`} />
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span
+                    className={`size-2.5 shrink-0 rounded-sm ${b.swatch}`}
+                  />
+                  <span className="truncate text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                     {b.label}
                   </span>
                 </div>
-                <p className="mt-2.5 font-mono font-semibold tabular-nums text-base md:text-[22px]">
-                  {formatCents(b.value)}
-                </p>
-                <p className="mt-0.5 font-mono text-[11.5px] text-zinc-500 tabular-nums">
-                  {pct(b.value)} del capital
-                </p>
+                <div className="ml-auto text-right sm:ml-0 sm:mt-2.5 sm:text-left">
+                  <p className="whitespace-nowrap font-mono font-semibold tabular-nums text-[15px] sm:text-base md:text-[22px]">
+                    {formatCents(b.value)}
+                  </p>
+                  <p className="mt-0.5 whitespace-nowrap font-mono text-[11px] text-zinc-500 tabular-nums sm:text-[11.5px]">
+                    {pct(b.value)} del capital
+                  </p>
+                </div>
               </div>
             ))}
           </div>
