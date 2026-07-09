@@ -59,7 +59,7 @@ export function PanelContent({
   const totalProfit = capital.salesProfit + capital.collectedInterest;
 
   return (
-    <div className="grid gap-5 md:grid-cols-[1.55fr_1fr] md:items-start">
+    <div className="grid gap-5 xl:grid-cols-[1.55fr_1fr] xl:items-start">
       <div className="flex min-w-0 flex-col gap-5">
         {/* hero */}
         <section className="rounded-2xl border border-border bg-gradient-to-br from-card to-[#121215] p-6 md:p-7">
@@ -94,7 +94,7 @@ export function PanelContent({
                   </span>
                 </div>
                 <div className="ml-auto text-right sm:ml-0 sm:mt-2.5 sm:text-left">
-                  <p className="whitespace-nowrap font-mono font-semibold tabular-nums text-[15px] sm:text-base md:text-[22px]">
+                  <p className="whitespace-nowrap font-mono font-semibold tabular-nums text-[15px] sm:text-base xl:text-[22px]">
                     {formatCents(b.value)}
                   </p>
                   <p className="mt-0.5 whitespace-nowrap font-mono text-[11px] text-zinc-500 tabular-nums sm:text-[11.5px]">
@@ -130,7 +130,7 @@ export function PanelContent({
             </div>
           ) : (
             <>
-              <div className="mt-2 hidden md:block">
+              <div className="mt-2 hidden overflow-x-auto md:block">
                 <ActivityTable
                   movements={movements}
                   today={today}
@@ -202,7 +202,7 @@ export function PanelContent({
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
                   {g.label}
                 </p>
-                <p className="mt-1.5 font-mono text-[22px] font-semibold text-emerald-400 tabular-nums">
+                <p className="mt-1.5 whitespace-nowrap font-mono text-lg font-semibold text-emerald-400 tabular-nums xl:text-[22px]">
                   {formatCents(g.value)}
                 </p>
               </div>

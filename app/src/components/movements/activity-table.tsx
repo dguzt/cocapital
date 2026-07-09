@@ -69,19 +69,19 @@ export function ActivityTable({
                   </div>
                 </td>
                 <td className="py-3 pr-3">
-                  <span className="inline-flex items-center gap-2 text-[13px] text-muted-foreground">
+                  <span className="inline-flex items-center gap-2 whitespace-nowrap text-[13px] text-muted-foreground">
                     <span className="flex size-[22px] items-center justify-center rounded-full bg-secondary text-[11px] font-semibold">
                       {it.authorInitial}
                     </span>
                     {it.author}
                   </span>
                 </td>
-                <td className="py-3 pr-3 text-[13px] text-muted-foreground">
+                <td className="whitespace-nowrap py-3 pr-3 text-[13px] text-muted-foreground">
                   {it.day}
                 </td>
                 <td className="py-3 text-right">
                   <span
-                    className={`block font-mono text-[14.5px] font-medium tabular-nums ${it.amountCls} ${it.voided ? "line-through opacity-50" : ""}`}
+                    className={`block whitespace-nowrap font-mono text-[14.5px] font-medium tabular-nums ${it.amountCls} ${it.voided ? "line-through opacity-50" : ""}`}
                   >
                     {it.amountText}
                   </span>

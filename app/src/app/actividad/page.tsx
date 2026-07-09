@@ -44,7 +44,7 @@ export default async function ActivityPage() {
             </p>
           ) : (
             <>
-              <div className="hidden md:block">
+              <div className="hidden overflow-x-auto md:block">
                 <ActivityTable
                   movements={movements}
                   today={today}
