@@ -92,3 +92,20 @@ export const PERIOD_DAYS: Record<Frequency, number> = {
   biweekly: 15,
   monthly: 30,
 };
+
+/** The Lima calendar day a timestamp falls on. */
+export function limaDateOf(instant: Date): ISODate {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Lima",
+  }).format(instant);
+}
+
+/** "14:32" — Lima wall-clock time of a timestamp (24h, compact). */
+export function limaTimeOf(instant: Date): string {
+  return new Intl.DateTimeFormat("es-PE", {
+    timeZone: "America/Lima",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(instant);
+}

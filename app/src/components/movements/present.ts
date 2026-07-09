@@ -1,6 +1,7 @@
 /** Shared presenter: one movement → everything the feed/table shows. */
 import type { LedgerMovement } from "@/backend/modules/movements/data";
 import type { ISODate } from "@/lib/dates";
+import { limaDateOf, limaTimeOf } from "@/lib/dates";
 import { formatCents } from "@/lib/money";
 import { DIR_BADGE, MOVEMENT_META } from "./movement-meta";
 
@@ -54,6 +55,8 @@ export function presentMovement(
             ? "→ Prestado"
             : null;
 
+  // "Cuándo" = registry time (createdAt), exact: "Hoy · 14:32", "8 ago · 09:15".
+  const registeredDay = dayLabel(limaDateOf(m.createdAt), today);
   return {
     id: m.id,
     title: meta.label,
@@ -62,7 +65,7 @@ export function presentMovement(
     initial: meta.label[0],
     author: m.authorName,
     authorInitial: m.authorName[0]?.toUpperCase() ?? "?",
-    day: dayLabel(m.date, today),
+    day: `${registeredDay} · ${limaTimeOf(m.createdAt)}`,
     amountText: amount.text,
     amountCls: amount.cls,
     note,
