@@ -1,0 +1,15 @@
+import { fileURLToPath } from "node:url";
+import { defineConfig } from "vitest/config";
+
+/** Integration suite: real Neon test branch, sequential (shared DB state). */
+export default defineConfig({
+  resolve: {
+    alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
+  },
+  test: {
+    include: ["src/**/*.int.test.ts"],
+    setupFiles: ["src/test/integration-setup.ts"],
+    fileParallelism: false,
+    testTimeout: 30_000,
+  },
+});

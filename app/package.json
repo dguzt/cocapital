@@ -10,7 +10,9 @@
     "format": "biome format --write",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:int": "vitest run --config vitest.integration.config.ts",
     "check": "biome check && tsc --noEmit && vitest run",
+    "check:full": "npm run check && npm run test:int",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio"
