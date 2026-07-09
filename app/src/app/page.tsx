@@ -1,9 +1,10 @@
 import { requireUser } from "@/backend/modules/accounts/current-user";
 import { findGroupOf } from "@/backend/modules/groups/data";
+import { listGroupInstallments } from "@/backend/modules/loans/data";
 import { listMovements } from "@/backend/modules/movements/data";
 import { Dashboard } from "@/components/dashboard/dashboard";
 import { Onboarding } from "@/components/onboarding/onboarding";
-import { todayInLima } from "@/lib/dates";
+import { isOverdue, todayInLima } from "@/lib/dates";
 
 export default async function HomePage({
   searchParams,
@@ -18,13 +19,23 @@ export default async function HomePage({
     return <Onboarding userName={user.name} error={error} />;
   }
 
-  const movements = await listMovements(group.id);
+  const today = todayInLima();
+  const [movements, installments] = await Promise.all([
+    listMovements(group.id),
+    listGroupInstallments(group.id),
+  ]);
+  const overdueCount = installments.filter(
+    (i) => i.status === "pending" && isOverdue(i.dueDate, today),
+  ).length;
+
   return (
     <Dashboard
       user={user}
       group={group}
       movements={movements}
-      today={todayInLima()}
+      installments={installments}
+      overdueCount={overdueCount}
+      today={today}
     />
   );
 }

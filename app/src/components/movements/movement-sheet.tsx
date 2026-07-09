@@ -44,14 +44,14 @@ const ERROR_TEXT: Record<string, string> = {
   NoGroup: "Aún no perteneces a un grupo.",
 };
 
-/** Manual types in the sheet's visual order; lend/repay disabled until E3. */
-const SHEET_TYPES: { type: MovementType; enabled: boolean }[] = [
-  { type: "contribute", enabled: true },
-  { type: "buy_inventory", enabled: true },
-  { type: "sell_inventory", enabled: true },
-  { type: "expense", enabled: true },
-  { type: "lend", enabled: false },
-  { type: "repay", enabled: false },
+/** Manual types record here; lend/repay open their own flows (D3 #7). */
+const SHEET_TYPES: { type: MovementType; href?: string }[] = [
+  { type: "contribute" },
+  { type: "buy_inventory" },
+  { type: "sell_inventory" },
+  { type: "expense" },
+  { type: "lend", href: "/prestamos/nuevo" },
+  { type: "repay", href: "/prestamos" },
 ];
 
 export function MovementSheet() {
@@ -103,20 +103,26 @@ export function MovementSheet() {
           </DrawerHeader>
 
           <div className="grid grid-cols-3 gap-2">
-            {SHEET_TYPES.map(({ type: t, enabled }) => {
+            {SHEET_TYPES.map(({ type: t, href }) => {
               const meta = MOVEMENT_META[t];
-              const active = type === t;
+              const active = type === t && !href;
               return (
                 <button
                   key={t}
                   type="button"
-                  disabled={!enabled}
-                  onClick={() => setType(t)}
+                  onClick={() => {
+                    if (href) {
+                      setOpen(false);
+                      router.push(href);
+                    } else {
+                      setType(t);
+                    }
+                  }}
                   className={`flex flex-col gap-2 rounded-xl border p-3 text-left transition-colors ${
                     active
                       ? "border-emerald-400 bg-emerald-400/10"
                       : "border-border bg-background hover:border-muted-foreground/40"
-                  } ${enabled ? "" : "opacity-40"}`}
+                  }`}
                 >
                   <span
                     className={`flex size-7 items-center justify-center rounded-lg ${DIR_BADGE[meta.dir]}`}
@@ -128,7 +134,7 @@ export function MovementSheet() {
                       {meta.label}
                     </span>
                     <span className="block text-[11px] text-muted-foreground">
-                      {enabled ? meta.hint : "Muy pronto"}
+                      {meta.hint}
                     </span>
                   </span>
                 </button>

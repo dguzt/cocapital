@@ -4,12 +4,16 @@
  * Mobile-first; desktop gets the two-column grid.
  */
 import { UserButton } from "@clerk/nextjs";
+import { HandCoins } from "lucide-react";
+import Link from "next/link";
 import type { SessionUser } from "@/backend/modules/accounts/current-user";
+import type { CapitalInstallment } from "@/backend/modules/capital/domain/derive";
 import { deriveCapital } from "@/backend/modules/capital/domain/derive";
 import type { GroupWithMembers } from "@/backend/modules/groups/data";
 import type { LedgerMovement } from "@/backend/modules/movements/data";
 import { ActivityFeed } from "@/components/movements/activity-feed";
 import { MovementSheet } from "@/components/movements/movement-sheet";
+import { Button } from "@/components/ui/button";
 import type { ISODate } from "@/lib/dates";
 import { formatCents } from "@/lib/money";
 import { InviteBanner } from "./invite-banner";
@@ -18,15 +22,18 @@ export function Dashboard({
   user,
   group,
   movements,
+  installments,
+  overdueCount,
   today,
 }: {
   user: SessionUser;
   group: GroupWithMembers;
   movements: LedgerMovement[];
+  installments: CapitalInstallment[];
+  overdueCount: number;
   today: ISODate;
 }) {
-  // E3 wires real installments; until then the loan terms are all pending.
-  const capital = deriveCapital(movements, []);
+  const capital = deriveCapital(movements, installments);
   const positive =
     Math.max(capital.cash, 0) +
     Math.max(capital.inventory, 0) +
@@ -54,6 +61,16 @@ export function Dashboard({
             {group.members.length}/2 socios
           </p>
         </div>
+        <Button asChild variant="secondary" size="sm" className="relative">
+          <Link href="/prestamos">
+            <HandCoins className="size-4" /> Préstamos
+            {overdueCount > 0 && (
+              <span className="ml-1 rounded-full bg-red-400/15 px-1.5 font-mono text-[11px] font-semibold text-red-400">
+                {overdueCount}
+              </span>
+            )}
+          </Link>
+        </Button>
         <div className="hidden md:block">
           <MovementSheet />
         </div>

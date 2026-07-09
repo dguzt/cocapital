@@ -1,0 +1,92 @@
+import { ArrowLeft, Plus } from "lucide-react";
+import Link from "next/link";
+import { requireUser } from "@/backend/modules/accounts/current-user";
+import { findGroupOf } from "@/backend/modules/groups/data";
+import { listLoans } from "@/backend/modules/loans/data";
+import { Button } from "@/components/ui/button";
+import { todayInLima } from "@/lib/dates";
+import { formatCents } from "@/lib/money";
+
+export default async function LoansPage() {
+  const user = await requireUser();
+  const group = await findGroupOf(user.id);
+  if (!group) {
+    return null;
+  }
+  const loans = await listLoans(group.id, todayInLima());
+
+  return (
+    <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-5 p-4 pt-8 md:p-8">
+      <header className="flex items-center gap-3">
+        <Button asChild variant="ghost" size="icon">
+          <Link href="/" aria-label="Volver al panel">
+            <ArrowLeft className="size-5" />
+          </Link>
+        </Button>
+        <div className="flex-1">
+          <h1 className="font-semibold text-xl leading-tight">Préstamos</h1>
+          <p className="text-[13px] text-muted-foreground">
+            Capital prestado y cronogramas
+          </p>
+        </div>
+        <Button asChild>
+          <Link href="/prestamos/nuevo">
+            <Plus className="size-4" /> Nuevo préstamo
+          </Link>
+        </Button>
+      </header>
+
+      {loans.length === 0 ? (
+        <section className="flex flex-1 flex-col items-center justify-center rounded-2xl border border-dashed border-border p-10 text-center">
+          <div className="flex size-14 items-center justify-center rounded-2xl bg-emerald-400/15 text-2xl text-emerald-400">
+            →
+          </div>
+          <p className="mt-4 font-medium">Aún no hay préstamos</p>
+          <p className="mt-1 max-w-xs text-muted-foreground text-sm">
+            Crea el primero: el cronograma de cuotas se genera solo.
+          </p>
+          <Button asChild className="mt-4">
+            <Link href="/prestamos/nuevo">Crear préstamo</Link>
+          </Button>
+        </section>
+      ) : (
+        <ul className="space-y-2.5">
+          {loans.map((loan) => (
+            <li key={loan.id}>
+              <Link
+                href={`/prestamos/${loan.id}`}
+                className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:border-muted-foreground/40"
+              >
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary font-semibold">
+                  {loan.borrowerName[0]}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[15px] font-semibold">
+                    {loan.borrowerName}
+                  </span>
+                  <span className="block text-[13px] text-muted-foreground">
+                    {loan.collectedCount}/{loan.totalCount} cobradas
+                    {loan.overdueCount > 0 &&
+                      ` · ${loan.overdueCount} vencida${loan.overdueCount > 1 ? "s" : ""}`}
+                  </span>
+                </span>
+                <span className="text-right">
+                  <span className="block font-mono text-[15px] font-medium tabular-nums">
+                    {formatCents(loan.pendingAmount)}
+                  </span>
+                  <span
+                    className={`block text-xs font-semibold ${loan.overdueCount > 0 ? "text-destructive" : "text-muted-foreground"}`}
+                  >
+                    {loan.overdueCount > 0
+                      ? `⚠ ${loan.overdueCount} vencida${loan.overdueCount > 1 ? "s" : ""}`
+                      : "al día"}
+                  </span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
