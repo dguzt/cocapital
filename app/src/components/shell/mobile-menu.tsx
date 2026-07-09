@@ -1,6 +1,6 @@
 "use client";
 /** The mobile hamburger (D3 #7): full nav + user card in a bottom drawer. */
-import { SignOutButton } from "@clerk/nextjs";
+import { SignOutButton, UserButton } from "@clerk/nextjs";
 import { Activity, LayoutGrid, LogOut, Menu, Package } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -69,9 +69,9 @@ export function MobileMenu({
             ))}
           </nav>
           <div className="mt-4 flex items-center gap-3 border-t border-border pt-4">
-            <span className="flex size-9 items-center justify-center rounded-full bg-emerald-400 font-semibold text-emerald-950">
-              {userName[0]?.toUpperCase()}
-            </span>
+            {/* Clerk's account modal: profile, security, connected accounts */}
+            <UserButton />
+
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-semibold">
                 {userName}

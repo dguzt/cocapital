@@ -3,7 +3,7 @@
  * (brand · group chip · nav with overdue badge · user card) + topbar with
  * page title/actions. On mobile the sidebar collapses to a compact header.
  */
-import { SignOutButton } from "@clerk/nextjs";
+import { SignOutButton, UserButton } from "@clerk/nextjs";
 import { Activity, LayoutGrid, LogOut, Package } from "lucide-react";
 import Link from "next/link";
 import type { SessionUser } from "@/backend/modules/accounts/current-user";
@@ -126,9 +126,7 @@ export function AppShell({
         </nav>
 
         <div className="mt-auto flex items-center gap-2.5 border-t border-border pt-3">
-          <span className="flex size-8 items-center justify-center rounded-full bg-emerald-400 text-sm font-semibold text-emerald-950">
-            {user.name[0]?.toUpperCase()}
-          </span>
+          <UserButton />
           <span className="min-w-0 flex-1">
             <span className="block truncate text-[13.5px] font-semibold">
               {user.name}
