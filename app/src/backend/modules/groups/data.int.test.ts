@@ -1,14 +1,9 @@
 /** E1 integration: group create/join against the real test branch. */
 import { beforeEach, describe, expect, it } from "vitest";
+import { truncateAll } from "@/test/truncate";
 import { db } from "../../infra/db/client";
-import { groups, memberships, users } from "../../infra/db/schema";
+import { users } from "../../infra/db/schema";
 import { createGroup, findGroupOf, joinGroup } from "./data";
-
-async function truncate() {
-  await db.delete(memberships);
-  await db.delete(groups);
-  await db.delete(users);
-}
 
 async function mkUser(clerkId: string, name: string) {
   const [u] = await db
@@ -18,7 +13,7 @@ async function mkUser(clerkId: string, name: string) {
   return u;
 }
 
-beforeEach(truncate);
+beforeEach(truncateAll);
 
 describe("E1: create → invite → join → full", () => {
   it("runs the whole onboarding flow", async () => {

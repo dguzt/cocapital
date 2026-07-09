@@ -12,11 +12,10 @@ export const INVITE_CODE_LENGTH = 8;
 
 /** 8 chars from an unambiguous alphabet, from caller-provided randomness. */
 export function makeInviteCode(randomBytes: Uint8Array): string {
-  let code = "";
-  for (let i = 0; i < INVITE_CODE_LENGTH; i++) {
-    code += INVITE_ALPHABET[randomBytes[i] % INVITE_ALPHABET.length];
-  }
-  return code;
+  return Array.from(
+    randomBytes.slice(0, INVITE_CODE_LENGTH),
+    (byte) => INVITE_ALPHABET[byte % INVITE_ALPHABET.length],
+  ).join("");
 }
 
 export function validateGroupName(name: string): Result<string, GroupError> {

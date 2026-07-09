@@ -124,9 +124,9 @@ describe("generateSchedule — edges", () => {
     ] as const) {
       const s = unwrap({ ...base, frequency, installmentCount: 12 });
       const dates = s.installments.map((i) => i.dueDate);
-      for (let i = 1; i < dates.length; i++) {
-        expect(dates[i] > dates[i - 1]).toBe(true);
-      }
+      dates.slice(1).forEach((d, i) => {
+        expect(d > dates[i]).toBe(true);
+      });
     }
   });
 });

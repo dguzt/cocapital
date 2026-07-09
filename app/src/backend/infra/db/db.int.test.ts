@@ -4,6 +4,7 @@
  * Runs against the isolated Neon "test" branch (see integration-setup.ts).
  */
 import { beforeEach, describe, expect, it } from "vitest";
+import { truncateAll } from "@/test/truncate";
 import { db } from "./client";
 import {
   groups,
@@ -13,6 +14,13 @@ import {
   users,
 } from "./schema";
 
+/** Flatten an error's cause chain into one searchable string, immutably. */
+function causeChain(e: unknown): string {
+  const messages = (err: unknown): string[] =>
+    err instanceof Error ? [err.message, ...messages(err.cause)] : [];
+  return messages(e).join(" ");
+}
+
 /** Drizzle wraps pg errors ("Failed query: …") — the real code/message is in
  *  the cause chain. Asserts a promise rejects with a unique violation. */
 async function expectUniqueViolation(p: Promise<unknown>) {
@@ -20,21 +28,8 @@ async function expectUniqueViolation(p: Promise<unknown>) {
     await p;
     throw new Error("expected a unique-violation rejection, but it resolved");
   } catch (e) {
-    let msg = "";
-    for (let err = e as Error | undefined; err; err = err.cause as Error) {
-      msg += ` ${err.message ?? ""}`;
-    }
-    expect(msg).toMatch(/duplicate key|23505/);
+    expect(causeChain(e)).toMatch(/duplicate key|23505/);
   }
-}
-
-/** Order matters: children before parents (FKs). */
-async function truncateAll() {
-  await db.delete(movementChanges);
-  await db.delete(movements);
-  await db.delete(memberships);
-  await db.delete(groups);
-  await db.delete(users);
 }
 
 async function seedUserAndGroup() {

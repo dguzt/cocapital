@@ -31,9 +31,21 @@ describe("deriveCapital — movement effects", () => {
       cash: 0,
       inventory: 0,
       lent: 0,
+      salesProfit: 0,
       collectedInterest: 0,
       expectedInterest: 0,
     });
+  });
+  it("salesProfit accumulates margin only from costed sells", () => {
+    const s = deriveCapital(
+      [
+        mv("sell_inventory", 12000, { cost: 9000 }), // +30 margin
+        mv("sell_inventory", 5000), // no cost → 0 margin
+        mv("sell_inventory", 8000, { cost: 10000 }), // sold at a loss: −20
+      ],
+      [],
+    );
+    expect(s.salesProfit).toBe(1000); // 3000 + 0 − 2000
   });
   it("contribute adds cash; expense removes it", () => {
     const s = deriveCapital([mv("contribute", 50000), mv("expense", 1000)], []);
