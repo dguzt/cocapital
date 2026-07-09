@@ -7,7 +7,7 @@ Two purposes, one project:
 
 ## Working agreement for the AI
 
-- **GitHub account:** this is a personal project → always use `gh auth switch --user dguzt` before any `gh`/git remote/push. Never use `jhairguzman` here.
+- **GitHub account:** always run `gh auth switch --user dguzt` before any `gh`/git remote/push, and use the `github-dguzt` SSH alias for remotes. No other account is ever used in this repo.
 - **Follow the two-loop flow** in `FLOW.md`. Small requests: just do them. Substantial features: run the flow (Explore → minimal Spec → prototype → gate → decompose → epic specs → develop per usecase/task).
 - **Prototype before big specs.** In Loop A the goal is to validate the hypothesis with the smallest throwaway-OK build, not to write exhaustive specs.
 - **Develop per usecase with the user's supervision** so they learn what's being built; develop non-functional tasks with tests.
