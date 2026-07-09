@@ -48,7 +48,7 @@ export function Dashboard({
           S/
         </div>
         <div className="flex-1">
-          <h1 className="font-semibold text-lg leading-tight">{group.name}</h1>
+          <h1 className="font-semibold text-xl leading-tight">{group.name}</h1>
           <p className="text-muted-foreground text-xs">
             {group.members.map((m) => m.name).join(" · ")} ·{" "}
             {group.members.length}/2 socios
@@ -65,7 +65,7 @@ export function Dashboard({
       <div className="grid gap-5 md:grid-cols-[1.55fr_1fr] md:items-start">
         <div className="flex flex-col gap-5">
           <section className="rounded-2xl border border-border bg-card p-6">
-            <p className="text-[10.5px] font-semibold uppercase tracking-widest text-muted-foreground">
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
               Capital total
             </p>
             <p className="mt-2 font-mono text-5xl font-semibold tracking-tight tabular-nums">
@@ -88,11 +88,11 @@ export function Dashboard({
                 >
                   <div className="flex items-center gap-2">
                     <span className={`size-2.5 rounded-sm ${b.swatch}`} />
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                       {b.label}
                     </span>
                   </div>
-                  <p className="mt-2 font-mono font-semibold tabular-nums text-sm md:text-lg">
+                  <p className="mt-2 font-mono font-semibold tabular-nums text-base md:text-xl">
                     {formatCents(b.value)}
                   </p>
                 </div>
@@ -130,18 +130,18 @@ export function Dashboard({
           <h2 className="font-semibold">Ganancia acumulada</h2>
           <div className="mt-4 grid grid-cols-2 gap-3">
             <div className="rounded-xl border border-border bg-background p-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Por ventas
               </p>
-              <p className="mt-1.5 font-mono font-semibold text-emerald-400 tabular-nums">
+              <p className="mt-1.5 font-mono text-lg font-semibold text-emerald-400 tabular-nums">
                 {formatCents(capital.salesProfit)}
               </p>
             </div>
             <div className="rounded-xl border border-border bg-background p-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Por intereses
               </p>
-              <p className="mt-1.5 font-mono font-semibold text-emerald-400 tabular-nums">
+              <p className="mt-1.5 font-mono text-lg font-semibold text-emerald-400 tabular-nums">
                 {formatCents(capital.collectedInterest)}
               </p>
             </div>

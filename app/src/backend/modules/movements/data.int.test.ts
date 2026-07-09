@@ -13,7 +13,7 @@ async function seed() {
     .insert(users)
     .values({ clerkId: "clerk_diego", name: "Diego", email: "d@test.pe" })
     .returning();
-  const created = await createGroup(diego.id, "Amigos");
+  const created = await createGroup(diego.id, "Inversiones DR");
   if (!created.ok) throw new Error("seed failed");
   return { diego, group: created.value };
 }

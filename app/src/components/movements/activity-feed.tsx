@@ -54,33 +54,31 @@ export function ActivityFeed({
         const amt = amountText(m);
         const n = note(m);
         return (
-          <li key={m.id} className="flex items-center gap-3 py-3">
+          <li key={m.id} className="flex items-center gap-3 py-3.5">
             <span
-              className={`flex size-9 shrink-0 items-center justify-center rounded-xl text-xs font-semibold ${DIR_BADGE[meta.dir]}`}
+              className={`flex size-10 shrink-0 items-center justify-center rounded-xl text-sm font-semibold ${DIR_BADGE[meta.dir]}`}
             >
               {meta.label[0]}
             </span>
             <span className="min-w-0 flex-1">
               <span
-                className={`block truncate text-sm font-medium ${m.status === "voided" ? "line-through opacity-50" : ""}`}
+                className={`block truncate text-[15px] font-medium ${m.status === "voided" ? "line-through opacity-50" : ""}`}
               >
                 {meta.label}
                 {m.concept ? ` · ${m.concept}` : ""}
               </span>
-              <span className="block text-xs text-muted-foreground">
+              <span className="block text-[13px] text-muted-foreground">
                 {m.authorName} · {dayLabel(m.date, today)}
               </span>
             </span>
             <span className="text-right">
               <span
-                className={`block font-mono text-sm font-medium tabular-nums ${amt.cls} ${m.status === "voided" ? "line-through opacity-50" : ""}`}
+                className={`block font-mono text-[15px] font-medium tabular-nums ${amt.cls} ${m.status === "voided" ? "line-through opacity-50" : ""}`}
               >
                 {amt.text}
               </span>
               {n && (
-                <span className="block text-[11px] text-muted-foreground">
-                  {n}
-                </span>
+                <span className="block text-xs text-muted-foreground">{n}</span>
               )}
             </span>
           </li>

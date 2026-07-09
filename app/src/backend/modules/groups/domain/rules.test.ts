@@ -17,8 +17,8 @@ describe("makeInviteCode", () => {
 
 describe("validateGroupName", () => {
   it("trims and accepts", () => {
-    const r = validateGroupName("  Amigos  ");
-    expect(r.ok && r.value === "Amigos").toBe(true);
+    const r = validateGroupName("  Inversiones DR  ");
+    expect(r.ok && r.value === "Inversiones DR").toBe(true);
   });
   it.each(["", "   ", "x".repeat(41)])("rejects %j", (name) => {
     const r = validateGroupName(name);

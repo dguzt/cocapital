@@ -1,8 +1,8 @@
 import { createGroupAction } from "@/backend/modules/groups/actions";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SubmitButton } from "@/components/ui/submit-button";
 
 const ERROR_TEXT: Record<string, string> = {
   InvalidGroupName: "El nombre debe tener entre 1 y 40 caracteres.",
@@ -40,19 +40,23 @@ export function Onboarding({
                 <Input
                   id="name"
                   name="name"
-                  placeholder="Ej. Amigos"
+                  placeholder="Ej. Inversiones D&R"
                   maxLength={40}
                   required
+                  className="h-12 text-base"
                 />
               </div>
               {error && (
-                <p className="text-sm text-red-400">
+                <p className="text-sm text-destructive">
                   {ERROR_TEXT[error] ?? "Algo salió mal. Intenta de nuevo."}
                 </p>
               )}
-              <Button type="submit" className="w-full">
+              <SubmitButton
+                className="h-12 w-full"
+                pendingText="Creando grupo…"
+              >
                 Crear grupo
-              </Button>
+              </SubmitButton>
             </form>
           </CardContent>
         </Card>

@@ -21,10 +21,10 @@ describe("E1: create → invite → join → full", () => {
     const rosa = await mkUser("clerk_rosa", "Rosa");
 
     // UC-102: Diego creates the group
-    const created = await createGroup(diego.id, "  Amigos  ");
+    const created = await createGroup(diego.id, "  Inversiones DR  ");
     expect(created.ok).toBe(true);
     if (!created.ok) return;
-    expect(created.value.name).toBe("Amigos"); // trimmed
+    expect(created.value.name).toBe("Inversiones DR"); // trimmed
     expect(created.value.inviteCode).toMatch(/^[A-Z2-9]{8}$/);
     expect(created.value.members.map((m) => m.role)).toEqual(["creator"]);
 
@@ -50,7 +50,7 @@ describe("E1: create → invite → join → full", () => {
 
   it("rejects a second group for the same user", async () => {
     const diego = await mkUser("clerk_diego", "Diego");
-    await createGroup(diego.id, "Amigos");
+    await createGroup(diego.id, "Inversiones DR");
     const second = await createGroup(diego.id, "Otro");
     expect(!second.ok && second.error.kind === "AlreadyInGroup").toBe(true);
   });

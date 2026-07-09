@@ -159,7 +159,7 @@ export function MovementSheet() {
                   placeholder="0.00"
                   value={cost}
                   onChange={(e) => setCost(e.target.value)}
-                  className="font-mono tabular-nums"
+                  className="h-12 font-mono text-base tabular-nums"
                 />
                 <p className="text-[11px] text-muted-foreground">
                   Con el costo, la ganancia de la venta entra al capital.
@@ -173,6 +173,7 @@ export function MovementSheet() {
                 placeholder="Ej. 3 perfumes · feria"
                 value={concept}
                 onChange={(e) => setConcept(e.target.value)}
+                className="h-12 text-base"
               />
             </div>
             <Button

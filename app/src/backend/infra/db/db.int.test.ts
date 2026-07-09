@@ -39,7 +39,7 @@ async function seedUserAndGroup() {
     .returning();
   const [group] = await db
     .insert(groups)
-    .values({ name: "Amigos", inviteCode: "TESTCODE01" })
+    .values({ name: "Inversiones DR", inviteCode: "TESTCODE01" })
     .returning();
   return { user, group };
 }
