@@ -74,3 +74,21 @@ export function addPeriods(
 export function isOverdue(dueDate: ISODate, today: ISODate): boolean {
   return dueDate < today;
 }
+
+const SHORT_MONTHS = "ene feb mar abr may jun jul ago sep oct nov dic".split(
+  " ",
+);
+
+/** "2026-08-08" → "8 ago" (cronograma rows, activity dates). */
+export function formatDayMonth(date: ISODate): string {
+  const [, m, d] = date.split("-").map(Number);
+  return `${d} ${SHORT_MONTHS[m - 1]}`;
+}
+
+/** Approximate loan length in days — the D3 "interés anual ~X%" reference. */
+export const PERIOD_DAYS: Record<Frequency, number> = {
+  daily: 1,
+  weekly: 7,
+  biweekly: 15,
+  monthly: 30,
+};
