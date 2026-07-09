@@ -5,7 +5,7 @@ import { type DecideInput, decideChange, proposeChange } from "./pending";
 const snapshot: MovementSnapshot = {
   type: "contribute",
   amount: 5000, // S/50 — the D1 example
-  costo: null,
+  cost: null,
   concept: "aporte",
   date: "2026-07-09",
 };

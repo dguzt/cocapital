@@ -1,38 +1,38 @@
 import { describe, expect, it } from "vitest";
-import { formatCentimos, solesToCentimos, splitEvenly } from "./money";
+import { formatCents, solesToCents, splitEvenly } from "./money";
 
-describe("solesToCentimos", () => {
+describe("solesToCents", () => {
   it("parses plain amounts", () => {
-    expect(solesToCentimos("36.66")).toBe(3666);
-    expect(solesToCentimos("300")).toBe(30000);
-    expect(solesToCentimos(82.5)).toBe(8250);
+    expect(solesToCents("36.66")).toBe(3666);
+    expect(solesToCents("300")).toBe(30000);
+    expect(solesToCents(82.5)).toBe(8250);
   });
   it("parses thousands separators", () => {
-    expect(solesToCentimos("1,234.56")).toBe(123456);
+    expect(solesToCents("1,234.56")).toBe(123456);
   });
   it("survives float dust (36.66 * 100 = 3665.999…)", () => {
-    expect(solesToCentimos(36.66)).toBe(3666);
+    expect(solesToCents(36.66)).toBe(3666);
   });
   it("rejects garbage and negatives", () => {
-    expect(solesToCentimos("abc")).toBeNull();
-    expect(solesToCentimos("-5")).toBeNull();
-    expect(solesToCentimos(Number.NaN)).toBeNull();
+    expect(solesToCents("abc")).toBeNull();
+    expect(solesToCents("-5")).toBeNull();
+    expect(solesToCents(Number.NaN)).toBeNull();
   });
 });
 
-describe("formatCentimos", () => {
+describe("formatCents", () => {
   it("formats with thousands separators", () => {
-    expect(formatCentimos(3666)).toBe("S/ 36.66");
-    expect(formatCentimos(123456)).toBe("S/ 1,234.56");
-    expect(formatCentimos(100000000)).toBe("S/ 1,000,000.00");
+    expect(formatCents(3666)).toBe("S/ 36.66");
+    expect(formatCents(123456)).toBe("S/ 1,234.56");
+    expect(formatCents(100000000)).toBe("S/ 1,000,000.00");
   });
-  it("pads céntimos", () => {
-    expect(formatCentimos(30000)).toBe("S/ 300.00");
-    expect(formatCentimos(5)).toBe("S/ 0.05");
-    expect(formatCentimos(0)).toBe("S/ 0.00");
+  it("pads cents", () => {
+    expect(formatCents(30000)).toBe("S/ 300.00");
+    expect(formatCents(5)).toBe("S/ 0.05");
+    expect(formatCents(0)).toBe("S/ 0.00");
   });
   it("handles negatives (deltas in edit history)", () => {
-    expect(formatCentimos(-4500)).toBe("-S/ 45.00");
+    expect(formatCents(-4500)).toBe("-S/ 45.00");
   });
 });
 

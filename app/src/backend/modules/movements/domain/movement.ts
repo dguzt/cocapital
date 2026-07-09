@@ -1,5 +1,5 @@
 import type { ISODate } from "@/lib/dates";
-import type { Centimos } from "@/lib/money";
+import type { Cents } from "@/lib/money";
 
 /** Fixed list — vision decision #3. lend/repay are auto-written by M4. */
 export const MOVEMENT_TYPES = [
@@ -25,9 +25,9 @@ export type MovementStatus = "active" | "voided";
 /** The editable surface of a movement — what an E4 edit can change. */
 export type MovementSnapshot = {
   type: MovementType;
-  amount: Centimos;
+  amount: Cents;
   /** Cost of goods for sell_inventory (optional; null ⇒ cost = amount, margin 0). */
-  costo: Centimos | null;
+  cost: Cents | null;
   concept: string | null;
   /** Calendar date the event belongs to (Lima). */
   date: ISODate;

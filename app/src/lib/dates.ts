@@ -5,13 +5,14 @@
  */
 export type ISODate = string;
 
-export type Frequency = "diario" | "semanal" | "quincenal" | "mensual";
+/** UI labels are Spanish (Diario/Semanal/Quincenal/Mensual); values English. */
+export type Frequency = "daily" | "weekly" | "biweekly" | "monthly";
 
 export const FREQUENCIES: Frequency[] = [
-  "diario",
-  "semanal",
-  "quincenal",
-  "mensual",
+  "daily",
+  "weekly",
+  "biweekly",
+  "monthly",
 ];
 
 /** Today as a calendar date in Lima, regardless of server timezone. */
@@ -38,9 +39,9 @@ function daysInMonth(year: number, monthIndex: number): number {
 
 /**
  * Step `n` periods forward from `start` (D5/A-2):
- * diario +1d · semanal +7d · quincenal +15d ·
- * mensual +1 month keeping the start's day-of-month as anchor, clamped to the
- * target month's last day (Ene 31 → Feb 28 → Mar 31, anchor preserved).
+ * daily +1d · weekly +7d · biweekly +15d (quincenal) ·
+ * monthly +1 month keeping the start's day-of-month as anchor, clamped to the
+ * target month's last day (Jan 31 → Feb 28 → Mar 31, anchor preserved).
  */
 export function addPeriods(
   start: ISODate,
@@ -49,16 +50,16 @@ export function addPeriods(
 ): ISODate {
   const d = toUTC(start);
   switch (frequency) {
-    case "diario":
+    case "daily":
       d.setUTCDate(d.getUTCDate() + n);
       return fromUTC(d);
-    case "semanal":
+    case "weekly":
       d.setUTCDate(d.getUTCDate() + 7 * n);
       return fromUTC(d);
-    case "quincenal":
+    case "biweekly":
       d.setUTCDate(d.getUTCDate() + 15 * n);
       return fromUTC(d);
-    case "mensual": {
+    case "monthly": {
       const anchorDay = d.getUTCDate();
       const totalMonths = d.getUTCMonth() + n;
       const year = d.getUTCFullYear() + Math.floor(totalMonths / 12);
@@ -69,7 +70,7 @@ export function addPeriods(
   }
 }
 
-/** Vencida is DERIVED, never stored (D3 #10): due strictly before today. */
-export function isVencida(dueDate: ISODate, today: ISODate): boolean {
+/** "Vencida" is DERIVED at render, never stored (D3 #10): due strictly before today. */
+export function isOverdue(dueDate: ISODate, today: ISODate): boolean {
   return dueDate < today;
 }

@@ -38,21 +38,21 @@ export function proposeChange(
   if (movement.status === "voided") {
     return err({
       kind: "MovementVoided",
-      message: "No se puede modificar un movimiento anulado",
+      message: "cannot modify a voided movement",
       movementId: movement.id,
     });
   }
   if (hasPendingChange) {
     return err({
       kind: "ChangeAlreadyPending",
-      message: "Este movimiento ya tiene un cambio esperando aprobación",
+      message: "this movement already has a change awaiting approval",
       movementId: movement.id,
     });
   }
   if (kind === "edit" && !after) {
     return err({
       kind: "MissingChanges",
-      message: "Una edición debe incluir los nuevos valores",
+      message: "an edit must include the new values",
       movementId: movement.id,
     });
   }
@@ -97,7 +97,7 @@ export function decideChange(
   if (pending.status !== "pending") {
     return err({
       kind: "AlreadyDecided",
-      message: "Este cambio ya fue resuelto",
+      message: "this change was already decided",
       pendingId: pending.id,
       status: pending.status,
     });
@@ -106,7 +106,7 @@ export function decideChange(
   if (actorId === pending.proposedBy) {
     return err({
       kind: "SelfApproval",
-      message: "El otro socio debe aprobar este cambio",
+      message: "the other partner must approve this change",
       pendingId: pending.id,
       actorId,
     });
@@ -119,7 +119,7 @@ export function decideChange(
     if (!pending.after) {
       return err({
         kind: "MissingChanges",
-        message: "El cambio pendiente no tiene nuevos valores",
+        message: "the pending change has no new values",
         movementId: pending.id,
       });
     }

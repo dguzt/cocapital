@@ -1,10 +1,12 @@
 /**
  * Capital read-model (TASK-201, M5). Pure reducer — zero tables, zero writes.
- * Identity: total = efectivo + inventario + prestado. Realized-only (D3 #5):
- * expected interest NEVER enters the total; collected interest enters it
- * through cash the moment a cuota is cobrada.
+ * Identity: total = cash + inventory + lent. Realized-only (D3 #5): expected
+ * interest NEVER enters the total; collected interest enters it through cash
+ * the moment an installment is collected.
+ * UI labels: cash=Efectivo · inventory=Inventario · lent=Prestado ·
+ * collectedInterest=ganancia cobrada · expectedInterest=ganancia esperada.
  */
-import type { Centimos } from "@/lib/money";
+import type { Cents } from "@/lib/money";
 import type {
   MovementStatus,
   MovementType,
@@ -12,83 +14,83 @@ import type {
 
 export type CapitalMovement = {
   type: MovementType;
-  amount: Centimos;
+  amount: Cents;
   /** sell_inventory only: cost of goods. null ⇒ cost = amount (margin 0). */
-  costo: Centimos | null;
+  cost: Cents | null;
   status: MovementStatus;
 };
 
 export type CapitalInstallment = {
-  principal: Centimos;
-  interest: Centimos;
-  status: "pendiente" | "cobrada";
+  principal: Cents;
+  interest: Cents;
+  status: "pending" | "collected";
 };
 
 export type CapitalSummary = {
-  total: Centimos;
-  efectivo: Centimos;
-  inventario: Centimos;
-  prestado: Centimos;
-  gananciaCobrada: Centimos;
+  total: Cents;
+  cash: Cents;
+  inventory: Cents;
+  lent: Cents;
+  collectedInterest: Cents;
   /** Info only — never part of total (D3 #5). */
-  gananciaEsperada: Centimos;
+  expectedInterest: Cents;
 };
 
 export function deriveCapital(
   movements: CapitalMovement[],
   installments: CapitalInstallment[],
 ): CapitalSummary {
-  let efectivo = 0;
-  let inventario = 0;
+  let cash = 0;
+  let inventory = 0;
 
   for (const m of movements) {
     if (m.status === "voided") continue;
     switch (m.type) {
       case "contribute":
-        efectivo += m.amount;
+        cash += m.amount;
         break;
       case "expense":
-        efectivo -= m.amount;
+        cash -= m.amount;
         break;
       case "buy_inventory":
-        efectivo -= m.amount;
-        inventario += m.amount;
+        cash -= m.amount;
+        inventory += m.amount;
         break;
       case "sell_inventory":
         // Cash in at sale price; inventory out at cost. The difference
         // (margin) lands in total automatically via the identity.
-        efectivo += m.amount;
-        inventario -= m.costo ?? m.amount;
+        cash += m.amount;
+        inventory -= m.cost ?? m.amount;
         break;
       case "lend":
         // Principal only (D3 #5) — total unchanged, money changes bucket.
-        efectivo -= m.amount;
+        cash -= m.amount;
         break;
       case "repay":
-        // Full cuota (principal + interest) comes back as cash.
-        efectivo += m.amount;
+        // Full installment (principal + interest) comes back as cash.
+        cash += m.amount;
         break;
     }
   }
 
-  let prestado = 0;
-  let gananciaCobrada = 0;
-  let gananciaEsperada = 0;
+  let lent = 0;
+  let collectedInterest = 0;
+  let expectedInterest = 0;
   for (const i of installments) {
-    if (i.status === "cobrada") {
-      gananciaCobrada += i.interest;
+    if (i.status === "collected") {
+      collectedInterest += i.interest;
     } else {
-      prestado += i.principal;
-      gananciaEsperada += i.interest;
+      lent += i.principal;
+      expectedInterest += i.interest;
     }
   }
 
   return {
-    total: efectivo + inventario + prestado,
-    efectivo,
-    inventario,
-    prestado,
-    gananciaCobrada,
-    gananciaEsperada,
+    total: cash + inventory + lent,
+    cash,
+    inventory,
+    lent,
+    collectedInterest,
+    expectedInterest,
   };
 }
