@@ -19,11 +19,13 @@ export function PanelContent({
   user,
   movements,
   installments,
+  pendingIds,
   today,
 }: {
   user: SessionUser;
   movements: LedgerMovement[];
   installments: CapitalInstallment[];
+  pendingIds: string[];
   today: ISODate;
 }) {
   const capital = deriveCapital(movements, installments);
@@ -129,10 +131,20 @@ export function PanelContent({
           ) : (
             <>
               <div className="mt-2 hidden md:block">
-                <ActivityTable movements={movements} today={today} limit={6} />
+                <ActivityTable
+                  movements={movements}
+                  today={today}
+                  pendingIds={pendingIds}
+                  limit={6}
+                />
               </div>
               <div className="md:hidden">
-                <ActivityFeed movements={movements} today={today} limit={6} />
+                <ActivityFeed
+                  movements={movements}
+                  today={today}
+                  pendingIds={pendingIds}
+                  limit={6}
+                />
               </div>
             </>
           )}
