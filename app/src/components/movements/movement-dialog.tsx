@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { formatCents } from "@/lib/money";
+import { formatCents, sanitizeMoneyInput } from "@/lib/money";
 import { MOVEMENT_META } from "./movement-meta";
 
 const ERROR_TEXT: Record<string, string> = {
@@ -140,7 +140,7 @@ export function MovementDialog({
                 id="edit-amount"
                 inputMode="decimal"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => setAmount(sanitizeMoneyInput(e.target.value))}
                 className="h-12 font-mono text-base tabular-nums"
               />
             </div>
@@ -151,7 +151,7 @@ export function MovementDialog({
                   id="edit-cost"
                   inputMode="decimal"
                   value={cost}
-                  onChange={(e) => setCost(e.target.value)}
+                  onChange={(e) => setCost(sanitizeMoneyInput(e.target.value))}
                   className="h-12 font-mono text-base tabular-nums"
                 />
               </div>
@@ -160,6 +160,7 @@ export function MovementDialog({
               <Label htmlFor="edit-concept">Concepto</Label>
               <Input
                 id="edit-concept"
+                maxLength={80}
                 value={concept}
                 onChange={(e) => setConcept(e.target.value)}
                 className="h-12 text-base"

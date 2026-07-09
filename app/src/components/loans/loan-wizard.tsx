@@ -21,7 +21,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Frequency, ISODate } from "@/lib/dates";
 import { formatDayMonth, PERIOD_DAYS, todayInLima } from "@/lib/dates";
-import { formatCents, solesToCents } from "@/lib/money";
+import {
+  formatCents,
+  sanitizeIntInput,
+  sanitizeMoneyInput,
+  solesToCents,
+} from "@/lib/money";
 
 const FREQUENCIES: { value: Frequency; label: string }[] = [
   { value: "daily", label: "Diario" },
@@ -228,7 +233,9 @@ export function LoanWizard({ borrowers }: { borrowers: Borrower[] }) {
             inputMode="decimal"
             placeholder="300"
             value={capitalSoles}
-            onChange={(e) => setCapitalSoles(e.target.value)}
+            onChange={(e) =>
+              setCapitalSoles(sanitizeMoneyInput(e.target.value))
+            }
             className="h-12 font-mono text-lg tabular-nums"
           />
         </div>
@@ -239,7 +246,7 @@ export function LoanWizard({ borrowers }: { borrowers: Borrower[] }) {
             inputMode="decimal"
             placeholder="10"
             value={ratePercent}
-            onChange={(e) => setRatePercent(e.target.value)}
+            onChange={(e) => setRatePercent(sanitizeMoneyInput(e.target.value))}
             className="h-12 font-mono text-lg tabular-nums"
           />
         </div>
@@ -252,7 +259,7 @@ export function LoanWizard({ borrowers }: { borrowers: Borrower[] }) {
           inputMode="numeric"
           placeholder="4"
           value={count}
-          onChange={(e) => setCount(e.target.value)}
+          onChange={(e) => setCount(sanitizeIntInput(e.target.value))}
           className="h-12 font-mono text-lg tabular-nums"
         />
       </div>
@@ -350,7 +357,7 @@ export function LoanWizard({ borrowers }: { borrowers: Borrower[] }) {
                       ...prev,
                       [r.number]: {
                         ...prev[r.number],
-                        amountSoles: e.target.value,
+                        amountSoles: sanitizeMoneyInput(e.target.value),
                       },
                     }))
                   }

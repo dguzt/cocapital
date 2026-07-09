@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { sanitizeMoneyInput } from "@/lib/money";
 import { DIR_BADGE, MOVEMENT_META } from "./movement-meta";
 
 const ICONS: Record<MovementType, React.ReactNode> = {
@@ -147,9 +148,9 @@ export function MovementSheet() {
               <Input
                 id="amount"
                 inputMode="decimal"
-                placeholder="0.00"
+                placeholder={MOVEMENT_META[type].amountPlaceholder}
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => setAmount(sanitizeMoneyInput(e.target.value))}
                 className="h-14 font-mono text-2xl font-semibold tabular-nums"
               />
             </div>
@@ -163,7 +164,7 @@ export function MovementSheet() {
                   inputMode="decimal"
                   placeholder="0.00"
                   value={cost}
-                  onChange={(e) => setCost(e.target.value)}
+                  onChange={(e) => setCost(sanitizeMoneyInput(e.target.value))}
                   className="h-12 font-mono text-base tabular-nums"
                 />
                 <p className="text-[11px] text-muted-foreground">
@@ -175,7 +176,8 @@ export function MovementSheet() {
               <Label htmlFor="concept">Concepto · opcional</Label>
               <Input
                 id="concept"
-                placeholder="Ej. 3 perfumes · feria"
+                maxLength={80}
+                placeholder={MOVEMENT_META[type].conceptPlaceholder}
                 value={concept}
                 onChange={(e) => setConcept(e.target.value)}
                 className="h-12 text-base"

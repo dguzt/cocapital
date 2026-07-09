@@ -43,3 +43,19 @@ export function splitEvenly(total: Cents, parts: number): Cents[] {
   result[parts - 1] += remainder;
   return result;
 }
+
+/**
+ * Keystroke-level guard for money fields: keeps only digits and ONE decimal
+ * point, max 2 decimals. Letters never appear in the input at all.
+ */
+export function sanitizeMoneyInput(raw: string): string {
+  const cleaned = raw.replace(/[^\d.]/g, "");
+  const [integer, ...decimals] = cleaned.split(".");
+  if (decimals.length === 0) return integer;
+  return `${integer}.${decimals.join("").slice(0, 2)}`;
+}
+
+/** Same idea for count fields: digits only. */
+export function sanitizeIntInput(raw: string): string {
+  return raw.replace(/\D/g, "");
+}

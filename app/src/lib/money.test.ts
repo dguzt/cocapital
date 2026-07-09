@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { formatCents, solesToCents, splitEvenly } from "./money";
+import {
+  formatCents,
+  sanitizeIntInput,
+  sanitizeMoneyInput,
+  solesToCents,
+  splitEvenly,
+} from "./money";
 
 describe("solesToCents", () => {
   it("parses plain amounts", () => {
@@ -62,5 +68,31 @@ describe("splitEvenly (D5: last absorbs)", () => {
     expect(() => splitEvenly(10.5, 2)).toThrow();
     expect(() => splitEvenly(-1, 2)).toThrow();
     expect(() => splitEvenly(100, 0)).toThrow();
+  });
+});
+
+describe("sanitizeMoneyInput (field-level guard)", () => {
+  it("strips letters and symbols", () => {
+    expect(sanitizeMoneyInput("12a3")).toBe("123");
+    expect(sanitizeMoneyInput("S/ 50")).toBe("50");
+    expect(sanitizeMoneyInput("hello")).toBe("");
+  });
+  it("allows a single decimal point, max 2 decimals", () => {
+    expect(sanitizeMoneyInput("36.66")).toBe("36.66");
+    expect(sanitizeMoneyInput("36.667")).toBe("36.66");
+    expect(sanitizeMoneyInput("3.6.6")).toBe("3.66");
+    expect(sanitizeMoneyInput("36.")).toBe("36.");
+  });
+  it("keeps partial typing usable", () => {
+    expect(sanitizeMoneyInput("")).toBe("");
+    expect(sanitizeMoneyInput(".5")).toBe(".5");
+  });
+});
+
+describe("sanitizeIntInput", () => {
+  it("digits only", () => {
+    expect(sanitizeIntInput("4a")).toBe("4");
+    expect(sanitizeIntInput("1.5")).toBe("15");
+    expect(sanitizeIntInput("abc")).toBe("");
   });
 });
