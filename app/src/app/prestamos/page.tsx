@@ -1,8 +1,10 @@
-import { ArrowLeft, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import Link from "next/link";
+import * as R from "remeda";
 import { requireUser } from "@/backend/modules/accounts/current-user";
 import { findGroupOf } from "@/backend/modules/groups/data";
 import { listLoans } from "@/backend/modules/loans/data";
+import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
 import { todayInLima } from "@/lib/dates";
 import { formatCents } from "@/lib/money";
@@ -10,34 +12,28 @@ import { formatCents } from "@/lib/money";
 export default async function LoansPage() {
   const user = await requireUser();
   const group = await findGroupOf(user.id);
-  if (!group) {
-    return null;
-  }
+  if (!group) return null;
   const loans = await listLoans(group.id, todayInLima());
+  const overdueCount = R.sumBy(loans, (l) => l.overdueCount);
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-5 p-4 pt-8 md:p-8">
-      <header className="flex items-center gap-3">
-        <Button asChild variant="ghost" size="icon">
-          <Link href="/" aria-label="Volver al panel">
-            <ArrowLeft className="size-5" />
-          </Link>
-        </Button>
-        <div className="flex-1">
-          <h1 className="font-semibold text-xl leading-tight">Préstamos</h1>
-          <p className="text-[13px] text-muted-foreground">
-            Capital prestado y cronogramas
-          </p>
-        </div>
+    <AppShell
+      user={user}
+      group={group}
+      active="loans"
+      overdueCount={overdueCount}
+      title="Préstamos"
+      subtitle="Capital prestado y cronogramas"
+      actions={
         <Button asChild>
           <Link href="/prestamos/nuevo">
             <Plus className="size-4" /> Nuevo préstamo
           </Link>
         </Button>
-      </header>
-
+      }
+    >
       {loans.length === 0 ? (
-        <section className="flex flex-1 flex-col items-center justify-center rounded-2xl border border-dashed border-border p-10 text-center">
+        <section className="flex max-w-2xl flex-col items-center rounded-2xl border border-dashed border-input p-12 text-center">
           <div className="flex size-14 items-center justify-center rounded-2xl bg-emerald-400/15 text-2xl text-emerald-400">
             →
           </div>
@@ -50,24 +46,22 @@ export default async function LoansPage() {
           </Button>
         </section>
       ) : (
-        <ul className="space-y-2.5">
+        <ul className="max-w-2xl space-y-2.5">
           {loans.map((loan) => (
             <li key={loan.id}>
               <Link
                 href={`/prestamos/${loan.id}`}
-                className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:border-muted-foreground/40"
+                className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:border-input"
               >
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary font-semibold">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary font-bold">
                   {loan.borrowerName[0]}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[15px] font-semibold">
+                  <span className="block truncate text-[15px] font-bold">
                     {loan.borrowerName}
                   </span>
-                  <span className="block text-[13px] text-muted-foreground">
+                  <span className="block text-[12.5px] text-zinc-500">
                     {loan.collectedCount}/{loan.totalCount} cobradas
-                    {loan.overdueCount > 0 &&
-                      ` · ${loan.overdueCount} vencida${loan.overdueCount > 1 ? "s" : ""}`}
                   </span>
                 </span>
                 <span className="text-right">
@@ -75,7 +69,7 @@ export default async function LoansPage() {
                     {formatCents(loan.pendingAmount)}
                   </span>
                   <span
-                    className={`block text-xs font-semibold ${loan.overdueCount > 0 ? "text-destructive" : "text-muted-foreground"}`}
+                    className={`block text-[11px] font-semibold ${loan.overdueCount > 0 ? "text-destructive" : "text-muted-foreground"}`}
                   >
                     {loan.overdueCount > 0
                       ? `⚠ ${loan.overdueCount} vencida${loan.overdueCount > 1 ? "s" : ""}`
@@ -87,6 +81,17 @@ export default async function LoansPage() {
           ))}
         </ul>
       )}
-    </div>
+      <div className="md:hidden">
+        <Button
+          asChild
+          size="lg"
+          className="fixed inset-x-4 bottom-4 z-40 h-13 shadow-lg shadow-emerald-400/20"
+        >
+          <Link href="/prestamos/nuevo">
+            <Plus className="size-5" /> Nuevo préstamo
+          </Link>
+        </Button>
+      </div>
+    </AppShell>
   );
 }

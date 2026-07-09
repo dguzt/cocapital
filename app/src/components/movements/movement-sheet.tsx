@@ -4,7 +4,6 @@
 
 import {
   ArrowDownToLine,
-  ArrowLeftRight,
   ArrowUpFromLine,
   Minus,
   PackageMinus,

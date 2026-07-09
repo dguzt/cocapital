@@ -1,9 +1,15 @@
+import { Activity } from "lucide-react";
+import Link from "next/link";
 import { requireUser } from "@/backend/modules/accounts/current-user";
 import { findGroupOf } from "@/backend/modules/groups/data";
 import { listGroupInstallments } from "@/backend/modules/loans/data";
 import { listMovements } from "@/backend/modules/movements/data";
-import { Dashboard } from "@/components/dashboard/dashboard";
+import { PanelContent } from "@/components/dashboard/dashboard";
+import { InviteBanner } from "@/components/dashboard/invite-banner";
+import { MovementSheet } from "@/components/movements/movement-sheet";
 import { Onboarding } from "@/components/onboarding/onboarding";
+import { AppShell } from "@/components/shell/app-shell";
+import { Button } from "@/components/ui/button";
 import { isOverdue, todayInLima } from "@/lib/dates";
 
 export default async function HomePage({
@@ -29,13 +35,33 @@ export default async function HomePage({
   ).length;
 
   return (
-    <Dashboard
+    <AppShell
       user={user}
       group={group}
-      movements={movements}
-      installments={installments}
+      active="panel"
       overdueCount={overdueCount}
-      today={today}
-    />
+      title="Panel"
+      subtitle="Resumen del capital compartido"
+      actions={
+        <>
+          <Button asChild variant="outline">
+            <Link href="/actividad">
+              <Activity className="size-4" /> Actividad
+            </Link>
+          </Button>
+          <MovementSheet />
+        </>
+      }
+    >
+      <div className="flex flex-col gap-5">
+        {group.members.length < 2 && <InviteBanner code={group.inviteCode} />}
+        <PanelContent
+          user={user}
+          movements={movements}
+          installments={installments}
+          today={today}
+        />
+      </div>
+    </AppShell>
   );
 }

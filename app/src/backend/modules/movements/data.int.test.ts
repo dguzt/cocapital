@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { truncateAll } from "@/test/truncate";
 import { db } from "../../infra/db/client";
-import { groups, memberships, movements, users } from "../../infra/db/schema";
+import { users } from "../../infra/db/schema";
 import { deriveCapital } from "../capital/domain/derive";
 import { createGroup } from "../groups/data";
 import { addMovement, listMovements } from "./data";
