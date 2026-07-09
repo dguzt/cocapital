@@ -4,6 +4,20 @@
 
 ---
 
+## D5 — Ship-day decisions (money, domain, E4, auth) + assumptions
+
+**Date:** 2026-07-09
+**Status:** ✅ Locked for the 12-hour MVP deploy.
+
+1. **Money = integer céntimos, last cuota absorbs the remainder.** All amounts stored as integer céntimos (`bigint`-free, plain int). Equal split rounds down; the last cuota takes the leftover. Invariants (test-enforced): `Σcuotas = total`, `Σprincipal = capital`, `Σinterest = interés`, `principal + interest = cuota` per row.
+2. **Test URL = cocapital.vercel.app.** workers.dev rejected — it's Cloudflare's domain and can't front Vercel; deploying on Workers (OpenNext) = platform risk on a ship day. Custom domain later.
+3. **E4 blocks the deploy — no valve.** Double-confirmation ships today or we don't deploy. (Reaffirms D4 #1.) Pressure valves are the P1/P2 cosmetics instead (UC-306 cut; UC-203/305 polish).
+4. **Clerk:** founder creates the app at the hour-3 gate; user mirror happens on first authed request (no webhooks in MVP).
+
+**Assumptions taken (veto window passed):** Vencida "today" = America/Lima, `due_date` is a plain date · mensual clamps to month-end (Ene 31 → Feb 28), diario/semanal/quincenal = +1/+7/+15 días, anchor day preserved across months · concept optional · creation needs no partner OK (only edits/voids) · invite link reusable until 2/2 then dead · UI Spanish, phone-first, per Claude Design prototype · cobro writes via `db.batch()` (neon-http has no interactive transactions — verified).
+
+---
+
 ## D4 — MVP scope & build order (decompose gate)
 
 **Date:** 2026-07-06
