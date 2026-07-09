@@ -1,12 +1,13 @@
 import { Activity } from "lucide-react";
 import Link from "next/link";
-import { requireUser } from "@/backend/modules/accounts/current-user";
+import { getCurrentUser } from "@/backend/modules/accounts/current-user";
 import { findGroupOf } from "@/backend/modules/groups/data";
 import { listGroupInstallments } from "@/backend/modules/loans/data";
 import { listPendingChanges } from "@/backend/modules/movements/changes-data";
 import { listMovements } from "@/backend/modules/movements/data";
 import { PanelContent } from "@/components/dashboard/dashboard";
 import { InviteBanner } from "@/components/dashboard/invite-banner";
+import { Landing } from "@/components/landing/landing";
 import { MovementSheet } from "@/components/movements/movement-sheet";
 import { PendingApprovals } from "@/components/movements/pending-approvals";
 import { Onboarding } from "@/components/onboarding/onboarding";
@@ -19,7 +20,11 @@ export default async function HomePage({
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
-  const user = await requireUser();
+  // "/" is public: landing for visitors, Panel for members (proxy allows it).
+  const user = await getCurrentUser();
+  if (!user) {
+    return <Landing />;
+  }
   const group = await findGroupOf(user.id);
   const { error } = await searchParams;
 
