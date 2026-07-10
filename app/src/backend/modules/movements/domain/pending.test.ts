@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { MovementSnapshot } from "./movement";
-import { type DecideInput, decideChange, proposeChange } from "./pending";
+import {
+  type DecideInput,
+  decideChange,
+  proposeChange,
+  sanitizeEditedSnapshot,
+} from "./pending";
 
 const snapshot: MovementSnapshot = {
   type: "contribute",
@@ -65,6 +70,50 @@ describe("proposeChange", () => {
       actorId: "ana",
     });
     expect(!r.ok && r.error.kind === "MissingChanges").toBe(true);
+  });
+});
+
+describe("sanitizeEditedSnapshot — Security H1", () => {
+  const trusted: MovementSnapshot = {
+    type: "expense",
+    amount: 5000,
+    cost: null,
+    concept: "luz",
+    date: "2026-07-09",
+  };
+
+  it("keeps type and date from the trusted row, ignoring a forged proposal", () => {
+    const forged: MovementSnapshot = {
+      type: "contribute", // attacker tries to reclassify
+      amount: 4500,
+      cost: null,
+      concept: "editado",
+      date: "2020-01-01", // attacker tries to back-date
+    };
+    const safe = sanitizeEditedSnapshot(trusted, forged);
+    expect(safe.type).toBe("expense"); // preserved
+    expect(safe.date).toBe("2026-07-09"); // preserved
+    expect(safe.amount).toBe(4500); // legitimately editable
+    expect(safe.concept).toBe("editado"); // legitimately editable
+  });
+
+  it("drops cost smuggled onto a non-sell movement", () => {
+    const forged: MovementSnapshot = {
+      type: "sell_inventory", // forged so the action would let cost through
+      amount: 4500,
+      cost: 9999,
+      concept: "x",
+      date: "2020-01-01",
+    };
+    const safe = sanitizeEditedSnapshot(trusted, forged);
+    expect(safe.cost).toBeNull(); // trusted type is expense → no cost
+  });
+
+  it("preserves cost on a genuine sell_inventory movement", () => {
+    const sell: MovementSnapshot = { ...trusted, type: "sell_inventory", cost: 3000 };
+    const safe = sanitizeEditedSnapshot(sell, { ...sell, cost: 3500 });
+    expect(safe.type).toBe("sell_inventory");
+    expect(safe.cost).toBe(3500);
   });
 });
 

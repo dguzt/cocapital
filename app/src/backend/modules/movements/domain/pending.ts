@@ -30,6 +30,24 @@ export type ProposedChange = {
   after: MovementSnapshot | null;
 };
 
+/**
+ * Security H1: an edit may change only amount/concept/cost. Rebuild the
+ * immutable fields (`type`, `date`) from the trusted stored snapshot rather
+ * than the client's proposal, and drop `cost` on any non-sell type. Pure so
+ * it can be unit-tested without a DB.
+ */
+export function sanitizeEditedSnapshot(
+  trusted: MovementSnapshot,
+  proposed: MovementSnapshot,
+): MovementSnapshot {
+  return {
+    ...proposed,
+    type: trusted.type,
+    date: trusted.date,
+    cost: trusted.type === "sell_inventory" ? proposed.cost : null,
+  };
+}
+
 export function proposeChange(
   input: ProposeInput,
 ): Result<ProposedChange, PendingChangeError> {

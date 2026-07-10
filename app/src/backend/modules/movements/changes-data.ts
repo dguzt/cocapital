@@ -13,6 +13,7 @@ import {
   type ChangeKind,
   decideChange as decideChangePure,
   proposeChange as proposePure,
+  sanitizeEditedSnapshot,
 } from "./domain/pending";
 
 export type PendingChangeItem = {
@@ -79,15 +80,22 @@ export async function proposeMovementChange(
       ),
     );
 
+  // Security H1: an edit may only touch amount/concept/cost. Rebuild the
+  // immutable fields from the trusted DB row instead of trusting the
+  // client-supplied snapshot — otherwise a member could smuggle a hidden
+  // type/date reclassification into an approved "amount" edit.
+  const trusted = snapshotOf(movement);
+  const safeAfter = after ? sanitizeEditedSnapshot(trusted, after) : after;
+
   const decision = proposePure({
     movement: {
       id: movement.id,
       status: movement.status,
-      snapshot: snapshotOf(movement),
+      snapshot: trusted,
     },
     hasPendingChange: pending.length > 0,
     kind,
-    after,
+    after: safeAfter,
     actorId,
   });
   if (!decision.ok) return decision;
