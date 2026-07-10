@@ -97,7 +97,7 @@ export function MovementSheet() {
         </Button>
       </DrawerTrigger>
       <DrawerContent>
-        <div className="mx-auto w-full max-w-md px-4 pb-8">
+        <div className="mx-auto w-full max-w-md overflow-y-auto px-4 pb-8">
           <DrawerHeader className="px-0">
             <DrawerTitle>Nuevo movimiento</DrawerTitle>
           </DrawerHeader>
