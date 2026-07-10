@@ -6,6 +6,7 @@
  */
 import { sql } from "drizzle-orm";
 import {
+  check,
   date,
   index,
   integer,
@@ -89,7 +90,12 @@ export const movements = pgTable(
     status: movementStatus("status").notNull().default("active"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
-  (t) => [index("movements_group_created_idx").on(t.groupId, t.createdAt)],
+  (t) => [
+    index("movements_group_created_idx").on(t.groupId, t.createdAt),
+    // Security C1: money is always non-negative cents (defense-in-depth).
+    check("movements_amount_nonneg", sql`${t.amount} >= 0`),
+    check("movements_cost_nonneg", sql`${t.cost} is null or ${t.cost} >= 0`),
+  ],
 );
 
 // ── M3 · pending changes + immutable history (E4/D1) ───────────────────────
@@ -184,7 +190,12 @@ export const loans = pgTable(
       .references(() => movements.id),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
-  (t) => [index("loans_group_idx").on(t.groupId)],
+  (t) => [
+    index("loans_group_idx").on(t.groupId),
+    // Security C1: positive principal, non-negative rate.
+    check("loans_capital_positive", sql`${t.capital} > 0`),
+    check("loans_rate_nonneg", sql`${t.rateBps} >= 0`),
+  ],
 );
 
 export const installments = pgTable(
@@ -205,5 +216,11 @@ export const installments = pgTable(
     /** The auto-written repay movement once collected. */
     repayMovementId: uuid("repay_movement_id").references(() => movements.id),
   },
-  (t) => [index("installments_loan_idx").on(t.loanId)],
+  (t) => [
+    index("installments_loan_idx").on(t.loanId),
+    // Security C1: positive amount, non-negative principal/interest split.
+    check("installments_amount_positive", sql`${t.amount} > 0`),
+    check("installments_principal_nonneg", sql`${t.principal} >= 0`),
+    check("installments_interest_nonneg", sql`${t.interest} >= 0`),
+  ],
 );

@@ -17,13 +17,18 @@ import {
   loans,
   movements,
 } from "../../infra/db/schema";
+import {
+  type LoanValidationError,
+  validateLoanValues,
+} from "./domain/validate";
 
 export type LoanError =
   | AppError<"BorrowerNameRequired">
   | AppError<"BorrowerNotFound", { borrowerId: string }>
   | AppError<"LoanNotFound", { loanId: string }>
   | AppError<"InvalidInstallments", { reason: string }>
-  | AppError<"InstallmentNotCollectable", { installmentId: string }>;
+  | AppError<"InstallmentNotCollectable", { installmentId: string }>
+  | LoanValidationError;
 
 export type NewLoanInstallment = {
   number: number;
@@ -91,6 +96,17 @@ export async function createLoan(
   userId: string,
   input: NewLoan,
 ): Promise<Result<{ loanId: string }, LoanError>> {
+  // Security C1: validate signs/bounds/format server-side before any check
+  // that only proves arithmetic consistency — a negative-capital payload
+  // reconciles perfectly yet mints phantom cash/profit in the reducer.
+  const valuesOk = validateLoanValues({
+    capital: input.capital,
+    rateBps: input.rateBps,
+    startDate: input.startDate,
+    installments: input.installments,
+  });
+  if (!valuesOk.ok) return valuesOk;
+
   if (input.installments.length === 0) {
     return err({
       kind: "InvalidInstallments",
