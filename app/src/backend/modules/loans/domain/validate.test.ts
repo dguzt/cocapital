@@ -51,7 +51,13 @@ describe("validateLoanValues — blocks the C1 phantom-profit exploit", () => {
       ...valid,
       capital: 1,
       installments: [
-        { number: 1, dueDate: "2026-08-09", amount: 1, principal: -50, interest: 51 },
+        {
+          number: 1,
+          dueDate: "2026-08-09",
+          amount: 1,
+          principal: -50,
+          interest: 51,
+        },
       ],
     });
     expect(r.ok).toBe(false);
@@ -64,7 +70,9 @@ describe("validateLoanValues — sign, bounds, and format guards", () => {
     expect(validateLoanValues({ ...valid, capital: 0 }).ok).toBe(false);
   });
   it("rejects capital over the cents ceiling", () => {
-    expect(validateLoanValues({ ...valid, capital: MAX_CENTS + 1 }).ok).toBe(false);
+    expect(validateLoanValues({ ...valid, capital: MAX_CENTS + 1 }).ok).toBe(
+      false,
+    );
   });
   it("rejects a negative rate", () => {
     expect(validateLoanValues({ ...valid, rateBps: -1 }).ok).toBe(false);

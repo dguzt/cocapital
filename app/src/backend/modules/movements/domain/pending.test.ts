@@ -110,7 +110,11 @@ describe("sanitizeEditedSnapshot — Security H1", () => {
   });
 
   it("preserves cost on a genuine sell_inventory movement", () => {
-    const sell: MovementSnapshot = { ...trusted, type: "sell_inventory", cost: 3000 };
+    const sell: MovementSnapshot = {
+      ...trusted,
+      type: "sell_inventory",
+      cost: 3000,
+    };
     const safe = sanitizeEditedSnapshot(sell, { ...sell, cost: 3500 });
     expect(safe.type).toBe("sell_inventory");
     expect(safe.cost).toBe(3500);
