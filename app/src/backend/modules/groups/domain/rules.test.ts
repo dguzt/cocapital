@@ -13,6 +13,18 @@ describe("makeInviteCode", () => {
     const bytes = new Uint8Array([5, 10, 15, 20, 25, 30, 35, 40]);
     expect(makeInviteCode(bytes)).toBe(makeInviteCode(bytes));
   });
+  it("rejection-samples the biased tail (bytes >= 248 skipped)", () => {
+    // 8 rejected bytes then 8 usable ones → still a valid 8-char code.
+    const bytes = new Uint8Array([
+      248, 249, 250, 251, 252, 253, 254, 255, 0, 1, 2, 3, 4, 5, 6, 7,
+    ]);
+    const code = makeInviteCode(bytes);
+    expect(code).toHaveLength(8);
+    expect(code).toBe("ABCDEFGH"); // 0..7 map to the first 8 letters
+  });
+  it("throws if randomness runs out after rejections", () => {
+    expect(() => makeInviteCode(new Uint8Array([248, 249, 250]))).toThrow();
+  });
 });
 
 describe("validateGroupName", () => {

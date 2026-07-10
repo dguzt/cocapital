@@ -54,7 +54,9 @@ export const memberships = pgTable(
   },
   (t) => [
     primaryKey({ columns: [t.groupId, t.userId] }),
-    index("memberships_user_idx").on(t.userId),
+    // Security L1: DB-enforced one-group-per-user (MVP invariant). Previously
+    // only a check-then-insert in app code, which a concurrent race could beat.
+    uniqueIndex("memberships_user_idx").on(t.userId),
   ],
 );
 

@@ -57,7 +57,8 @@ export async function createGroup(
     });
   }
 
-  const bytes = new Uint8Array(8);
+  // 32 bytes is ample headroom for 8 chars after rejection sampling (~3% drop).
+  const bytes = new Uint8Array(32);
   crypto.getRandomValues(bytes);
   const inviteCode = makeInviteCode(bytes);
 

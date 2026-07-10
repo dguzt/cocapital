@@ -9,13 +9,29 @@ export const GROUP_SIZE = 2;
 
 const INVITE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // no 0/O/1/I/L
 export const INVITE_CODE_LENGTH = 8;
+/**
+ * Security L2: reject bytes at/above the largest multiple of the alphabet size
+ * (⌊256/31⌋·31 = 248) so `byte % 31` is unbiased — plain modulo favoured the
+ * first 8 letters (256 % 31 = 8), shaving entropy off every code.
+ */
+const REJECT_CEILING =
+  Math.floor(256 / INVITE_ALPHABET.length) * INVITE_ALPHABET.length;
 
-/** 8 chars from an unambiguous alphabet, from caller-provided randomness. */
+/**
+ * 8 chars from an unambiguous alphabet via unbiased rejection sampling over
+ * caller-provided randomness. Throws if the pool runs dry — callers must pass
+ * comfortably more than INVITE_CODE_LENGTH bytes.
+ */
 export function makeInviteCode(randomBytes: Uint8Array): string {
-  return Array.from(
-    randomBytes.slice(0, INVITE_CODE_LENGTH),
-    (byte) => INVITE_ALPHABET[byte % INVITE_ALPHABET.length],
-  ).join("");
+  let code = "";
+  for (const byte of randomBytes) {
+    if (byte >= REJECT_CEILING) continue; // drop biased tail
+    code += INVITE_ALPHABET[byte % INVITE_ALPHABET.length];
+    if (code.length === INVITE_CODE_LENGTH) return code;
+  }
+  throw new Error(
+    "makeInviteCode: random pool exhausted before producing a full code",
+  );
 }
 
 export function validateGroupName(name: string): Result<string, GroupError> {
