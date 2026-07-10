@@ -115,7 +115,7 @@ A member editing an innocuous `expense` can smuggle a `type` flip (`expense → 
 
 No CSP, HSTS, `X-Frame-Options`/`frame-ancestors`, `X-Content-Type-Options`, `Referrer-Policy`, or `Permissions-Policy` were set. The most concrete consequence: the authenticated approval UI is **clickjacking-able** — an attacker can iframe the dashboard and trick a signed-in partner into clicking "approve" on a money movement (`decideChangeAction`).
 
-**Fix:** added an `async headers()` block returning `X-Frame-Options: DENY` + a CSP with `frame-ancestors 'none'`, `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and a `Permissions-Policy` denying camera/microphone/geolocation. The CSP allow-lists Clerk's script/frame/connect origins so auth keeps working.
+**Fix:** added an `async headers()` block returning `X-Frame-Options: DENY` + a CSP `frame-ancestors 'none'` (the two controls that close the clickjacking threat), plus `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and a `Permissions-Policy` denying camera/microphone/geolocation. A full `script-src`/`connect-src` CSP is intentionally deferred as a follow-up: it must allow-list the Clerk frontend-API origin (which differs between the dev and prod Clerk instances) and be verified end-to-end, or it will break auth.
 
 ---
 
