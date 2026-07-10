@@ -15,3 +15,19 @@ export async function createGroupAction(formData: FormData) {
   revalidatePath("/");
   redirect("/");
 }
+
+/**
+ * Security M2: joining is an explicit POST behind a confirmation button — a
+ * mutation must never run on a GET page render (a prefetch/link-preview of
+ * /join/<code> could otherwise silently trap a user in an attacker's group).
+ */
+export async function joinGroupAction(formData: FormData) {
+  const user = await requireUser();
+  const code = String(formData.get("code") ?? "").toUpperCase();
+  const result = await data.joinGroup(user.id, code);
+  if (!result.ok) {
+    redirect(`/join/${encodeURIComponent(code)}?error=${result.error.kind}`);
+  }
+  revalidatePath("/");
+  redirect("/");
+}
