@@ -17,6 +17,14 @@ export type AddMovementInput = {
   concept?: string;
 };
 
+/** A void on a `repay` flips its cuota back to pending — refresh loans too. */
+function revalidateLedgerAndLoans() {
+  revalidatePath("/");
+  revalidatePath("/actividad");
+  revalidatePath("/prestamos");
+  revalidatePath("/prestamos/[id]", "page");
+}
+
 export async function addMovementAction(input: AddMovementInput) {
   const user = await requireUser();
   const group = await findGroupOf(user.id);
@@ -70,7 +78,11 @@ export async function proposeEditAction(
   return { ok: true as const };
 }
 
-/** UC-402: propose a void — never a delete. Goes pending. */
+/**
+ * UC-402: propose a void — never a delete. Goes pending.
+ * On a `repay` this is "deshacer cobro": approving it returns the cuota to
+ * pending, so the loan pages must be revalidated too.
+ */
 export async function proposeVoidAction(movementId: string) {
   const user = await requireUser();
   const group = await findGroupOf(user.id);
@@ -83,8 +95,7 @@ export async function proposeVoidAction(movementId: string) {
     "void",
   );
   if (!result.ok) return { ok: false as const, error: result.error.kind };
-  revalidatePath("/");
-  revalidatePath("/actividad");
+  revalidateLedgerAndLoans();
   return { ok: true as const };
 }
 
@@ -104,8 +115,7 @@ export async function decideChangeAction(
     decision,
   );
   if (!result.ok) return { ok: false as const, error: result.error.kind };
-  revalidatePath("/");
-  revalidatePath("/actividad");
+  revalidateLedgerAndLoans();
   return { ok: true as const, applied: result.value.applied };
 }
 

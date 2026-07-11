@@ -1,12 +1,18 @@
 /**
  * E4 data layer: pending changes + immutable history over movement_changes.
  * The pure state machine (domain/pending.ts) decides; this executes.
- * lend/repay movements are system-written by M4 → never editable here.
+ * Loan movements are system-written by M4: `lend` is untouchable here (correct
+ * it from the loan) and `repay` is void-only — voiding one undoes the collection.
  */
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { err, ok, type Result } from "@/lib/result";
 import { db } from "../../infra/db/client";
-import { movementChanges, movements, users } from "../../infra/db/schema";
+import {
+  installments,
+  movementChanges,
+  movements,
+  users,
+} from "../../infra/db/schema";
 import type { PendingChangeError } from "./domain/errors";
 import type { MovementSnapshot } from "./domain/movement";
 import {
@@ -61,7 +67,13 @@ export async function proposeMovementChange(
       movementId,
     });
   }
-  if (movement.type === "lend" || movement.type === "repay") {
+  // `lend` is the loan itself — never touched from here. A `repay` may be
+  // voided (that undoes the collection) but never edited: its amount and
+  // principal split belong to the installment, not to the movement.
+  if (
+    movement.type === "lend" ||
+    (movement.type === "repay" && kind === "edit")
+  ) {
     return err({
       kind: "SystemMovement",
       message: "loan movements are system-written; correct them via the loan",
@@ -110,6 +122,7 @@ export async function decideMovementChange(
     .select({
       change: movementChanges,
       movementGroup: movements.groupId,
+      movementType: movements.type,
     })
     .from(movementChanges)
     .innerJoin(movements, eq(movements.id, movementChanges.movementId))
@@ -152,16 +165,34 @@ export async function decideMovementChange(
     outcome.value.action.kind === "edit"
       ? { ...outcome.value.action.newSnapshot }
       : { status: "voided" as const };
-  await db.batch([
-    db
-      .update(movementChanges)
-      .set(decidePatch)
-      .where(eq(movementChanges.id, pendingId)),
-    db
-      .update(movements)
-      .set(movementPatch)
-      .where(eq(movements.id, row.change.movementId)),
-  ]);
+
+  const decideWrite = db
+    .update(movementChanges)
+    .set(decidePatch)
+    .where(eq(movementChanges.id, pendingId));
+  const movementWrite = db
+    .update(movements)
+    .set(movementPatch)
+    .where(eq(movements.id, row.change.movementId));
+
+  // Undoing a collection: voiding the `repay` alone would take the cuota's cash
+  // out of capital while its principal stayed "collected" — so out of `lent`
+  // too, and the total would silently shrink. Returning the installment to
+  // pending in the SAME batch restores the exact pre-collection capital:
+  // cash −amount, lent +principal, interest back to expected.
+  if (outcome.value.action.kind === "void" && row.movementType === "repay") {
+    await db.batch([
+      decideWrite,
+      movementWrite,
+      db
+        .update(installments)
+        .set({ status: "pending", collectedAt: null, repayMovementId: null })
+        .where(eq(installments.repayMovementId, row.change.movementId)),
+    ]);
+    return ok({ applied: true });
+  }
+
+  await db.batch([decideWrite, movementWrite]);
   return ok({ applied: true });
 }
 

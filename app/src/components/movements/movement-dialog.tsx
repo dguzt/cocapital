@@ -56,8 +56,14 @@ export function MovementDialog({
   const [pending, startTransition] = useTransition();
 
   const meta = MOVEMENT_META[movement.type];
-  const isSystem = movement.type === "lend" || movement.type === "repay";
-  const editable = !isSystem && movement.status === "active" && !hasPending;
+  const isLoan = movement.type === "lend";
+  const isCollection = movement.type === "repay";
+  const open_ = movement.status === "active" && !hasPending;
+  // A loan's `lend` is corrected from the loan. A collection can't be edited
+  // (its amount belongs to the cuota) but it CAN be voided — that's "deshacer
+  // cobro": the cuota goes back to pending.
+  const canEdit = open_ && !isLoan && !isCollection;
+  const canVoid = open_ && !isLoan;
 
   useEffect(() => {
     if (open) {
@@ -100,7 +106,11 @@ export function MovementDialog({
       const result = await proposeVoidAction(movement.id);
       if (result.ok) {
         setOpen(false);
-        toast.success("Anulación enviada — falta el OK de tu socio");
+        toast.success(
+          isCollection
+            ? "Deshacer cobro enviado — falta el OK de tu socio"
+            : "Anulación enviada — falta el OK de tu socio",
+        );
         router.refresh();
       } else {
         toast.error(ERROR_TEXT[result.error] ?? "Algo salió mal.");
@@ -194,7 +204,7 @@ export function MovementDialog({
             <Button
               className="flex-1"
               variant="secondary"
-              disabled={!editable}
+              disabled={!canEdit}
               onClick={() => setMode("edit")}
             >
               Editar
@@ -202,7 +212,7 @@ export function MovementDialog({
             <Button
               className="flex-1"
               variant="outline"
-              disabled={!editable || pending}
+              disabled={!canVoid || pending}
               onClick={submitVoid}
             >
               {pending && <Loader2 className="size-4 animate-spin" />}
@@ -210,9 +220,15 @@ export function MovementDialog({
             </Button>
           </div>
         )}
-        {isSystem && (
+        {isLoan && (
           <p className="text-[12px] text-muted-foreground">
             Movimiento generado por un préstamo — se corrige desde el préstamo.
+          </p>
+        )}
+        {isCollection && (
+          <p className="text-[12px] text-muted-foreground">
+            El monto de un cobro no se edita — viene de la cuota. Anularlo
+            devuelve la cuota a pendiente y podrás volver a cobrarla.
           </p>
         )}
 

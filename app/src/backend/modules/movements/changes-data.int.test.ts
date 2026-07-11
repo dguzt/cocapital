@@ -1,8 +1,9 @@
 /** E4 integration: propose → old value stands → decide → applied/rejected. */
+import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { truncateAll } from "@/test/truncate";
 import { db } from "../../infra/db/client";
-import { users } from "../../infra/db/schema";
+import { installments, users } from "../../infra/db/schema";
 import { deriveCapital } from "../capital/domain/derive";
 import { createGroup, joinGroup } from "../groups/data";
 import {
@@ -157,26 +158,8 @@ describe("E4: the D1 story — Ana cambió S/50 → S/45", () => {
     expect(deriveCapital(ledger, []).total).toBe(0); // excluded from capital
   });
 
-  it("lend/repay movements are system-written → not editable", async () => {
-    const { ana, rosa, group } = await seed();
-    const { generateSchedule } = await import("../loans/domain/schedule");
-    const { createLoan } = await import("../loans/data");
-    const s = generateSchedule({
-      capital: 10000,
-      ratePercent: 10,
-      installmentCount: 2,
-      frequency: "weekly",
-      startDate: TODAY,
-    });
-    if (!s.ok) throw new Error("engine failed");
-    await createLoan(group.id, ana.id, {
-      borrower: { name: "Karina" },
-      capital: 10000,
-      rateBps: 1000,
-      frequency: "weekly",
-      startDate: TODAY,
-      installments: s.value.installments,
-    });
+  it("a lend movement is the loan itself → not even voidable here", async () => {
+    const { rosa, group } = await seedLoan();
     const lendMovement = (await listMovements(group.id)).find(
       (m) => m.type === "lend",
     );
@@ -189,5 +172,181 @@ describe("E4: the D1 story — Ana cambió S/50 → S/45", () => {
       "void",
     );
     expect(!r.ok && r.error.kind === "SystemMovement").toBe(true);
+  });
+});
+
+/** A loan of S/40 at 10% → 2 cuotas of S/22 (principal 2000 + interés 200). */
+async function seedLoan() {
+  const { ana, rosa, group } = await seed();
+  const { generateSchedule } = await import("../loans/domain/schedule");
+  const { createLoan } = await import("../loans/data");
+  const s = generateSchedule({
+    capital: 4000,
+    ratePercent: 10,
+    installmentCount: 2,
+    frequency: "weekly",
+    startDate: TODAY,
+  });
+  if (!s.ok) throw new Error("engine failed");
+  const created = await createLoan(group.id, ana.id, {
+    borrower: { name: "Arturo" },
+    capital: 4000,
+    rateBps: 1000,
+    frequency: "weekly",
+    startDate: TODAY,
+    installments: s.value.installments,
+  });
+  if (!created.ok) throw new Error("loan failed");
+  return { ana, rosa, group, loanId: created.value.loanId };
+}
+
+async function capitalOf(groupId: string) {
+  const { listGroupInstallments } = await import("../loans/data");
+  return deriveCapital(
+    await listMovements(groupId),
+    await listGroupInstallments(groupId),
+  );
+}
+
+describe("Deshacer cobro: anular un repay devuelve la cuota a pendiente", () => {
+  it("un cobro no se edita — su monto pertenece a la cuota", async () => {
+    const { ana, rosa, group, loanId } = await seedLoan();
+    const { collectInstallment, getLoan } = await import("../loans/data");
+    const loan = await getLoan(group.id, loanId);
+    if (!loan.ok) throw new Error("loan missing");
+    await collectInstallment(
+      group.id,
+      ana.id,
+      loanId,
+      loan.value.installments[0].id,
+      TODAY,
+    );
+    const repay = (await listMovements(group.id)).find(
+      (m) => m.type === "repay",
+    );
+    if (!repay) throw new Error("repay movement missing");
+
+    const edit = await proposeMovementChange(
+      group.id,
+      rosa.id,
+      repay.id,
+      "edit",
+      { type: "repay", amount: 9999, cost: null, concept: "x", date: TODAY },
+    );
+    expect(!edit.ok && edit.error.kind === "SystemMovement").toBe(true);
+  });
+
+  it("cobrar → deshacer devuelve el capital exactamente a donde estaba", async () => {
+    const { ana, rosa, group, loanId } = await seedLoan();
+    const { collectInstallment, getLoan } = await import("../loans/data");
+
+    const beforeCollect = await capitalOf(group.id);
+    expect(beforeCollect.lent).toBe(4000); // todo el principal sigue prestado
+    expect(beforeCollect.collectedInterest).toBe(0);
+
+    const loan = await getLoan(group.id, loanId);
+    if (!loan.ok) throw new Error("loan missing");
+    const cuota1 = loan.value.installments[0];
+    await collectInstallment(group.id, ana.id, loanId, cuota1.id, TODAY);
+
+    // Cobrada: entra la plata, baja lo prestado, el interés se realiza.
+    const collected = await capitalOf(group.id);
+    expect(collected.lent).toBe(4000 - cuota1.principal);
+    expect(collected.collectedInterest).toBe(cuota1.interest);
+    expect(collected.total).toBe(beforeCollect.total + cuota1.interest);
+
+    // Ana propone deshacer el cobro; nada cambia hasta el OK de Rosa.
+    const repay = (await listMovements(group.id)).find(
+      (m) => m.type === "repay",
+    );
+    if (!repay) throw new Error("repay movement missing");
+    const proposed = await proposeMovementChange(
+      group.id,
+      ana.id,
+      repay.id,
+      "void",
+    );
+    expect(proposed.ok).toBe(true);
+    if (!proposed.ok) return;
+    const stillCollected = await getLoan(group.id, loanId);
+    expect(
+      stillCollected.ok && stillCollected.value.installments[0].status,
+    ).toBe("collected");
+
+    // Rosa aprueba → cuota pendiente otra vez y capital idéntico al inicial.
+    const approved = await decideMovementChange(
+      group.id,
+      rosa.id,
+      proposed.value.pendingId,
+      "approve",
+    );
+    expect(approved.ok && approved.value.applied).toBe(true);
+
+    const undone = await getLoan(group.id, loanId);
+    if (!undone.ok) throw new Error("loan missing");
+    expect(undone.value.installments[0].status).toBe("pending");
+
+    // La cuota queda limpia: sin fecha de cobro y sin FK al movimiento anulado.
+    const [row] = await db
+      .select()
+      .from(installments)
+      .where(eq(installments.id, cuota1.id));
+    expect(row.collectedAt).toBeNull();
+    expect(row.repayMovementId).toBeNull();
+
+    const afterUndo = await capitalOf(group.id);
+    expect(afterUndo).toEqual(beforeCollect); // simetría exacta
+
+    // El movimiento sigue visible, anulado — nunca se borra.
+    const repayAfter = (await listMovements(group.id)).find(
+      (m) => m.id === repay.id,
+    );
+    expect(repayAfter?.status).toBe("voided");
+  });
+
+  it("deshecho el cobro, la cuota se puede volver a cobrar", async () => {
+    const { ana, rosa, group, loanId } = await seedLoan();
+    const { collectInstallment, getLoan } = await import("../loans/data");
+    const loan = await getLoan(group.id, loanId);
+    if (!loan.ok) throw new Error("loan missing");
+    const cuota1 = loan.value.installments[0];
+
+    await collectInstallment(group.id, ana.id, loanId, cuota1.id, TODAY);
+    const repay = (await listMovements(group.id)).find(
+      (m) => m.type === "repay",
+    );
+    if (!repay) throw new Error("repay movement missing");
+    const proposed = await proposeMovementChange(
+      group.id,
+      ana.id,
+      repay.id,
+      "void",
+    );
+    if (!proposed.ok) throw new Error("propose failed");
+    await decideMovementChange(
+      group.id,
+      rosa.id,
+      proposed.value.pendingId,
+      "approve",
+    );
+
+    const recollected = await collectInstallment(
+      group.id,
+      ana.id,
+      loanId,
+      cuota1.id,
+      TODAY,
+    );
+    expect(recollected.ok).toBe(true);
+    const loanNow = await getLoan(group.id, loanId);
+    expect(loanNow.ok && loanNow.value.installments[0].status).toBe(
+      "collected",
+    );
+    // El cobro anulado sigue ahí; el nuevo es otro movimiento activo.
+    const repays = (await listMovements(group.id)).filter(
+      (m) => m.type === "repay",
+    );
+    expect(repays).toHaveLength(2);
+    expect(repays.filter((m) => m.status === "active")).toHaveLength(1);
   });
 });
