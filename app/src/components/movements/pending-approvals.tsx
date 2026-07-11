@@ -51,7 +51,19 @@ export function PendingApprovals({ items }: { items: PendingChangeItem[] }) {
             >
               <span className="min-w-0 flex-1 text-[13.5px]">
                 <span className="font-semibold">{item.proposerName}</span>{" "}
-                {item.kind === "void" ? (
+                {item.kind === "void" && item.before.type === "repay" ? (
+                  <>
+                    quiere{" "}
+                    <span className="text-destructive">deshacer el cobro</span>
+                    {item.before.concept ? ` de ${item.before.concept}` : ""} de{" "}
+                    <span className="font-mono tabular-nums">
+                      {formatCents(item.before.amount)}
+                    </span>{" "}
+                    <span className="text-muted-foreground">
+                      — la cuota vuelve a pendiente
+                    </span>
+                  </>
+                ) : item.kind === "void" ? (
                   <>
                     quiere <span className="text-destructive">anular</span>{" "}
                     {meta.label}

@@ -70,6 +70,9 @@ export type LoanDetail = {
     principal: Cents;
     interest: Cents;
     status: "pending" | "collected";
+    /** The `repay` movement of the collection — lets the detail page spot a
+     *  pending "deshacer cobro" waiting for the partner's OK. */
+    repayMovementId: string | null;
   }[];
 };
 
@@ -292,6 +295,7 @@ export async function getLoan(
       principal: r.principal,
       interest: r.interest,
       status: r.status,
+      repayMovementId: r.repayMovementId,
     })),
   });
 }

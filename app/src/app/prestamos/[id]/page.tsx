@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/backend/modules/accounts/current-user";
 import { findGroupOf } from "@/backend/modules/groups/data";
 import { getLoan, listGroupInstallments } from "@/backend/modules/loans/data";
+import { listPendingChanges } from "@/backend/modules/movements/changes-data";
 import { CollectButton } from "@/components/loans/collect-button";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,13 @@ export default async function LoanDetailPage({
   const overdueCount = groupInstallments.filter(
     (i) => i.status === "pending" && isOverdue(i.dueDate, today),
   ).length;
+
+  // A "deshacer cobro" is proposed on the cuota's repay movement, but the user
+  // looks for it HERE — so surface it on the cuota it will undo.
+  const pendingChanges = await listPendingChanges(group.id);
+  const undoPending = new Set(
+    pendingChanges.filter((c) => c.kind === "void").map((c) => c.movementId),
+  );
   const rate = (loan.value.rateBps / 100).toFixed(
     loan.value.rateBps % 100 === 0 ? 0 : 2,
   );
@@ -88,6 +96,9 @@ export default async function LoanDetailPage({
             {loan.value.installments.map((inst) => {
               const overdue =
                 inst.status === "pending" && isOverdue(inst.dueDate, today);
+              const awaitingUndo =
+                inst.repayMovementId !== null &&
+                undoPending.has(inst.repayMovementId);
               return (
                 <li key={inst.id} className="flex items-center gap-3 py-3.5">
                   <span className="w-16 shrink-0 text-[15px] font-medium">
@@ -99,18 +110,22 @@ export default async function LoanDetailPage({
                     </span>
                     <span
                       className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                        inst.status === "collected"
-                          ? "bg-emerald-400/15 text-emerald-400"
-                          : overdue
-                            ? "bg-red-400/15 text-red-400"
-                            : "bg-secondary text-muted-foreground"
+                        awaitingUndo
+                          ? "bg-amber-400/15 text-amber-400"
+                          : inst.status === "collected"
+                            ? "bg-emerald-400/15 text-emerald-400"
+                            : overdue
+                              ? "bg-red-400/15 text-red-400"
+                              : "bg-secondary text-muted-foreground"
                       }`}
                     >
-                      {inst.status === "collected"
-                        ? "Cobrada"
-                        : overdue
-                          ? "Vencida"
-                          : "Pendiente"}
+                      {awaitingUndo
+                        ? "Deshacer cobro · falta el OK"
+                        : inst.status === "collected"
+                          ? "Cobrada"
+                          : overdue
+                            ? "Vencida"
+                            : "Pendiente"}
                     </span>
                   </span>
                   <span className="w-24 text-right font-mono text-[15px] font-medium tabular-nums">
@@ -125,8 +140,12 @@ export default async function LoanDetailPage({
                       borrowerName={loan.value.borrowerName}
                     />
                   ) : (
-                    <span className="w-[68px] text-center text-xs text-emerald-400">
-                      ✓
+                    <span
+                      className={`w-[68px] text-center text-xs ${
+                        awaitingUndo ? "text-amber-400" : "text-emerald-400"
+                      }`}
+                    >
+                      {awaitingUndo ? "⏳" : "✓"}
                     </span>
                   )}
                 </li>
