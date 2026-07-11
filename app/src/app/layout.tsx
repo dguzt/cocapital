@@ -2,6 +2,7 @@ import { esES } from "@clerk/localizations";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
@@ -43,6 +44,7 @@ export default function RootLayout({
           {children}
           <Toaster theme="dark" position="bottom-center" />
           <Analytics />
+          <SpeedInsights />
         </body>
       </html>
     </ClerkProvider>
