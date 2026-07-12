@@ -3,11 +3,16 @@
  * keeps its old value until the OTHER partner approves (D1).
  *
  * What may be proposed depends on who owns the movement:
- *   · lend  → nothing. The loan's own entry is corrected from the loan.
- *   · repay → void only. Its amount belongs to the cuota, not to the movement,
- *             so editing it here would desync the two. Voiding it is
- *             "deshacer cobro" and the loans module reverses it on approval.
- *   · the rest → edit and void.
+ *
+ *   lend   → nothing. A loan's own entry is corrected from the loan.
+ *   repay  → void only. Its amount belongs to the cuota, not to the movement,
+ *            so editing it here would desync the two. Voiding it IS "deshacer
+ *            cobro", and the loans module reverses it on approval.
+ *   others → edit and void.
+ *
+ * The one-pending-change-per-movement rule is enforced twice: here, and by a
+ * partial unique index in the schema. The index is the one that actually holds
+ * under a race.
  */
 import { err, ok, type Result } from "@/lib/result";
 import type { PendingChangeError } from "../domain/errors";
@@ -15,6 +20,7 @@ import type { MovementSnapshot } from "../domain/movement";
 import type { ChangeKind } from "../domain/pending";
 import { proposeChange as decide } from "../domain/pending";
 import * as changeRepo from "../repositories/change-repository";
+import type { MovementRow } from "../repositories/movement-repository";
 import * as movementRepo from "../repositories/movement-repository";
 
 export async function proposeChange(
@@ -25,6 +31,7 @@ export async function proposeChange(
   after?: MovementSnapshot,
 ): Promise<Result<{ pendingId: string }, PendingChangeError>> {
   const movement = await movementRepo.findInGroup(groupId, movementId);
+
   if (!movement) {
     return err({
       kind: "MovementNotFound",
@@ -33,10 +40,7 @@ export async function proposeChange(
     });
   }
 
-  if (
-    movement.type === "lend" ||
-    (movement.type === "repay" && kind === "edit")
-  ) {
+  if (isOwnedByALoan(movement, kind)) {
     return err({
       kind: "SystemMovement",
       message: "loan movements are system-written; correct them via the loan",
@@ -48,21 +52,36 @@ export async function proposeChange(
     movement: {
       id: movement.id,
       status: movement.status,
-      snapshot: {
-        type: movement.type,
-        amount: movement.amount,
-        cost: movement.cost,
-        concept: movement.concept,
-        date: movement.date,
-      },
+      snapshot: snapshotOf(movement),
     },
     hasPendingChange: await changeRepo.hasPendingFor(movementId),
     kind,
     after,
     actorId,
   });
-  if (!proposal.ok) return proposal;
+
+  if (!proposal.ok) {
+    return proposal;
+  }
 
   const row = await changeRepo.insert(proposal.value);
+
   return ok({ pendingId: row.id });
+}
+
+/** A lend is untouchable here; a repay is voidable but never editable. */
+function isOwnedByALoan(movement: MovementRow, kind: ChangeKind) {
+  return (
+    movement.type === "lend" || (movement.type === "repay" && kind === "edit")
+  );
+}
+
+function snapshotOf(movement: MovementRow): MovementSnapshot {
+  return {
+    type: movement.type,
+    amount: movement.amount,
+    cost: movement.cost,
+    concept: movement.concept,
+    date: movement.date,
+  };
 }

@@ -252,50 +252,69 @@ describe("Deshacer cobro: anular un repay devuelve la cuota a pendiente", () => 
   it("cobrar → deshacer devuelve el capital exactamente a donde estaba", async () => {
     const { ana, rosa, group, loanId } = await seedLoan();
 
+    // Before the collection: every sol of principal is still out on loan, and
+    // no interest has been realised.
     const beforeCollect = await capitalOf(group.id);
-    expect(beforeCollect.lent).toBe(4000); // todo el principal sigue prestado
+
+    expect(beforeCollect.lent).toBe(4000);
     expect(beforeCollect.collectedInterest).toBe(0);
 
     const loan = await getLoanDetail(group.id, loanId);
+
     if (!loan.ok) throw new Error("loan missing");
+
     const cuota1 = loan.value.installments[0];
+
+    // Collecting: the cash comes in, `lent` drops by the principal, and the
+    // cuota's interest becomes real — the total grows by exactly that much.
     await collectInstallment(group.id, ana.id, loanId, cuota1.id, TODAY);
 
-    // Cobrada: entra la plata, baja lo prestado, el interés se realiza.
     const collected = await capitalOf(group.id);
+
     expect(collected.lent).toBe(4000 - cuota1.principal);
     expect(collected.collectedInterest).toBe(cuota1.interest);
     expect(collected.total).toBe(beforeCollect.total + cuota1.interest);
 
-    // Ana propone deshacer el cobro; nada cambia hasta el OK de Rosa.
+    // Ana proposes undoing it. Nothing moves until Rosa says yes: the cuota is
+    // still "Cobrada".
     const repay = (await listMovements(group.id)).find(
       (m) => m.type === "repay",
     );
+
     if (!repay) throw new Error("repay movement missing");
+
     const proposed = await proposeMovementChange(
       group.id,
       ana.id,
       repay.id,
       "void",
     );
+
     expect(proposed.ok).toBe(true);
+
     if (!proposed.ok) return;
+
     const stillCollected = await getLoanDetail(group.id, loanId);
+
     expect(
       stillCollected.ok && stillCollected.value.installments[0].status,
     ).toBe("collected");
 
-    // Rosa aprueba → cuota pendiente otra vez y capital idéntico al inicial.
+    // Rosa approves: the cuota goes back to pending and the capital returns to
+    // exactly where it started.
     const approved = await decideMovementChange(
       group.id,
       rosa.id,
       proposed.value.pendingId,
       "approve",
     );
+
     expect(approved.ok && approved.value.applied).toBe(true);
 
     const undone = await getLoanDetail(group.id, loanId);
+
     if (!undone.ok) throw new Error("loan missing");
+
     expect(undone.value.installments[0].status).toBe("pending");
 
     // La cuota queda limpia: sin fecha de cobro y sin FK al movimiento anulado.

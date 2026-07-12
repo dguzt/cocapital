@@ -23,8 +23,16 @@ export type ChangeHistoryItem = PendingChangeItem & {
   decidedAt: Date | null;
 };
 
+/**
+ * Is there already an undecided change for this movement?
+ *
+ * LIMIT 1 because we only need existence: stop at the first hit instead of
+ * materialising a row set. The partial unique index (one pending change per
+ * movement) means Postgres can answer this straight from the index, and it
+ * caps the answer at one row even if this query forgot to.
+ */
 export async function hasPendingFor(movementId: string) {
-  const rows = await db
+  const [row] = await db
     .select({ id: movementChanges.id })
     .from(movementChanges)
     .where(
@@ -32,8 +40,10 @@ export async function hasPendingFor(movementId: string) {
         eq(movementChanges.movementId, movementId),
         eq(movementChanges.status, "pending"),
       ),
-    );
-  return rows.length > 0;
+    )
+    .limit(1);
+
+  return row !== undefined;
 }
 
 export async function insert(row: {
