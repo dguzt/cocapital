@@ -5,7 +5,7 @@ import {
   sanitizeMoneyInput,
   solesToCents,
   splitEvenly,
-} from "./money";
+} from "@/lib/money";
 
 describe("solesToCents", () => {
   it("parses plain amounts", () => {

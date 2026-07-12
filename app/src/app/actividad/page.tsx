@@ -1,8 +1,8 @@
 import { requireUser } from "@/backend/modules/accounts/current-user";
 import { findGroupOf } from "@/backend/modules/groups/data";
-import { listGroupInstallments } from "@/backend/modules/loans/data";
-import { listPendingChanges } from "@/backend/modules/movements/changes-data";
-import { listMovements } from "@/backend/modules/movements/data";
+import { listGroupInstallments } from "@/backend/modules/loans/usecases/list-group-installments";
+import { listMovements } from "@/backend/modules/movements/usecases/list-movements";
+import { listPendingChanges } from "@/backend/modules/movements/usecases/list-pending-changes";
 import { ActivityFeed } from "@/components/movements/activity-feed";
 import { ActivityTable } from "@/components/movements/activity-table";
 import { PendingApprovals } from "@/components/movements/pending-approvals";

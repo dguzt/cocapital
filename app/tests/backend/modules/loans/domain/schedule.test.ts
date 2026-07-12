@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { Schedule } from "./schedule";
-import { generateSchedule, type ScheduleInput } from "./schedule";
+import type { Schedule } from "@/backend/modules/loans/domain/schedule";
+import {
+  generateSchedule,
+  type ScheduleInput,
+} from "@/backend/modules/loans/domain/schedule";
 
 const base: ScheduleInput = {
   capital: 30000, // S/300

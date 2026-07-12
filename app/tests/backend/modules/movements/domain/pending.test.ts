@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
-import type { MovementSnapshot } from "./movement";
-import { type DecideInput, decideChange, proposeChange } from "./pending";
+import type { MovementSnapshot } from "@/backend/modules/movements/domain/movement";
+import {
+  type DecideInput,
+  decideChange,
+  proposeChange,
+} from "@/backend/modules/movements/domain/pending";
 
 const snapshot: MovementSnapshot = {
   type: "contribute",

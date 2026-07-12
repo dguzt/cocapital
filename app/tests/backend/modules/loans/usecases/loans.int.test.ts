@@ -1,20 +1,19 @@
 /** E3 integration: create loan → schedule persisted → collect → capital. */
 import { beforeEach, describe, expect, it } from "vitest";
+import { db } from "@/backend/infra/db/client";
+import { users } from "@/backend/infra/db/schema";
+import { deriveCapital } from "@/backend/modules/capital/domain/derive";
+import { createGroup } from "@/backend/modules/groups/data";
+import { generateSchedule } from "@/backend/modules/loans/domain/schedule";
+import { collectInstallment } from "@/backend/modules/loans/usecases/collect-installment";
+import { createLoan } from "@/backend/modules/loans/usecases/create-loan";
+import { getLoanDetail } from "@/backend/modules/loans/usecases/get-loan-detail";
+import { listGroupInstallments } from "@/backend/modules/loans/usecases/list-group-installments";
+import { listLoans } from "@/backend/modules/loans/usecases/list-loans";
+import { validateNewMovement } from "@/backend/modules/movements/domain/validate";
+import { addMovement } from "@/backend/modules/movements/usecases/add-movement";
+import { listMovements } from "@/backend/modules/movements/usecases/list-movements";
 import { truncateAll } from "@/test/truncate";
-import { db } from "../../infra/db/client";
-import { users } from "../../infra/db/schema";
-import { deriveCapital } from "../capital/domain/derive";
-import { createGroup } from "../groups/data";
-import { addMovement, listMovements } from "../movements/data";
-import { validateNewMovement } from "../movements/domain/validate";
-import {
-  collectInstallment,
-  createLoan,
-  getLoan,
-  listGroupInstallments,
-  listLoans,
-} from "./data";
-import { generateSchedule } from "./domain/schedule";
 
 const TODAY = "2026-07-09";
 
@@ -92,7 +91,7 @@ describe("E3: lending lifecycle", () => {
       totalCount: 4,
       pendingAmount: 33000,
     });
-    const detail = await getLoan(group.id, created.value.loanId);
+    const detail = await getLoanDetail(group.id, created.value.loanId);
     expect(detail.ok && detail.value.installments).toHaveLength(4);
     if (!detail.ok) return;
 
@@ -170,7 +169,9 @@ describe("E3: lending lifecycle", () => {
     });
     expect(first.ok).toBe(true);
 
-    const { listBorrowers } = await import("./data");
+    const { listBorrowers } = await import(
+      "@/backend/modules/loans/usecases/list-borrowers"
+    );
     const list1 = await listBorrowers(group.id);
     expect(list1).toHaveLength(1);
 

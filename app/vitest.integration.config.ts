@@ -7,7 +7,7 @@ export default defineConfig({
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
   },
   test: {
-    include: ["src/**/*.int.test.ts"],
+    include: ["tests/**/*.int.test.ts"],
     setupFiles: ["src/test/integration-setup.ts"],
     fileParallelism: false,
     testTimeout: 30_000,

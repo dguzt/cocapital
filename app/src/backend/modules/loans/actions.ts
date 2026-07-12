@@ -1,28 +1,21 @@
 "use server";
-/** M4 public API. */
+/** M4's edge with Next: session → use case → revalidate. No rules here. */
 import { revalidatePath } from "next/cache";
-import type { Frequency, ISODate } from "@/lib/dates";
 import { todayInLima } from "@/lib/dates";
-import type { Cents } from "@/lib/money";
 import { requireUser } from "../accounts/current-user";
 import { findGroupOf } from "../groups/data";
-import * as data from "./data";
+import type { NewLoan } from "./domain/loan";
+import { collectInstallment } from "./usecases/collect-installment";
+import { createLoan } from "./usecases/create-loan";
 
-export type CreateLoanInput = {
-  borrower: { id: string } | { name: string; phone?: string };
-  capital: Cents;
-  rateBps: number;
-  frequency: Frequency;
-  startDate: ISODate;
-  installments: data.NewLoanInstallment[];
-};
+export type CreateLoanInput = NewLoan;
 
 export async function createLoanAction(input: CreateLoanInput) {
   const user = await requireUser();
   const group = await findGroupOf(user.id);
   if (!group) return { ok: false as const, error: "NoGroup" };
 
-  const result = await data.createLoan(group.id, user.id, input);
+  const result = await createLoan(group.id, user.id, input);
   if (!result.ok) return { ok: false as const, error: result.error.kind };
 
   revalidatePath("/");
@@ -38,7 +31,7 @@ export async function collectInstallmentAction(
   const group = await findGroupOf(user.id);
   if (!group) return { ok: false as const, error: "NoGroup" };
 
-  const result = await data.collectInstallment(
+  const result = await collectInstallment(
     group.id,
     user.id,
     loanId,

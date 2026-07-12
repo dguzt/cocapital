@@ -1,6 +1,6 @@
 "use client";
 /** Desktop activity table; each row opens the movement dialog (E4). */
-import type { LedgerMovement } from "@/backend/modules/movements/data";
+import type { LedgerMovement } from "@/backend/modules/movements/usecases/list-movements";
 import type { ISODate } from "@/lib/dates";
 import { MovementDialog } from "./movement-dialog";
 import { presentMovement } from "./present";

@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import type { MovementType } from "../../movements/domain/movement";
 import {
   type CapitalInstallment,
   type CapitalMovement,
   deriveCapital,
-} from "./derive";
+} from "@/backend/modules/capital/domain/derive";
+import type { MovementType } from "@/backend/modules/movements/domain/movement";
 
 const mv = (
   type: MovementType,

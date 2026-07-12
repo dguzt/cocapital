@@ -1,12 +1,13 @@
 /** E2 integration: record movements → ledger → capital derivation. */
 import { beforeEach, describe, expect, it } from "vitest";
+import { db } from "@/backend/infra/db/client";
+import { users } from "@/backend/infra/db/schema";
+import { deriveCapital } from "@/backend/modules/capital/domain/derive";
+import { createGroup } from "@/backend/modules/groups/data";
+import { validateNewMovement } from "@/backend/modules/movements/domain/validate";
+import { addMovement } from "@/backend/modules/movements/usecases/add-movement";
+import { listMovements } from "@/backend/modules/movements/usecases/list-movements";
 import { truncateAll } from "@/test/truncate";
-import { db } from "../../infra/db/client";
-import { users } from "../../infra/db/schema";
-import { deriveCapital } from "../capital/domain/derive";
-import { createGroup } from "../groups/data";
-import { addMovement, listMovements } from "./data";
-import { validateNewMovement } from "./domain/validate";
 
 async function seed() {
   const [diego] = await db

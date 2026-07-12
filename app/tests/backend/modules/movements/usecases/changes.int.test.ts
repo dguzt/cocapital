@@ -1,21 +1,38 @@
 /** E4 integration: propose → old value stands → decide → applied/rejected. */
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
+import { applyApprovedChange } from "@/backend/application/apply-approved-change";
+import { db } from "@/backend/infra/db/client";
+import { installments, users } from "@/backend/infra/db/schema";
+import { deriveCapital } from "@/backend/modules/capital/domain/derive";
+import { createGroup, joinGroup } from "@/backend/modules/groups/data";
+import { generateSchedule } from "@/backend/modules/loans/domain/schedule";
+import { collectInstallment } from "@/backend/modules/loans/usecases/collect-installment";
+import { createLoan } from "@/backend/modules/loans/usecases/create-loan";
+import { getLoanDetail } from "@/backend/modules/loans/usecases/get-loan-detail";
+import { listGroupInstallments } from "@/backend/modules/loans/usecases/list-group-installments";
+import { validateNewMovement } from "@/backend/modules/movements/domain/validate";
+import { addMovement } from "@/backend/modules/movements/usecases/add-movement";
+import { decideChange } from "@/backend/modules/movements/usecases/decide-change";
+import { getMovementHistory } from "@/backend/modules/movements/usecases/get-movement-history";
+import { listMovements } from "@/backend/modules/movements/usecases/list-movements";
+import { listPendingChanges } from "@/backend/modules/movements/usecases/list-pending-changes";
+import { proposeChange } from "@/backend/modules/movements/usecases/propose-change";
 import { truncateAll } from "@/test/truncate";
-import { db } from "../../infra/db/client";
-import { installments, users } from "../../infra/db/schema";
-import { deriveCapital } from "../capital/domain/derive";
-import { createGroup, joinGroup } from "../groups/data";
-import {
-  decideMovementChange,
-  listMovementHistory,
-  listPendingChanges,
-  proposeMovementChange,
-} from "./changes-data";
-import { addMovement, listMovements } from "./data";
-import { validateNewMovement } from "./domain/validate";
 
 const TODAY = "2026-07-09";
+
+/** The composition root decides WHO applies an approved change — same wiring
+ *  the server action uses, so these tests exercise the real dispatch. */
+const decideMovementChange = (
+  groupId: string,
+  actorId: string,
+  pendingId: string,
+  decision: "approve" | "reject",
+) => decideChange(applyApprovedChange, groupId, actorId, pendingId, decision);
+
+const proposeMovementChange = proposeChange;
+const listMovementHistory = getMovementHistory;
 
 async function seed() {
   const [ana] = await db
@@ -178,8 +195,6 @@ describe("E4: the D1 story — Ana cambió S/50 → S/45", () => {
 /** A loan of S/40 at 10% → 2 cuotas of S/22 (principal 2000 + interés 200). */
 async function seedLoan() {
   const { ana, rosa, group } = await seed();
-  const { generateSchedule } = await import("../loans/domain/schedule");
-  const { createLoan } = await import("../loans/data");
   const s = generateSchedule({
     capital: 4000,
     ratePercent: 10,
@@ -201,7 +216,6 @@ async function seedLoan() {
 }
 
 async function capitalOf(groupId: string) {
-  const { listGroupInstallments } = await import("../loans/data");
   return deriveCapital(
     await listMovements(groupId),
     await listGroupInstallments(groupId),
@@ -211,8 +225,7 @@ async function capitalOf(groupId: string) {
 describe("Deshacer cobro: anular un repay devuelve la cuota a pendiente", () => {
   it("un cobro no se edita — su monto pertenece a la cuota", async () => {
     const { ana, rosa, group, loanId } = await seedLoan();
-    const { collectInstallment, getLoan } = await import("../loans/data");
-    const loan = await getLoan(group.id, loanId);
+    const loan = await getLoanDetail(group.id, loanId);
     if (!loan.ok) throw new Error("loan missing");
     await collectInstallment(
       group.id,
@@ -238,13 +251,12 @@ describe("Deshacer cobro: anular un repay devuelve la cuota a pendiente", () => 
 
   it("cobrar → deshacer devuelve el capital exactamente a donde estaba", async () => {
     const { ana, rosa, group, loanId } = await seedLoan();
-    const { collectInstallment, getLoan } = await import("../loans/data");
 
     const beforeCollect = await capitalOf(group.id);
     expect(beforeCollect.lent).toBe(4000); // todo el principal sigue prestado
     expect(beforeCollect.collectedInterest).toBe(0);
 
-    const loan = await getLoan(group.id, loanId);
+    const loan = await getLoanDetail(group.id, loanId);
     if (!loan.ok) throw new Error("loan missing");
     const cuota1 = loan.value.installments[0];
     await collectInstallment(group.id, ana.id, loanId, cuota1.id, TODAY);
@@ -268,7 +280,7 @@ describe("Deshacer cobro: anular un repay devuelve la cuota a pendiente", () => 
     );
     expect(proposed.ok).toBe(true);
     if (!proposed.ok) return;
-    const stillCollected = await getLoan(group.id, loanId);
+    const stillCollected = await getLoanDetail(group.id, loanId);
     expect(
       stillCollected.ok && stillCollected.value.installments[0].status,
     ).toBe("collected");
@@ -282,7 +294,7 @@ describe("Deshacer cobro: anular un repay devuelve la cuota a pendiente", () => 
     );
     expect(approved.ok && approved.value.applied).toBe(true);
 
-    const undone = await getLoan(group.id, loanId);
+    const undone = await getLoanDetail(group.id, loanId);
     if (!undone.ok) throw new Error("loan missing");
     expect(undone.value.installments[0].status).toBe("pending");
 
@@ -306,8 +318,7 @@ describe("Deshacer cobro: anular un repay devuelve la cuota a pendiente", () => 
 
   it("deshecho el cobro, la cuota se puede volver a cobrar", async () => {
     const { ana, rosa, group, loanId } = await seedLoan();
-    const { collectInstallment, getLoan } = await import("../loans/data");
-    const loan = await getLoan(group.id, loanId);
+    const loan = await getLoanDetail(group.id, loanId);
     if (!loan.ok) throw new Error("loan missing");
     const cuota1 = loan.value.installments[0];
 
@@ -338,7 +349,7 @@ describe("Deshacer cobro: anular un repay devuelve la cuota a pendiente", () => 
       TODAY,
     );
     expect(recollected.ok).toBe(true);
-    const loanNow = await getLoan(group.id, loanId);
+    const loanNow = await getLoanDetail(group.id, loanId);
     expect(loanNow.ok && loanNow.value.installments[0].status).toBe(
       "collected",
     );

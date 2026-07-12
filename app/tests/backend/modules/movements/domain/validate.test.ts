@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateNewMovement } from "./validate";
+import { validateNewMovement } from "@/backend/modules/movements/domain/validate";
 
 const base = {
   type: "contribute",

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addPeriods, isOverdue, todayInLima } from "./dates";
+import { addPeriods, isOverdue, todayInLima } from "@/lib/dates";
 
 describe("addPeriods", () => {
   it("daily steps one day", () => {

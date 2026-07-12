@@ -12,8 +12,8 @@ import {
   proposeEditAction,
   proposeVoidAction,
 } from "@/backend/modules/movements/actions";
-import type { ChangeHistoryItem } from "@/backend/modules/movements/changes-data";
-import type { LedgerMovement } from "@/backend/modules/movements/data";
+import type { ChangeHistoryItem } from "@/backend/modules/movements/usecases/get-movement-history";
+import type { LedgerMovement } from "@/backend/modules/movements/usecases/list-movements";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

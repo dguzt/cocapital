@@ -8,7 +8,7 @@ import Link from "next/link";
 import type { SessionUser } from "@/backend/modules/accounts/current-user";
 import type { CapitalInstallment } from "@/backend/modules/capital/domain/derive";
 import { deriveCapital } from "@/backend/modules/capital/domain/derive";
-import type { LedgerMovement } from "@/backend/modules/movements/data";
+import type { LedgerMovement } from "@/backend/modules/movements/usecases/list-movements";
 import { ActivityFeed } from "@/components/movements/activity-feed";
 import { ActivityTable } from "@/components/movements/activity-table";
 import { MovementSheet } from "@/components/movements/movement-sheet";

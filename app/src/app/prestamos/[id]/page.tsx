@@ -3,8 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/backend/modules/accounts/current-user";
 import { findGroupOf } from "@/backend/modules/groups/data";
-import { getLoan, listGroupInstallments } from "@/backend/modules/loans/data";
-import { listPendingChanges } from "@/backend/modules/movements/changes-data";
+import { getLoanDetail } from "@/backend/modules/loans/usecases/get-loan-detail";
+import { listGroupInstallments } from "@/backend/modules/loans/usecases/list-group-installments";
+import { listPendingChanges } from "@/backend/modules/movements/usecases/list-pending-changes";
 import { CollectButton } from "@/components/loans/collect-button";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,7 @@ export default async function LoanDetailPage({
   const group = await findGroupOf(user.id);
   if (!group) return null;
   const { id } = await params;
-  const loan = await getLoan(group.id, id);
+  const loan = await getLoanDetail(group.id, id);
   if (!loan.ok) notFound();
 
   const today = todayInLima();

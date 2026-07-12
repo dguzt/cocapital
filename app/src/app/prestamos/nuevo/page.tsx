@@ -1,9 +1,7 @@
 import { requireUser } from "@/backend/modules/accounts/current-user";
 import { findGroupOf } from "@/backend/modules/groups/data";
-import {
-  listBorrowers,
-  listGroupInstallments,
-} from "@/backend/modules/loans/data";
+import { listBorrowers } from "@/backend/modules/loans/usecases/list-borrowers";
+import { listGroupInstallments } from "@/backend/modules/loans/usecases/list-group-installments";
 import { LoanWizard } from "@/components/loans/loan-wizard";
 import { AppShell } from "@/components/shell/app-shell";
 import { isOverdue, todayInLima } from "@/lib/dates";

@@ -4,15 +4,15 @@
  * Runs against the isolated Neon "test" branch (see integration-setup.ts).
  */
 import { beforeEach, describe, expect, it } from "vitest";
-import { truncateAll } from "@/test/truncate";
-import { db } from "./client";
+import { db } from "@/backend/infra/db/client";
 import {
   groups,
   memberships,
   movementChanges,
   movements,
   users,
-} from "./schema";
+} from "@/backend/infra/db/schema";
+import { truncateAll } from "@/test/truncate";
 
 /** Flatten an error's cause chain into one searchable string, immutably. */
 function causeChain(e: unknown): string {

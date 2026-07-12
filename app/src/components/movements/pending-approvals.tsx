@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { decideChangeAction } from "@/backend/modules/movements/actions";
-import type { PendingChangeItem } from "@/backend/modules/movements/changes-data";
+import type { PendingChangeItem } from "@/backend/modules/movements/usecases/list-pending-changes";
 import { Button } from "@/components/ui/button";
 import { formatCents } from "@/lib/money";
 import { MOVEMENT_META } from "./movement-meta";

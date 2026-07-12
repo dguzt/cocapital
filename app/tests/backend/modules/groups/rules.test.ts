@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { decideJoin, makeInviteCode, validateGroupName } from "./rules";
+import {
+  decideJoin,
+  makeInviteCode,
+  validateGroupName,
+} from "@/backend/modules/groups/domain/rules";
 
 describe("makeInviteCode", () => {
   it("makes 8 chars from the unambiguous alphabet", () => {
