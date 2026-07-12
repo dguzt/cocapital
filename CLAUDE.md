@@ -36,6 +36,30 @@ specs/
   templates/             epic.md / usecase.md / task.md
 ```
 
+## Backend architecture (non-negotiable)
+
+The folders name the business, not the framework. Per module:
+
+```
+modules/<module>/
+  domain/         pure rules and types. No I/O, no Drizzle, no clock. Unit-tested.
+  usecases/       ONE FILE PER THING THE BUSINESS DOES — reads included.
+  repositories/   the only place Drizzle lives. Builds statements; runs no rules.
+  actions.ts      "use server": session → use case → revalidate. Zero logic.
+application/      the only file that may know every module (the dispatch).
+tests/            mirrors this tree exactly. *.test.ts = unit · *.int.test.ts = DB.
+```
+
+- **A read is a use case too.** `get-loan-detail` authorizes the group and derives the expected interest — decisions, not a query. There is no `queries/` folder.
+- **Imports:** `usecases → domain + own repositories` (and other modules' *use cases*, never their repositories). `movements` (the ledger) **must never import `loans` or `inventory`** — that direction is how the ledger starts learning everyone's rules.
+- **Atomicity:** neon-http has no interactive tx. Repositories return **unexecuted Drizzle statements**; the use case that owns the rule collects them and calls `runAtomically()`. That's how one use case writes across tables without a repository reaching into another module.
+
+### The rule behind all of it
+
+**A movement is how the ledger SHOWS a fact, not how the fact behaves.** Anular un cobro reopens a cuota (loans); anular una venta will restock (inventory); anular un aporte touches nothing else. So **every movement type names its owner**, and `application/apply-approved-change.ts` dispatches with an **exhaustive switch** — add a type and it stops compiling until you say who reverses it. Never grow an `if (type === …)` inside the ledger; that is the bug this architecture exists to prevent.
+
+> Open: whether `movements` becomes a real double-entry **ledger** (Cuentas por Cobrar / por Pagar, accrual — selling ≠ getting paid). Decide before building inventory.
+
 ## GitHub Project field scheme
 
 Type (Epic/Usecase/Task) · Priority (P0/P1/P2) · Size (S/M/L) · Hat (Builder/Tester/Manager/Hustler) · Module (multi-select) · Status.
