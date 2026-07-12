@@ -21,14 +21,21 @@ const valid: NewLoanInstallment[] = [
   },
 ];
 
+/** Which invariant broke — null if the schedule was accepted. */
+function reasonOf(result: ReturnType<typeof checkSchedule>) {
+  if (result.ok) return null;
+  return result.error.kind === "InvalidInstallments"
+    ? result.error.reason
+    : result.error.kind;
+}
+
 describe("checkSchedule", () => {
   it("accepts a schedule whose principal sums to the capital", () => {
     expect(checkSchedule(valid, 4000).ok).toBe(true);
   });
 
   it("rejects an empty schedule", () => {
-    const r = checkSchedule([], 4000);
-    expect(!r.ok && r.error.reason).toBe("empty");
+    expect(reasonOf(checkSchedule([], 4000))).toBe("empty");
   });
 
   it("rejects principal that does not sum to the capital", () => {
@@ -36,23 +43,20 @@ describe("checkSchedule", () => {
     const short = valid.map((i, idx) =>
       idx === 0 ? { ...i, principal: i.principal - 1 } : i,
     );
-    const r = checkSchedule(short, 4000);
-    expect(!r.ok && r.error.reason).toBe("principal-mismatch");
+    expect(reasonOf(checkSchedule(short, 4000))).toBe("principal-mismatch");
   });
 
   it("rejects a row where principal + interest is not the amount", () => {
     const broken = valid.map((i, idx) =>
       idx === 1 ? { ...i, interest: i.interest + 5 } : i,
     );
-    const r = checkSchedule(broken, 4000);
-    expect(!r.ok && r.error.reason).toBe("row-invariant");
+    expect(reasonOf(checkSchedule(broken, 4000))).toBe("row-invariant");
   });
 
   it("rejects a cuota of zero", () => {
     const zero = valid.map((i, idx) =>
       idx === 0 ? { ...i, amount: 0, principal: 0, interest: 0 } : i,
     );
-    const r = checkSchedule(zero, 2000);
-    expect(!r.ok && r.error.reason).toBe("row-invariant");
+    expect(reasonOf(checkSchedule(zero, 2000))).toBe("row-invariant");
   });
 });
