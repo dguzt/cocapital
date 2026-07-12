@@ -1,37 +1,37 @@
 /** Installments table. Drizzle lives here; rules do not. */
 import { and, asc, eq } from "drizzle-orm";
 import { db } from "../../../infra/db/client";
-import { installments, loans } from "../../../infra/db/schema";
+import { Installments, Loans } from "../../../infra/db/schema";
 import type { Write } from "../../../infra/db/write";
 import type { NewLoanInstallment } from "../domain/loan";
 
 export function listByLoan(loanId: string) {
   return db
     .select()
-    .from(installments)
-    .where(eq(installments.loanId, loanId))
-    .orderBy(asc(installments.number));
+    .from(Installments)
+    .where(eq(Installments.loanId, loanId))
+    .orderBy(asc(Installments.number));
 }
 
 /** Every installment term of the group — feeds M5's realized-only capital. */
 export function listByGroup(groupId: string) {
   return db
     .select({
-      principal: installments.principal,
-      interest: installments.interest,
-      status: installments.status,
-      dueDate: installments.dueDate,
+      principal: Installments.principal,
+      interest: Installments.interest,
+      status: Installments.status,
+      dueDate: Installments.dueDate,
     })
-    .from(installments)
-    .innerJoin(loans, eq(loans.id, installments.loanId))
-    .where(eq(loans.groupId, groupId));
+    .from(Installments)
+    .innerJoin(Loans, eq(Loans.id, Installments.loanId))
+    .where(eq(Loans.groupId, groupId));
 }
 
 export function insertManyStmt(
   loanId: string,
   rows: NewLoanInstallment[],
 ): Write {
-  return db.insert(installments).values(
+  return db.insert(Installments).values(
     rows.map((i) => ({
       loanId,
       number: i.number,
@@ -54,21 +54,21 @@ export function markCollectedStmt(
   collectedAt: Date,
 ) {
   return db
-    .update(installments)
+    .update(Installments)
     .set({ status: "collected", collectedAt, repayMovementId })
     .where(
       and(
-        eq(installments.id, installmentId),
-        eq(installments.status, "pending"),
+        eq(Installments.id, installmentId),
+        eq(Installments.status, "pending"),
       ),
     )
-    .returning({ id: installments.id });
+    .returning({ id: Installments.id });
 }
 
 /** The exact inverse of markCollected: the cuota is collectable again. */
 export function reopenByRepayMovementStmt(repayMovementId: string): Write {
   return db
-    .update(installments)
+    .update(Installments)
     .set({ status: "pending", collectedAt: null, repayMovementId: null })
-    .where(eq(installments.repayMovementId, repayMovementId));
+    .where(eq(Installments.repayMovementId, repayMovementId));
 }

@@ -5,7 +5,7 @@
 import { count, eq } from "drizzle-orm";
 import { err, ok, type Result } from "@/lib/result";
 import { db } from "../../infra/db/client";
-import { groups, memberships, users } from "../../infra/db/schema";
+import { Groups, Memberships, Users } from "../../infra/db/schema";
 import type { GroupError } from "./domain/errors";
 import { decideJoin, makeInviteCode, validateGroupName } from "./domain/rules";
 
@@ -21,22 +21,22 @@ export async function findGroupOf(
   userId: string,
 ): Promise<GroupWithMembers | null> {
   const [membership] = await db
-    .select({ groupId: memberships.groupId })
-    .from(memberships)
-    .where(eq(memberships.userId, userId));
+    .select({ groupId: Memberships.groupId })
+    .from(Memberships)
+    .where(eq(Memberships.userId, userId));
   if (!membership) return null;
 
   const [group] = await db
     .select()
-    .from(groups)
-    .where(eq(groups.id, membership.groupId));
+    .from(Groups)
+    .where(eq(Groups.id, membership.groupId));
   if (!group) return null;
 
   const members = await db
-    .select({ id: users.id, name: users.name, role: memberships.role })
-    .from(memberships)
-    .innerJoin(users, eq(users.id, memberships.userId))
-    .where(eq(memberships.groupId, group.id));
+    .select({ id: Users.id, name: Users.name, role: Memberships.role })
+    .from(Memberships)
+    .innerJoin(Users, eq(Users.id, Memberships.userId))
+    .where(eq(Memberships.groupId, group.id));
 
   return { ...group, members };
 }
@@ -65,8 +65,8 @@ export async function createGroup(
   // interactive transactions → client-generated id + atomic batch.
   const groupId = crypto.randomUUID();
   await db.batch([
-    db.insert(groups).values({ id: groupId, name: name.value, inviteCode }),
-    db.insert(memberships).values({ groupId, userId, role: "creator" }),
+    db.insert(Groups).values({ id: groupId, name: name.value, inviteCode }),
+    db.insert(Memberships).values({ groupId, userId, role: "creator" }),
   ]);
 
   return ok((await findGroupOf(userId)) as GroupWithMembers);
@@ -79,16 +79,16 @@ export async function joinGroup(
 ): Promise<Result<GroupWithMembers, GroupError>> {
   const [group] = await db
     .select()
-    .from(groups)
-    .where(eq(groups.inviteCode, code));
+    .from(Groups)
+    .where(eq(Groups.inviteCode, code));
 
   const [current, isMemberRow] = await Promise.all([
     findGroupOf(userId),
     group
       ? db
           .select({ n: count() })
-          .from(memberships)
-          .where(eq(memberships.groupId, group.id))
+          .from(Memberships)
+          .where(eq(Memberships.groupId, group.id))
       : Promise.resolve([{ n: 0 }]),
   ]);
 
@@ -102,7 +102,7 @@ export async function joinGroup(
   if (!decision.ok) return decision;
 
   if (decision.value.action === "join") {
-    await db.insert(memberships).values({ groupId: group.id, userId });
+    await db.insert(Memberships).values({ groupId: group.id, userId });
   }
   return ok((await findGroupOf(userId)) as GroupWithMembers);
 }

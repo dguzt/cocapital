@@ -1,7 +1,7 @@
 /** E3 integration: create loan → schedule persisted → collect → capital. */
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/backend/infra/db/client";
-import { users } from "@/backend/infra/db/schema";
+import { Users } from "@/backend/infra/db/schema";
 import { deriveCapital } from "@/backend/modules/capital/domain/derive";
 import { createGroup } from "@/backend/modules/groups/data";
 import { generateSchedule } from "@/backend/modules/loans/domain/schedule";
@@ -19,7 +19,7 @@ const TODAY = "2026-07-09";
 
 async function seed() {
   const [diego] = await db
-    .insert(users)
+    .insert(Users)
     .values({ clerkId: "clerk_diego", name: "Diego", email: "d@test.pe" })
     .returning();
   const created = await createGroup(diego.id, "Inversiones DR");
@@ -137,7 +137,7 @@ describe("E3: lending lifecycle", () => {
     expect(await listMovements(group.id)).toHaveLength(3);
   });
 
-  it("rejects installments that break the invariants", async () => {
+  it("rejects Installments that break the invariants", async () => {
     const { diego, group } = await seed();
     const karina = karinaLoan();
     const broken = karina.installments.map((i, idx) =>

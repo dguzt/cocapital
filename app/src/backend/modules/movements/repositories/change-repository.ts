@@ -1,7 +1,7 @@
 /** movement_changes table — the append-only trail of proposals. */
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { db } from "../../../infra/db/client";
-import { movementChanges, movements, users } from "../../../infra/db/schema";
+import { MovementChanges, Movements, Users } from "../../../infra/db/schema";
 import type { Write } from "../../../infra/db/write";
 import type { MovementSnapshot, MovementType } from "../domain/movement";
 import type { ChangeKind, PendingStatus } from "../domain/pending";
@@ -33,12 +33,12 @@ export type ChangeHistoryItem = PendingChangeItem & {
  */
 export async function hasPendingFor(movementId: string) {
   const [row] = await db
-    .select({ id: movementChanges.id })
-    .from(movementChanges)
+    .select({ id: MovementChanges.id })
+    .from(MovementChanges)
     .where(
       and(
-        eq(movementChanges.movementId, movementId),
-        eq(movementChanges.status, "pending"),
+        eq(MovementChanges.movementId, movementId),
+        eq(MovementChanges.status, "pending"),
       ),
     )
     .limit(1);
@@ -54,9 +54,9 @@ export async function insert(row: {
   after: MovementSnapshot | null;
 }) {
   const [inserted] = await db
-    .insert(movementChanges)
+    .insert(MovementChanges)
     .values(row)
-    .returning({ id: movementChanges.id });
+    .returning({ id: MovementChanges.id });
   return inserted;
 }
 
@@ -64,13 +64,13 @@ export async function insert(row: {
 export async function findWithMovement(pendingId: string) {
   const [row] = await db
     .select({
-      change: movementChanges,
-      movementGroup: movements.groupId,
-      movementType: movements.type,
+      change: MovementChanges,
+      movementGroup: Movements.groupId,
+      movementType: Movements.type,
     })
-    .from(movementChanges)
-    .innerJoin(movements, eq(movements.id, movementChanges.movementId))
-    .where(eq(movementChanges.id, pendingId));
+    .from(MovementChanges)
+    .innerJoin(Movements, eq(Movements.id, MovementChanges.movementId))
+    .where(eq(MovementChanges.id, pendingId));
   if (!row) return null;
   return {
     id: row.change.id,
@@ -89,9 +89,9 @@ export function decideStmt(
   patch: { status: PendingStatus; decidedBy: string; decidedAt: Date },
 ): Write {
   return db
-    .update(movementChanges)
+    .update(MovementChanges)
     .set(patch)
-    .where(eq(movementChanges.id, pendingId));
+    .where(eq(MovementChanges.id, pendingId));
 }
 
 export async function listPending(
@@ -99,25 +99,25 @@ export async function listPending(
 ): Promise<PendingChangeItem[]> {
   const rows = await db
     .select({
-      id: movementChanges.id,
-      movementId: movementChanges.movementId,
-      kind: movementChanges.kind,
-      proposedBy: movementChanges.proposedBy,
-      proposerName: users.name,
-      before: movementChanges.before,
-      after: movementChanges.after,
-      createdAt: movementChanges.createdAt,
+      id: MovementChanges.id,
+      movementId: MovementChanges.movementId,
+      kind: MovementChanges.kind,
+      proposedBy: MovementChanges.proposedBy,
+      proposerName: Users.name,
+      before: MovementChanges.before,
+      after: MovementChanges.after,
+      createdAt: MovementChanges.createdAt,
     })
-    .from(movementChanges)
-    .innerJoin(movements, eq(movements.id, movementChanges.movementId))
-    .innerJoin(users, eq(users.id, movementChanges.proposedBy))
+    .from(MovementChanges)
+    .innerJoin(Movements, eq(Movements.id, MovementChanges.movementId))
+    .innerJoin(Users, eq(Users.id, MovementChanges.proposedBy))
     .where(
       and(
-        eq(movements.groupId, groupId),
-        eq(movementChanges.status, "pending"),
+        eq(Movements.groupId, groupId),
+        eq(MovementChanges.status, "pending"),
       ),
     )
-    .orderBy(desc(movementChanges.createdAt));
+    .orderBy(desc(MovementChanges.createdAt));
   return rows.map((r) => ({
     ...r,
     before: r.before as MovementSnapshot,
@@ -131,26 +131,26 @@ export async function listForMovement(
 ): Promise<ChangeHistoryItem[]> {
   const rows = await db
     .select({
-      id: movementChanges.id,
-      movementId: movementChanges.movementId,
-      kind: movementChanges.kind,
-      proposedBy: movementChanges.proposedBy,
-      before: movementChanges.before,
-      after: movementChanges.after,
-      createdAt: movementChanges.createdAt,
-      status: movementChanges.status,
-      decidedBy: movementChanges.decidedBy,
-      decidedAt: movementChanges.decidedAt,
+      id: MovementChanges.id,
+      movementId: MovementChanges.movementId,
+      kind: MovementChanges.kind,
+      proposedBy: MovementChanges.proposedBy,
+      before: MovementChanges.before,
+      after: MovementChanges.after,
+      createdAt: MovementChanges.createdAt,
+      status: MovementChanges.status,
+      decidedBy: MovementChanges.decidedBy,
+      decidedAt: MovementChanges.decidedAt,
     })
-    .from(movementChanges)
-    .innerJoin(movements, eq(movements.id, movementChanges.movementId))
+    .from(MovementChanges)
+    .innerJoin(Movements, eq(Movements.id, MovementChanges.movementId))
     .where(
       and(
-        eq(movements.groupId, groupId),
-        eq(movementChanges.movementId, movementId),
+        eq(Movements.groupId, groupId),
+        eq(MovementChanges.movementId, movementId),
       ),
     )
-    .orderBy(desc(movementChanges.createdAt));
+    .orderBy(desc(MovementChanges.createdAt));
 
   if (rows.length === 0) return [];
   const userIds = [
@@ -159,9 +159,9 @@ export async function listForMovement(
     ),
   ] as string[];
   const nameRows = await db
-    .select({ id: users.id, name: users.name })
-    .from(users)
-    .where(inArray(users.id, userIds));
+    .select({ id: Users.id, name: Users.name })
+    .from(Users)
+    .where(inArray(Users.id, userIds));
   const names = new Map(nameRows.map((n) => [n.id, n.name]));
 
   return rows.map((r) => ({

@@ -1,7 +1,7 @@
 /** E1 integration: group create/join against the real test branch. */
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/backend/infra/db/client";
-import { users } from "@/backend/infra/db/schema";
+import { Users } from "@/backend/infra/db/schema";
 import {
   createGroup,
   findGroupOf,
@@ -11,7 +11,7 @@ import { truncateAll } from "@/test/truncate";
 
 async function mkUser(clerkId: string, name: string) {
   const [u] = await db
-    .insert(users)
+    .insert(Users)
     .values({ clerkId, name, email: `${name.toLowerCase()}@test.pe` })
     .returning();
   return u;

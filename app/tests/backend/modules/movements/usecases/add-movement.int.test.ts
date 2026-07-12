@@ -1,7 +1,7 @@
-/** E2 integration: record movements → ledger → capital derivation. */
+/** E2 integration: record Movements → ledger → capital derivation. */
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/backend/infra/db/client";
-import { users } from "@/backend/infra/db/schema";
+import { Users } from "@/backend/infra/db/schema";
 import { deriveCapital } from "@/backend/modules/capital/domain/derive";
 import { createGroup } from "@/backend/modules/groups/data";
 import { validateNewMovement } from "@/backend/modules/movements/domain/validate";
@@ -11,7 +11,7 @@ import { truncateAll } from "@/test/truncate";
 
 async function seed() {
   const [diego] = await db
-    .insert(users)
+    .insert(Users)
     .values({ clerkId: "clerk_diego", name: "Diego", email: "d@test.pe" })
     .returning();
   const created = await createGroup(diego.id, "Inversiones DR");
@@ -28,7 +28,7 @@ function valid(input: Parameters<typeof validateNewMovement>[0]) {
 beforeEach(truncateAll);
 
 describe("E2: record → ledger → capital", () => {
-  it("appends movements and derives the dashboard numbers", async () => {
+  it("appends Movements and derives the dashboard numbers", async () => {
     const { diego, group } = await seed();
     const today = "2026-07-09";
 
@@ -69,7 +69,7 @@ describe("E2: record → ledger → capital", () => {
   it("scopes the ledger by group", async () => {
     const { diego, group } = await seed();
     const [rosa] = await db
-      .insert(users)
+      .insert(Users)
       .values({ clerkId: "clerk_rosa", name: "Rosa", email: "r@test.pe" })
       .returning();
     const other = await createGroup(rosa.id, "Otro");

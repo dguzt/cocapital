@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { applyApprovedChange } from "@/backend/application/apply-approved-change";
 import { db } from "@/backend/infra/db/client";
-import { installments, users } from "@/backend/infra/db/schema";
+import { Installments, Users } from "@/backend/infra/db/schema";
 import { deriveCapital } from "@/backend/modules/capital/domain/derive";
 import { createGroup, joinGroup } from "@/backend/modules/groups/data";
 import { generateSchedule } from "@/backend/modules/loans/domain/schedule";
@@ -36,11 +36,11 @@ const listMovementHistory = getMovementHistory;
 
 async function seed() {
   const [ana] = await db
-    .insert(users)
+    .insert(Users)
     .values({ clerkId: "clerk_ana", name: "Ana", email: "a@test.pe" })
     .returning();
   const [rosa] = await db
-    .insert(users)
+    .insert(Users)
     .values({ clerkId: "clerk_rosa", name: "Rosa", email: "r@test.pe" })
     .returning();
   const created = await createGroup(ana.id, "Inversiones DR");
@@ -320,8 +320,8 @@ describe("Deshacer cobro: anular un repay devuelve la cuota a pendiente", () => 
     // La cuota queda limpia: sin fecha de cobro y sin FK al movimiento anulado.
     const [row] = await db
       .select()
-      .from(installments)
-      .where(eq(installments.id, cuota1.id));
+      .from(Installments)
+      .where(eq(Installments.id, cuota1.id));
     expect(row.collectedAt).toBeNull();
     expect(row.repayMovementId).toBeNull();
 
