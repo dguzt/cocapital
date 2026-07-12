@@ -1,9 +1,9 @@
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import * as R from "remeda";
+import { useCases } from "@/backend/application/container";
 import { requireUser } from "@/backend/modules/accounts/current-user";
 import { findGroupOf } from "@/backend/modules/groups/data";
-import { listLoans } from "@/backend/modules/loans/usecases/list-loans";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
 import { todayInLima } from "@/lib/dates";
@@ -13,7 +13,10 @@ export default async function LoansPage() {
   const user = await requireUser();
   const group = await findGroupOf(user.id);
   if (!group) return null;
-  const loans = await listLoans(group.id, todayInLima());
+  const loans = await useCases.listLoans.execute({
+    groupId: group.id,
+    today: todayInLima(),
+  });
   const overdueCount = R.sumBy(loans, (l) => l.overdueCount);
 
   return (

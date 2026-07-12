@@ -1,11 +1,9 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { useCases } from "@/backend/application/container";
 import { requireUser } from "@/backend/modules/accounts/current-user";
 import { findGroupOf } from "@/backend/modules/groups/data";
-import { getLoanDetail } from "@/backend/modules/loans/usecases/get-loan-detail";
-import { listGroupInstallments } from "@/backend/modules/loans/usecases/list-group-installments";
-import { listPendingChanges } from "@/backend/modules/movements/usecases/list-pending-changes";
 import { CollectButton } from "@/components/loans/collect-button";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
@@ -27,18 +25,25 @@ export default async function LoanDetailPage({
   const group = await findGroupOf(user.id);
   if (!group) return null;
   const { id } = await params;
-  const loan = await getLoanDetail(group.id, id);
+  const loan = await useCases.getLoanDetail.execute({
+    groupId: group.id,
+    loanId: id,
+  });
   if (!loan.ok) notFound();
 
   const today = todayInLima();
-  const groupInstallments = await listGroupInstallments(group.id);
+  const groupInstallments = await useCases.listGroupInstallments.execute({
+    groupId: group.id,
+  });
   const overdueCount = groupInstallments.filter(
     (i) => i.status === "pending" && isOverdue(i.dueDate, today),
   ).length;
 
   // A "deshacer cobro" is proposed on the cuota's repay movement, but the user
   // looks for it HERE — so surface it on the cuota it will undo.
-  const pendingChanges = await listPendingChanges(group.id);
+  const pendingChanges = await useCases.listPendingChanges.execute({
+    groupId: group.id,
+  });
   const undoPending = new Set(
     pendingChanges.filter((c) => c.kind === "void").map((c) => c.movementId),
   );

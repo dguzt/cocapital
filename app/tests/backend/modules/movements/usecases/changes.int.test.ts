@@ -1,38 +1,27 @@
 /** E4 integration: propose → old value stands → decide → applied/rejected. */
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
-import { applyApprovedChange } from "@/backend/application/apply-approved-change";
 import { db } from "@/backend/infra/db/client";
 import { Installments, Users } from "@/backend/infra/db/schema";
 import { deriveCapital } from "@/backend/modules/capital/domain/derive";
 import { createGroup, joinGroup } from "@/backend/modules/groups/data";
 import { generateSchedule } from "@/backend/modules/loans/domain/schedule";
-import { collectInstallment } from "@/backend/modules/loans/usecases/collect-installment";
-import { createLoan } from "@/backend/modules/loans/usecases/create-loan";
-import { getLoanDetail } from "@/backend/modules/loans/usecases/get-loan-detail";
-import { listGroupInstallments } from "@/backend/modules/loans/usecases/list-group-installments";
 import { validateNewMovement } from "@/backend/modules/movements/domain/validate";
-import { addMovement } from "@/backend/modules/movements/usecases/add-movement";
-import { decideChange } from "@/backend/modules/movements/usecases/decide-change";
-import { getMovementHistory } from "@/backend/modules/movements/usecases/get-movement-history";
-import { listMovements } from "@/backend/modules/movements/usecases/list-movements";
-import { listPendingChanges } from "@/backend/modules/movements/usecases/list-pending-changes";
-import { proposeChange } from "@/backend/modules/movements/usecases/propose-change";
 import { truncateAll } from "@/test/truncate";
+import {
+  addMovement,
+  collectInstallment,
+  createLoan,
+  decideMovementChange,
+  getLoanDetail,
+  listGroupInstallments,
+  listMovementHistory,
+  listMovements,
+  listPendingChanges,
+  proposeMovementChange,
+} from "../../../../support/use-cases";
 
 const TODAY = "2026-07-09";
-
-/** The composition root decides WHO applies an approved change — same wiring
- *  the server action uses, so these tests exercise the real dispatch. */
-const decideMovementChange = (
-  groupId: string,
-  actorId: string,
-  pendingId: string,
-  decision: "approve" | "reject",
-) => decideChange(applyApprovedChange, groupId, actorId, pendingId, decision);
-
-const proposeMovementChange = proposeChange;
-const listMovementHistory = getMovementHistory;
 
 async function seed() {
   const [ana] = await db

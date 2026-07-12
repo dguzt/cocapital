@@ -1,21 +1,14 @@
 "use server";
-/**
- * M3's edge with Next: session → use case → revalidate. No rules here.
- * This is where the composition root gets injected: decide-change needs to
- * know how to apply an approved change, and only application/ knows the owners.
- */
+/** M3's edge with Next: session → use case → revalidate. No rules here. */
 import { revalidatePath } from "next/cache";
+
 import { todayInLima } from "@/lib/dates";
 import { solesToCents } from "@/lib/money";
-import { applyApprovedChange } from "../../application/apply-approved-change";
+import { useCases } from "../../application/container";
 import { requireUser } from "../accounts/current-user";
 import { findGroupOf } from "../groups/data";
 import type { MovementSnapshot } from "./domain/movement";
 import { validateNewMovement } from "./domain/validate";
-import { addMovement } from "./usecases/add-movement";
-import { decideChange } from "./usecases/decide-change";
-import { getMovementHistory } from "./usecases/get-movement-history";
-import { proposeChange } from "./usecases/propose-change";
 
 export type AddMovementInput = {
   type: string;
@@ -35,15 +28,25 @@ function revalidateLedgerAndLoans() {
 export async function addMovementAction(input: AddMovementInput) {
   const user = await requireUser();
   const group = await findGroupOf(user.id);
-  if (!group) return { ok: false as const, error: "NoGroup" };
+
+  if (!group) {
+    return { ok: false as const, error: "NoGroup" };
+  }
 
   const validated = validateNewMovement({ ...input, today: todayInLima() });
+
   if (!validated.ok) {
     return { ok: false as const, error: validated.error.kind };
   }
 
-  await addMovement(group.id, user.id, validated.value);
+  await useCases.addMovement.execute({
+    ...validated.value,
+    groupId: group.id,
+    userId: user.id,
+  });
+
   revalidatePath("/");
+
   return { ok: true as const };
 }
 
@@ -55,13 +58,19 @@ export async function proposeEditAction(
 ) {
   const user = await requireUser();
   const group = await findGroupOf(user.id);
-  if (!group) return { ok: false as const, error: "NoGroup" };
+
+  if (!group) {
+    return { ok: false as const, error: "NoGroup" };
+  }
 
   const amount = solesToCents(input.amountSoles);
+
   if (amount === null || amount <= 0) {
     return { ok: false as const, error: "InvalidAmount" };
   }
+
   const cost = input.costSoles?.trim() ? solesToCents(input.costSoles) : null;
+
   if (input.costSoles?.trim() && (cost === null || cost <= 0)) {
     return { ok: false as const, error: "InvalidCost" };
   }
@@ -72,16 +81,22 @@ export async function proposeEditAction(
     concept: input.concept.trim() || null,
     cost: before.type === "sell_inventory" ? cost : before.cost,
   };
-  const result = await proposeChange(
-    group.id,
-    user.id,
+
+  const result = await useCases.proposeChange.execute({
+    groupId: group.id,
+    actorId: user.id,
     movementId,
-    "edit",
+    kind: "edit",
     after,
-  );
-  if (!result.ok) return { ok: false as const, error: result.error.kind };
+  });
+
+  if (!result.ok) {
+    return { ok: false as const, error: result.error.kind };
+  }
+
   revalidatePath("/");
   revalidatePath("/actividad");
+
   return { ok: true as const };
 }
 
@@ -93,11 +108,24 @@ export async function proposeEditAction(
 export async function proposeVoidAction(movementId: string) {
   const user = await requireUser();
   const group = await findGroupOf(user.id);
-  if (!group) return { ok: false as const, error: "NoGroup" };
 
-  const result = await proposeChange(group.id, user.id, movementId, "void");
-  if (!result.ok) return { ok: false as const, error: result.error.kind };
+  if (!group) {
+    return { ok: false as const, error: "NoGroup" };
+  }
+
+  const result = await useCases.proposeChange.execute({
+    groupId: group.id,
+    actorId: user.id,
+    movementId,
+    kind: "void",
+  });
+
+  if (!result.ok) {
+    return { ok: false as const, error: result.error.kind };
+  }
+
   revalidateLedgerAndLoans();
+
   return { ok: true as const };
 }
 
@@ -108,17 +136,24 @@ export async function decideChangeAction(
 ) {
   const user = await requireUser();
   const group = await findGroupOf(user.id);
-  if (!group) return { ok: false as const, error: "NoGroup" };
 
-  const result = await decideChange(
-    applyApprovedChange,
-    group.id,
-    user.id,
+  if (!group) {
+    return { ok: false as const, error: "NoGroup" };
+  }
+
+  const result = await useCases.decideChange.execute({
+    groupId: group.id,
+    actorId: user.id,
     pendingId,
     decision,
-  );
-  if (!result.ok) return { ok: false as const, error: result.error.kind };
+  });
+
+  if (!result.ok) {
+    return { ok: false as const, error: result.error.kind };
+  }
+
   revalidateLedgerAndLoans();
+
   return { ok: true as const, applied: result.value.applied };
 }
 
@@ -126,7 +161,15 @@ export async function decideChangeAction(
 export async function getMovementHistoryAction(movementId: string) {
   const user = await requireUser();
   const group = await findGroupOf(user.id);
-  if (!group) return { ok: false as const, error: "NoGroup" };
-  const history = await getMovementHistory(group.id, movementId);
+
+  if (!group) {
+    return { ok: false as const, error: "NoGroup" };
+  }
+
+  const history = await useCases.getMovementHistory.execute({
+    groupId: group.id,
+    movementId,
+  });
+
   return { ok: true as const, history };
 }

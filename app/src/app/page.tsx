@@ -1,10 +1,8 @@
 import { Activity } from "lucide-react";
 import Link from "next/link";
+import { useCases } from "@/backend/application/container";
 import { getCurrentUser } from "@/backend/modules/accounts/current-user";
 import { findGroupOf } from "@/backend/modules/groups/data";
-import { listGroupInstallments } from "@/backend/modules/loans/usecases/list-group-installments";
-import { listMovements } from "@/backend/modules/movements/usecases/list-movements";
-import { listPendingChanges } from "@/backend/modules/movements/usecases/list-pending-changes";
 import { PanelContent } from "@/components/dashboard/dashboard";
 import { InviteBanner } from "@/components/dashboard/invite-banner";
 import { Landing } from "@/components/landing/landing";
@@ -34,9 +32,9 @@ export default async function HomePage({
 
   const today = todayInLima();
   const [movements, installments, pendingChanges] = await Promise.all([
-    listMovements(group.id),
-    listGroupInstallments(group.id),
-    listPendingChanges(group.id),
+    useCases.listMovements.execute({ groupId: group.id }),
+    useCases.listGroupInstallments.execute({ groupId: group.id }),
+    useCases.listPendingChanges.execute({ groupId: group.id }),
   ]);
   const overdueCount = installments.filter(
     (i) => i.status === "pending" && isOverdue(i.dueDate, today),
