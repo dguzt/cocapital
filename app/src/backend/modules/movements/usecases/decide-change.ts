@@ -15,6 +15,7 @@ import type { Write } from "../../../infra/db/write";
 import { runAtomically } from "../../../infra/db/write";
 import type { PendingChangeError } from "../domain/errors";
 import type { MovementSnapshot, MovementType } from "../domain/movement";
+import type { DecisionOutcome } from "../domain/pending";
 import { decideChange as decide } from "../domain/pending";
 import * as changeRepo from "../repositories/change-repository";
 
@@ -39,6 +40,7 @@ export async function decideChange(
   decision: "approve" | "reject",
 ): Promise<Result<{ applied: boolean }, PendingChangeError>> {
   const change = await changeRepo.findWithMovement(pendingId);
+
   if (!change || change.movementGroup !== groupId) {
     return err({
       kind: "ChangeNotFound",
@@ -58,7 +60,10 @@ export async function decideChange(
     decision,
     actorId,
   });
-  if (!outcome.ok) return outcome;
+
+  if (!outcome.ok) {
+    return outcome;
+  }
 
   const decided = changeRepo.decideStmt(pendingId, {
     status: outcome.value.pendingStatus,
@@ -66,26 +71,32 @@ export async function decideChange(
     decidedAt: new Date(),
   });
 
-  if (!outcome.value.apply) {
-    await runAtomically([decided]);
-    return ok({ applied: false });
-  }
-
-  const effects = effectsFor(
-    outcome.value.action.kind === "edit"
-      ? {
-          kind: "edit",
-          movementId: change.movementId,
-          movementType: change.movementType,
-          after: outcome.value.action.newSnapshot,
-        }
-      : {
-          kind: "void",
-          movementId: change.movementId,
-          movementType: change.movementType,
-        },
-  );
+  const effects = outcome.value.apply
+    ? effectsFor(askOwnerFor(change, outcome.value))
+    : [];
 
   await runAtomically([decided, ...effects]);
-  return ok({ applied: true });
+
+  return ok({ applied: outcome.value.apply });
+}
+
+/** Turns an approved outcome into the request the owner module answers. */
+function askOwnerFor(
+  change: { movementId: string; movementType: MovementType },
+  outcome: Extract<DecisionOutcome, { apply: true }>,
+): ApprovedChange {
+  if (outcome.action.kind === "edit") {
+    return {
+      kind: "edit",
+      movementId: change.movementId,
+      movementType: change.movementType,
+      after: outcome.action.newSnapshot,
+    };
+  }
+
+  return {
+    kind: "void",
+    movementId: change.movementId,
+    movementType: change.movementType,
+  };
 }
