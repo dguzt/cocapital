@@ -7,8 +7,14 @@
  * negative. Nobody outside this module needs to know that.
  */
 import type { Write } from "../../../infra/db/write";
-import { voidEntryWrites } from "../../movements/usecases/void-entry";
+import type { VoidEntry } from "../../movements/usecases/void-entry";
 
-export function undoPurchaseWrites(movementId: string): Write[] {
-  return voidEntryWrites(movementId);
+export class UndoPurchase {
+  static inject = ["voidEntry"] as const;
+
+  constructor(private readonly voidEntry: VoidEntry) {}
+
+  writesFor(movementId: string): Write[] {
+    return this.voidEntry.writesFor(movementId);
+  }
 }

@@ -42,17 +42,31 @@ The folders name the business, not the framework. Per module:
 
 ```
 modules/<module>/
-  domain/         pure rules and types. No I/O, no Drizzle, no clock. Unit-tested.
-  usecases/       ONE FILE PER THING THE BUSINESS DOES — reads included.
-  repositories/   the only place Drizzle lives. Builds statements; runs no rules.
+  domain/         pure FUNCTIONS and types. No I/O, no Drizzle, no clock. Unit-tested.
+  usecases/       ONE CLASS PER THING THE BUSINESS DOES — reads included.
+  repositories/   one class per table. The only place Drizzle lives.
   actions.ts      "use server": session → use case → revalidate. Zero logic.
-application/      the only file that may know every module (the dispatch).
+application/      container.ts (the whole dependency graph) + the dispatch.
+infra/db/schema/  one file per table. Table variables are PascalCase (Movements).
 tests/            mirrors this tree exactly. *.test.ts = unit · *.int.test.ts = DB.
 ```
 
-- **A read is a use case too.** `get-loan-detail` authorizes the group and derives the expected interest — decisions, not a query. There is no `queries/` folder.
-- **Imports:** `usecases → domain + own repositories` (and other modules' *use cases*, never their repositories). `movements` (the ledger) **must never import `loans` or `inventory`** — that direction is how the ledger starts learning everyone's rules.
-- **Atomicity:** neon-http has no interactive tx. Repositories return **unexecuted Drizzle statements**; the use case that owns the rule collects them and calls `runAtomically()`. That's how one use case writes across tables without a repository reaching into another module.
+### Classes vs functions
+
+- **Use cases and repositories are classes.** The constructor is the list of dependencies — that is the whole point, it's what you read first. Public `execute(input)`; helpers are `private`. Input is a **named object**, never a pile of positional params.
+- **The domain stays pure functions** with descriptive names (`generateSchedule`, `checkSchedule`). They have no collaborators to inject, so a class would add ceremony and no information. `execute()` is reserved for use cases.
+- **A read is a use case too.** `GetLoanDetail` authorizes the group and derives the expected interest — decisions, not a query. There is no `queries/` folder.
+
+### Dependency injection: `typed-inject`
+
+`application/container.ts` wires everything, and **the compiler checks it**: add a dependency to a use case and the container stops compiling. No decorators (Next 16 discourages legacy decorators and does not support `emitDecoratorMetadata`, so tsyringe/Inversify would degrade to unchecked string tokens).
+
+> ⚠️ **The container's instances are module-level singletons, shared across requests.** NEVER put request state (`groupId`, `userId`, `actorId`) in a constructor or on `this` — it would leak between users. Request state always travels as an argument to `execute()`.
+
+### Rules that hold the whole thing together
+
+- **Imports:** `usecases → domain + own repositories` (and other modules' *use cases*, never their repositories). `movements` (the ledger) **must never import `loans` or `inventory`** — that direction is how the ledger starts learning everyone's rules. `DecideChange` depends on the `ChangeApplier` **interface**; the container injects the real one.
+- **Atomicity:** neon-http has no interactive tx. Repositories return **unexecuted Drizzle statements**; the use case that owns the rule collects them and hands them to the injected `UnitOfWork`. That's how one use case writes across tables without a repository reaching into another module.
 
 ### The rule behind all of it
 

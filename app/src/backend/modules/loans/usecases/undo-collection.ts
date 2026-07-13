@@ -12,16 +12,25 @@
  * the cuota in the same transaction restores it exactly: cash −amount,
  * lent +principal, interest back to expected.
  *
- * Returns statements instead of running them, so the caller can approve the
+ * It returns writes instead of running them, so the caller can approve the
  * pending change and undo the collection in a single transaction.
  */
 import type { Write } from "../../../infra/db/write";
-import * as movementRepo from "../../movements/repositories/movement-repository";
-import * as installmentRepo from "../repositories/installment-repository";
+import type { MovementRepository } from "../../movements/repositories/movement-repository";
+import type { InstallmentRepository } from "../repositories/installment-repository";
 
-export function undoCollectionWrites(repayMovementId: string): Write[] {
-  return [
-    movementRepo.voidStmt(repayMovementId),
-    installmentRepo.reopenByRepayMovementStmt(repayMovementId),
-  ];
+export class UndoCollection {
+  static inject = ["movements", "installments"] as const;
+
+  constructor(
+    private readonly movements: MovementRepository,
+    private readonly installments: InstallmentRepository,
+  ) {}
+
+  writesFor(repayMovementId: string): Write[] {
+    return [
+      this.movements.voidStmt(repayMovementId),
+      this.installments.reopenByRepayMovementStmt(repayMovementId),
+    ];
+  }
 }

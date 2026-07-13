@@ -19,69 +19,87 @@ import type { PendingChangeError } from "../domain/errors";
 import type { MovementSnapshot } from "../domain/movement";
 import type { ChangeKind } from "../domain/pending";
 import { proposeChange as decide } from "../domain/pending";
-import * as changeRepo from "../repositories/change-repository";
-import type { MovementRow } from "../repositories/movement-repository";
-import * as movementRepo from "../repositories/movement-repository";
+import type { ChangeRepository } from "../repositories/change-repository";
+import type {
+  MovementRepository,
+  MovementRow,
+} from "../repositories/movement-repository";
 
-export async function proposeChange(
-  groupId: string,
-  actorId: string,
-  movementId: string,
-  kind: ChangeKind,
-  after?: MovementSnapshot,
-): Promise<Result<{ pendingId: string }, PendingChangeError>> {
-  const movement = await movementRepo.findInGroup(groupId, movementId);
+export type ProposeChangeInput = {
+  groupId: string;
+  actorId: string;
+  movementId: string;
+  kind: ChangeKind;
+  after?: MovementSnapshot;
+};
 
-  if (!movement) {
-    return err({
-      kind: "MovementNotFound",
-      message: "movement not found in this group",
-      movementId,
+export class ProposeChange {
+  static inject = ["movements", "changes"] as const;
+
+  constructor(
+    private readonly movements: MovementRepository,
+    private readonly changes: ChangeRepository,
+  ) {}
+
+  async execute(
+    input: ProposeChangeInput,
+  ): Promise<Result<{ pendingId: string }, PendingChangeError>> {
+    const movement = await this.movements.findInGroup(
+      input.groupId,
+      input.movementId,
+    );
+
+    if (!movement) {
+      return err({
+        kind: "MovementNotFound",
+        message: "movement not found in this group",
+        movementId: input.movementId,
+      });
+    }
+
+    if (this.isOwnedByALoan(movement, input.kind)) {
+      return err({
+        kind: "SystemMovement",
+        message: "loan movements are system-written; correct them via the loan",
+        movementId: input.movementId,
+      });
+    }
+
+    const proposal = decide({
+      movement: {
+        id: movement.id,
+        status: movement.status,
+        snapshot: this.snapshotOf(movement),
+      },
+      hasPendingChange: await this.changes.hasPendingFor(input.movementId),
+      kind: input.kind,
+      after: input.after,
+      actorId: input.actorId,
     });
+
+    if (!proposal.ok) {
+      return proposal;
+    }
+
+    const row = await this.changes.insert(proposal.value);
+
+    return ok({ pendingId: row.id });
   }
 
-  if (isOwnedByALoan(movement, kind)) {
-    return err({
-      kind: "SystemMovement",
-      message: "loan movements are system-written; correct them via the loan",
-      movementId,
-    });
+  /** A lend is untouchable here; a repay is voidable but never editable. */
+  private isOwnedByALoan(movement: MovementRow, kind: ChangeKind): boolean {
+    return (
+      movement.type === "lend" || (movement.type === "repay" && kind === "edit")
+    );
   }
 
-  const proposal = decide({
-    movement: {
-      id: movement.id,
-      status: movement.status,
-      snapshot: snapshotOf(movement),
-    },
-    hasPendingChange: await changeRepo.hasPendingFor(movementId),
-    kind,
-    after,
-    actorId,
-  });
-
-  if (!proposal.ok) {
-    return proposal;
+  private snapshotOf(movement: MovementRow): MovementSnapshot {
+    return {
+      type: movement.type,
+      amount: movement.amount,
+      cost: movement.cost,
+      concept: movement.concept,
+      date: movement.date,
+    };
   }
-
-  const row = await changeRepo.insert(proposal.value);
-
-  return ok({ pendingId: row.id });
-}
-
-/** A lend is untouchable here; a repay is voidable but never editable. */
-function isOwnedByALoan(movement: MovementRow, kind: ChangeKind) {
-  return (
-    movement.type === "lend" || (movement.type === "repay" && kind === "edit")
-  );
-}
-
-function snapshotOf(movement: MovementRow): MovementSnapshot {
-  return {
-    type: movement.type,
-    amount: movement.amount,
-    cost: movement.cost,
-    concept: movement.concept,
-    date: movement.date,
-  };
 }

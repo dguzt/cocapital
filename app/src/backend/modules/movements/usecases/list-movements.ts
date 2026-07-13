@@ -1,12 +1,21 @@
 /** The group's whole ledger, newest first. The feed shows it; M5 derives from it. */
-import type { LedgerMovement } from "../repositories/movement-repository";
-import * as movementRepo from "../repositories/movement-repository";
+import type {
+  LedgerMovement,
+  MovementRepository,
+} from "../repositories/movement-repository";
 
-export async function listMovements(
-  groupId: string,
-): Promise<LedgerMovement[]> {
-  return movementRepo.listByGroup(groupId);
+export type { LedgerMovement };
+
+export type ListMovementsInput = {
+  groupId: string;
+};
+
+export class ListMovements {
+  static inject = ["movements"] as const;
+
+  constructor(private readonly movements: MovementRepository) {}
+
+  async execute(input: ListMovementsInput): Promise<LedgerMovement[]> {
+    return this.movements.listByGroup(input.groupId);
+  }
 }
-
-/** The shape the feed and the capital reducer consume. */
-export type { LedgerMovement } from "../repositories/movement-repository";

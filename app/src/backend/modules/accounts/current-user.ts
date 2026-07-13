@@ -1,12 +1,12 @@
 /**
  * M1 · the auth seam (UC-101). Everything server-side gets the current user
  * from HERE, never from Clerk directly — so usecase tests fake one function.
- * The users mirror is written on first authed request (no webhooks in MVP).
+ * The Users mirror is written on first authed request (no webhooks in MVP).
  */
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { db } from "../../infra/db/client";
-import { users } from "../../infra/db/schema";
+import { Users } from "../../infra/db/schema";
 
 export type SessionUser = {
   id: string;
@@ -22,8 +22,8 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
 
   const existing = await db
     .select()
-    .from(users)
-    .where(eq(users.clerkId, clerkId));
+    .from(Users)
+    .where(eq(Users.clerkId, clerkId));
   if (existing[0]) return existing[0];
 
   const clerkUser = await currentUser();
@@ -36,12 +36,12 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
 
   // Concurrent first requests can race — the unique clerk_id decides, loser re-reads.
   const inserted = await db
-    .insert(users)
+    .insert(Users)
     .values({ clerkId, name, email })
     .onConflictDoNothing()
     .returning();
   if (inserted[0]) return inserted[0];
-  const [row] = await db.select().from(users).where(eq(users.clerkId, clerkId));
+  const [row] = await db.select().from(Users).where(eq(Users.clerkId, clerkId));
   return row ?? null;
 }
 

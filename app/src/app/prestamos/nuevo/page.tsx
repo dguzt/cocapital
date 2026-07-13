@@ -1,7 +1,6 @@
+import { useCases } from "@/backend/application/container";
 import { requireUser } from "@/backend/modules/accounts/current-user";
 import { findGroupOf } from "@/backend/modules/groups/data";
-import { listBorrowers } from "@/backend/modules/loans/usecases/list-borrowers";
-import { listGroupInstallments } from "@/backend/modules/loans/usecases/list-group-installments";
 import { LoanWizard } from "@/components/loans/loan-wizard/loan-wizard";
 import { AppShell } from "@/components/shell/app-shell";
 import { isOverdue, todayInLima } from "@/lib/dates";
@@ -12,8 +11,8 @@ export default async function NewLoanPage() {
   if (!group) return null;
   const today = todayInLima();
   const [borrowers, installments] = await Promise.all([
-    listBorrowers(group.id),
-    listGroupInstallments(group.id),
+    useCases.listBorrowers.execute({ groupId: group.id }),
+    useCases.listGroupInstallments.execute({ groupId: group.id }),
   ]);
   const overdueCount = installments.filter(
     (i) => i.status === "pending" && isOverdue(i.dueDate, today),

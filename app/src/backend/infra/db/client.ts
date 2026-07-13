@@ -8,3 +8,6 @@ import * as schema from "./schema";
 // same driver, same code, only DATABASE_URL differs.
 const sql = neon(requireEnv("DATABASE_URL"));
 export const db = drizzle(sql, { schema });
+
+/** What repositories are injected with — never the module singleton directly. */
+export type Database = typeof db;

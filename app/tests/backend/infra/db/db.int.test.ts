@@ -6,11 +6,11 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/backend/infra/db/client";
 import {
-  groups,
-  memberships,
-  movementChanges,
-  movements,
-  users,
+  Groups,
+  Memberships,
+  MovementChanges,
+  Movements,
+  Users,
 } from "@/backend/infra/db/schema";
 import { truncateAll } from "@/test/truncate";
 
@@ -34,11 +34,11 @@ async function expectUniqueViolation(p: Promise<unknown>) {
 
 async function seedUserAndGroup() {
   const [user] = await db
-    .insert(users)
+    .insert(Users)
     .values({ clerkId: "clerk_test_a", name: "Ana", email: "a@test.pe" })
     .returning();
   const [group] = await db
-    .insert(groups)
+    .insert(Groups)
     .values({ name: "Inversiones DR", inviteCode: "TESTCODE01" })
     .returning();
   return { user, group };
@@ -49,15 +49,15 @@ beforeEach(truncateAll);
 describe("constraints", () => {
   it("clerk_id is unique", async () => {
     const row = { clerkId: "clerk_x", name: "A", email: "a@t.pe" };
-    await db.insert(users).values(row);
-    await expectUniqueViolation(db.insert(users).values(row));
+    await db.insert(Users).values(row);
+    await expectUniqueViolation(db.insert(Users).values(row));
   });
 
   it("membership primary key stops double-join", async () => {
     const { user, group } = await seedUserAndGroup();
     const m = { groupId: group.id, userId: user.id };
-    await db.insert(memberships).values(m);
-    await expectUniqueViolation(db.insert(memberships).values(m));
+    await db.insert(Memberships).values(m);
+    await expectUniqueViolation(db.insert(Memberships).values(m));
   });
 });
 
@@ -65,7 +65,7 @@ describe("one pending change per movement (partial unique index)", () => {
   it("second PENDING change is rejected; decided ones don't block", async () => {
     const { user, group } = await seedUserAndGroup();
     const [mov] = await db
-      .insert(movements)
+      .insert(Movements)
       .values({
         groupId: group.id,
         userId: user.id,
@@ -82,13 +82,13 @@ describe("one pending change per movement (partial unique index)", () => {
       before: { amount: 5000 },
       after: { amount: 4500 },
     };
-    await db.insert(movementChanges).values(change);
+    await db.insert(MovementChanges).values(change);
     // Same movement, second undecided change → DB says no.
-    await expectUniqueViolation(db.insert(movementChanges).values(change));
+    await expectUniqueViolation(db.insert(MovementChanges).values(change));
     // Decide the first → a new pending change is allowed again.
-    await db.update(movementChanges).set({ status: "rejected" });
+    await db.update(MovementChanges).set({ status: "rejected" });
     await expect(
-      db.insert(movementChanges).values(change),
+      db.insert(MovementChanges).values(change),
     ).resolves.toBeTruthy();
   });
 });
@@ -97,17 +97,17 @@ describe("batch atomicity (neon-http regression of the tx experiment)", () => {
   it("a failing statement rolls back the whole batch", async () => {
     const dup = { clerkId: "clerk_dup", name: "D", email: "d@t.pe" };
     await expectUniqueViolation(
-      db.batch([db.insert(users).values(dup), db.insert(users).values(dup)]),
+      db.batch([db.insert(Users).values(dup), db.insert(Users).values(dup)]),
     );
-    const rows = await db.select().from(users);
+    const rows = await db.select().from(Users);
     expect(rows).toHaveLength(0); // first insert rolled back too
   });
 
   it("a valid batch commits everything", async () => {
     await db.batch([
-      db.insert(users).values({ clerkId: "c1", name: "A", email: "a@t.pe" }),
-      db.insert(users).values({ clerkId: "c2", name: "B", email: "b@t.pe" }),
+      db.insert(Users).values({ clerkId: "c1", name: "A", email: "a@t.pe" }),
+      db.insert(Users).values({ clerkId: "c2", name: "B", email: "b@t.pe" }),
     ]);
-    expect(await db.select().from(users)).toHaveLength(2);
+    expect(await db.select().from(Users)).toHaveLength(2);
   });
 });

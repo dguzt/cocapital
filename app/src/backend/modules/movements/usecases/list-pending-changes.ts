@@ -1,11 +1,21 @@
 /** Every undecided change of the group — the approvals banner reads this. */
-import type { PendingChangeItem } from "../repositories/change-repository";
-import * as changeRepo from "../repositories/change-repository";
+import type {
+  ChangeRepository,
+  PendingChangeItem,
+} from "../repositories/change-repository";
 
-export async function listPendingChanges(
-  groupId: string,
-): Promise<PendingChangeItem[]> {
-  return changeRepo.listPending(groupId);
+export type { PendingChangeItem };
+
+export type ListPendingChangesInput = {
+  groupId: string;
+};
+
+export class ListPendingChanges {
+  static inject = ["changes"] as const;
+
+  constructor(private readonly changes: ChangeRepository) {}
+
+  async execute(input: ListPendingChangesInput): Promise<PendingChangeItem[]> {
+    return this.changes.listPending(input.groupId);
+  }
 }
-
-export type { PendingChangeItem } from "../repositories/change-repository";
