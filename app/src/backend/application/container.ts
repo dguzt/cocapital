@@ -25,7 +25,9 @@ import { GetLoanDetail } from "../modules/loans/usecases/get-loan-detail";
 import { ListBorrowers } from "../modules/loans/usecases/list-borrowers";
 import { ListGroupInstallments } from "../modules/loans/usecases/list-group-installments";
 import { ListLoans } from "../modules/loans/usecases/list-loans";
+import { ProposeVoidLoan } from "../modules/loans/usecases/propose-void-loan";
 import { UndoCollection } from "../modules/loans/usecases/undo-collection";
+import { VoidLoan } from "../modules/loans/usecases/void-loan";
 import { ChangeRepository } from "../modules/movements/repositories/change-repository";
 import { MovementRepository } from "../modules/movements/repositories/movement-repository";
 import { AddMovement } from "../modules/movements/usecases/add-movement";
@@ -34,6 +36,7 @@ import { GetMovementHistory } from "../modules/movements/usecases/get-movement-h
 import { ListMovements } from "../modules/movements/usecases/list-movements";
 import { ListPendingChanges } from "../modules/movements/usecases/list-pending-changes";
 import { ProposeChange } from "../modules/movements/usecases/propose-change";
+import { ProposeSystemVoid } from "../modules/movements/usecases/propose-system-void";
 import { VoidEntry } from "../modules/movements/usecases/void-entry";
 import { ApplyApprovedChange } from "./apply-approved-change";
 
@@ -58,7 +61,13 @@ const injector = createInjector()
   .provideClass("undoCollection", UndoCollection)
   .provideClass("undoSale", UndoSale)
   .provideClass("undoPurchase", UndoPurchase)
+  .provideClass("voidLoan", VoidLoan)
   .provideClass("applier", ApplyApprovedChange)
+
+  // Cancelling a loan is proposed from the loan but flows through the ledger's
+  // approval inbox: ProposeVoidLoan maps the loan to its lend movement, then
+  // ProposeSystemVoid opens the pending change on it.
+  .provideClass("proposeSystemVoid", ProposeSystemVoid)
 
   // GetLoanDetail is a use case that another use case depends on: collecting a
   // cuota starts by reading the loan, with the same authorization.
@@ -74,6 +83,7 @@ export const useCases = {
 
   createLoan: injector.injectClass(CreateLoan),
   collectInstallment: injector.injectClass(CollectInstallment),
+  proposeVoidLoan: injector.injectClass(ProposeVoidLoan),
   getLoanDetail: injector.resolve("getLoanDetail"),
   listLoans: injector.injectClass(ListLoans),
   listBorrowers: injector.injectClass(ListBorrowers),

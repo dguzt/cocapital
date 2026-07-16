@@ -5,6 +5,7 @@ import { useCases } from "@/backend/application/container";
 import { requireUser } from "@/backend/modules/accounts/current-user";
 import { findGroupOf } from "@/backend/modules/groups/data";
 import { CollectButton } from "@/components/loans/collect-button";
+import { VoidLoanButton } from "@/components/loans/void-loan-button";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
 import { isOverdue, todayInLima } from "@/lib/dates";
@@ -47,6 +48,12 @@ export default async function LoanDetailPage({
   const undoPending = new Set(
     pendingChanges.filter((c) => c.kind === "void").map((c) => c.movementId),
   );
+  const isVoided = loan.value.status === "voided";
+  // A pending cancellation is a pending void on the loan's own lend movement.
+  const voidPending = undoPending.has(loan.value.lendMovementId);
+  const collectedCount = loan.value.installments.filter(
+    (i) => i.status === "collected",
+  ).length;
   const rate = (loan.value.rateBps / 100).toFixed(
     loan.value.rateBps % 100 === 0 ? 0 : 2,
   );
@@ -70,14 +77,43 @@ export default async function LoanDetailPage({
       title={loan.value.borrowerName}
       subtitle={`${formatCents(loan.value.capital)} al ${rate}%`}
       actions={
-        <Button asChild variant="outline">
-          <Link href="/prestamos">
-            <ArrowLeft className="size-4" /> Préstamos
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link href="/prestamos">
+              <ArrowLeft className="size-4" /> Préstamos
+            </Link>
+          </Button>
+          {!isVoided && !voidPending && (
+            <VoidLoanButton
+              loanId={loan.value.id}
+              borrowerName={loan.value.borrowerName}
+              capitalCents={loan.value.capital}
+              collectedCount={collectedCount}
+            />
+          )}
+        </div>
       }
     >
       <div className="flex max-w-3xl flex-col gap-5">
+        {isVoided && (
+          <section className="rounded-2xl border border-border bg-secondary p-4">
+            <p className="text-sm font-semibold">Préstamo anulado</p>
+            <p className="mt-1 text-[13px] text-muted-foreground">
+              Se revirtió por completo: el capital volvió a caja y sus cobros
+              fueron deshechos.
+            </p>
+          </section>
+        )}
+        {!isVoided && voidPending && (
+          <section className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4">
+            <p className="text-sm font-semibold text-amber-400">
+              Anulación pendiente — falta el OK de tu socio
+            </p>
+            <p className="mt-1 text-[13px] text-muted-foreground">
+              Se revierte el préstamo completo cuando tu socio lo apruebe.
+            </p>
+          </section>
+        )}
         <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {summary.map((s) => (
             <div
@@ -137,7 +173,11 @@ export default async function LoanDetailPage({
                   <span className="w-24 text-right font-mono text-[15px] font-medium tabular-nums">
                     {formatCents(inst.amount)}
                   </span>
-                  {inst.status === "pending" ? (
+                  {isVoided ? (
+                    <span className="w-[68px] text-center text-xs text-muted-foreground">
+                      —
+                    </span>
+                  ) : inst.status === "pending" ? (
                     <CollectButton
                       loanId={loan.value.id}
                       installmentId={inst.id}

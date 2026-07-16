@@ -72,6 +72,12 @@ export const collectInstallment = (
     today,
   });
 
+export const proposeVoidLoan = (
+  groupId: string,
+  actorId: string,
+  loanId: string,
+) => useCases.proposeVoidLoan.execute({ groupId, actorId, loanId });
+
 export const getLoanDetail = (groupId: string, loanId: string) =>
   useCases.getLoanDetail.execute({ groupId, loanId });
 

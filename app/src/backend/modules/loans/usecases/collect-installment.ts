@@ -87,6 +87,14 @@ export class CollectInstallment {
       return loan;
     }
 
+    if (loan.value.status === "voided") {
+      return err({
+        kind: "InstallmentNotCollectable",
+        message: "the loan is voided",
+        installmentId: input.installmentId,
+      });
+    }
+
     const installment = loan.value.installments.find(
       (i) => i.id === input.installmentId,
     );

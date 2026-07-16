@@ -63,6 +63,18 @@ export function PendingApprovals({ items }: { items: PendingChangeItem[] }) {
                       — la cuota vuelve a pendiente
                     </span>
                   </>
+                ) : item.kind === "void" && item.before.type === "lend" ? (
+                  <>
+                    quiere{" "}
+                    <span className="text-destructive">anular el préstamo</span>{" "}
+                    de{" "}
+                    <span className="font-mono tabular-nums">
+                      {formatCents(item.before.amount)}
+                    </span>{" "}
+                    <span className="text-muted-foreground">
+                      — se revierte por completo, incluidos sus cobros
+                    </span>
+                  </>
                 ) : item.kind === "void" ? (
                   <>
                     quiere <span className="text-destructive">anular</span>{" "}

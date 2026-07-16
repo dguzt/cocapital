@@ -16,6 +16,7 @@ import type { Write } from "../infra/db/write";
 import type { UndoPurchase } from "../modules/inventory/usecases/undo-purchase";
 import type { UndoSale } from "../modules/inventory/usecases/undo-sale";
 import type { UndoCollection } from "../modules/loans/usecases/undo-collection";
+import type { VoidLoan } from "../modules/loans/usecases/void-loan";
 import type {
   ApprovedChange,
   ChangeApplier,
@@ -28,6 +29,7 @@ export class ApplyApprovedChange implements ChangeApplier {
     "undoSale",
     "undoPurchase",
     "voidEntry",
+    "voidLoan",
   ] as const;
 
   constructor(
@@ -35,9 +37,10 @@ export class ApplyApprovedChange implements ChangeApplier {
     private readonly undoSale: UndoSale,
     private readonly undoPurchase: UndoPurchase,
     private readonly voidEntry: VoidEntry,
+    private readonly voidLoan: VoidLoan,
   ) {}
 
-  writesFor(change: ApprovedChange): Write[] {
+  async writesFor(change: ApprovedChange): Promise<Write[]> {
     if (change.kind === "edit") {
       // Only the plain ledger types are editable — propose-change refuses the
       // rest, so anything reaching here edits its own row and nothing else.
@@ -55,12 +58,10 @@ export class ApplyApprovedChange implements ChangeApplier {
       case "expense":
         return this.voidEntry.writesFor(change.movementId);
       case "lend":
-        // Unreachable: propose-change rejects it. Voiding a loan's entry IS
-        // voiding the loan — that reverses every collection too, and it will be
-        // loans/usecases/void-loan.ts, not a ledger void.
-        throw new Error(
-          "a loan is voided from the loan, not from its movement",
-        );
+        // Voiding a loan's entry IS voiding the loan — that reverses every
+        // collection too. The proposal enters here from the loan page
+        // (loans/usecases/propose-void-loan.ts), never from the movement.
+        return this.voidLoan.writesFor(change.movementId);
     }
   }
 }
