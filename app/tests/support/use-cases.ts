@@ -12,7 +12,10 @@
  */
 import { useCases } from "@/backend/application/container";
 import type { NewLoan } from "@/backend/modules/loans/domain/loan";
-import type { MovementSnapshot } from "@/backend/modules/movements/domain/movement";
+import type {
+  MovementSnapshot,
+  MovementType,
+} from "@/backend/modules/movements/domain/movement";
 import type { ChangeKind } from "@/backend/modules/movements/domain/pending";
 import type { NewMovement } from "@/backend/modules/movements/domain/validate";
 import type { ISODate } from "@/lib/dates";
@@ -77,6 +80,17 @@ export const proposeVoidLoan = (
   actorId: string,
   loanId: string,
 ) => useCases.proposeVoidLoan.execute({ groupId, actorId, loanId });
+
+export const getLoanTargetForMovement = (
+  groupId: string,
+  movementId: string,
+  movementType: MovementType,
+) =>
+  useCases.getLoanTargetForMovement.execute({
+    groupId,
+    movementId,
+    movementType,
+  });
 
 export const getLoanDetail = (groupId: string, loanId: string) =>
   useCases.getLoanDetail.execute({ groupId, loanId });

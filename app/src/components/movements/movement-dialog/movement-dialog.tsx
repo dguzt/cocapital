@@ -3,10 +3,13 @@
  * Movement detail (E4). This file orchestrates; the rules of what you may do
  * to each type live in actions-by-type.ts, next to their reason.
  */
-import { Loader2 } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { getLoanTargetForMovementAction } from "@/backend/modules/loans/actions";
+import type { LoanTarget } from "@/backend/modules/loans/usecases/get-loan-target-for-movement";
 import {
   getMovementHistoryAction,
   proposeEditAction,
@@ -40,6 +43,13 @@ const ERROR_TEXT: Record<string, string> = {
 
 const emptyDraft: EditDraft = { amount: "", concept: "", cost: "" };
 
+/** The loan page a ledger row links to — a `repay` also points at its cuota. */
+function loanHref(target: LoanTarget): string {
+  return target.installmentId
+    ? `/prestamos/${target.loanId}?cuota=${target.installmentId}`
+    : `/prestamos/${target.loanId}`;
+}
+
 export function MovementDialog({
   movement,
   hasPending,
@@ -54,6 +64,7 @@ export function MovementDialog({
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [draft, setDraft] = useState<EditDraft>(emptyDraft);
   const [history, setHistory] = useState<ChangeHistoryItem[] | null>(null);
+  const [target, setTarget] = useState<LoanTarget | null>(null);
   const [pending, startTransition] = useTransition();
 
   const meta = MOVEMENT_META[movement.type];
@@ -62,7 +73,9 @@ export function MovementDialog({
     movement.status,
     hasPending,
   );
-  const isCollection = movement.type === "repay";
+  // A loan's entries (lend/repay) are corrected from the loan, not here — the
+  // dialog derives the user there instead of offering Editar/Anular.
+  const belongsToLoan = movement.type === "lend" || movement.type === "repay";
 
   useEffect(() => {
     if (open) {
@@ -76,8 +89,14 @@ export function MovementDialog({
       getMovementHistoryAction(movement.id).then((r) => {
         if (r.ok) setHistory(r.history);
       });
+      setTarget(null);
+      if (belongsToLoan) {
+        getLoanTargetForMovementAction(movement.id, movement.type).then((r) => {
+          if (r.ok) setTarget(r.target);
+        });
+      }
     }
-  }, [open, movement]);
+  }, [open, movement, belongsToLoan]);
 
   function submitEdit() {
     startTransition(async () => {
@@ -111,11 +130,7 @@ export function MovementDialog({
       const result = await proposeVoidAction(movement.id);
       if (result.ok) {
         setOpen(false);
-        toast.success(
-          isCollection
-            ? "Deshacer cobro enviado — falta el OK de tu socio"
-            : "Anulación enviada — falta el OK de tu socio",
-        );
+        toast.success("Anulación enviada — falta el OK de tu socio");
         router.refresh();
       } else {
         toast.error(ERROR_TEXT[result.error] ?? "Algo salió mal.");
@@ -156,6 +171,30 @@ export function MovementDialog({
             onCancel={() => setMode("view")}
             onSubmit={submitEdit}
           />
+        ) : belongsToLoan ? (
+          <div className="rounded-lg border border-border bg-secondary/50 px-3 py-3">
+            <p className="text-[13px] text-muted-foreground">
+              {movement.type === "repay"
+                ? "Este cobro pertenece a un préstamo. Para anularlo, ve al préstamo."
+                : "Este movimiento pertenece a un préstamo. Para editarlo o anularlo, ve al préstamo."}
+            </p>
+            <Button
+              className="mt-2.5 w-full"
+              disabled={!target}
+              asChild={!!target}
+              onClick={() => setOpen(false)}
+            >
+              {target ? (
+                <Link href={loanHref(target)}>
+                  <ArrowRight className="size-4" /> Ir al préstamo
+                </Link>
+              ) : (
+                <span>
+                  <Loader2 className="size-4 animate-spin" /> Ir al préstamo
+                </span>
+              )}
+            </Button>
+          </div>
         ) : (
           <div className="flex gap-2">
             <Button
@@ -178,7 +217,7 @@ export function MovementDialog({
           </div>
         )}
 
-        {mode === "view" && note && (
+        {mode === "view" && !belongsToLoan && note && (
           <p className="text-[12px] text-muted-foreground">{note}</p>
         )}
 

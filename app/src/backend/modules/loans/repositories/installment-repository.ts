@@ -50,6 +50,26 @@ export class InstallmentRepository {
     return rows.map((r) => r.repayMovementId).filter((id) => id !== null);
   }
 
+  /** The cuota a `repay` movement collected, scoped to the group (auth) — lets a
+   *  cobro row link to its cuota on the loan page. */
+  async findByRepayMovement(
+    groupId: string,
+    repayMovementId: string,
+  ): Promise<{ loanId: string; installmentId: string } | null> {
+    const [row] = await this.db
+      .select({ loanId: Installments.loanId, installmentId: Installments.id })
+      .from(Installments)
+      .innerJoin(Loans, eq(Loans.id, Installments.loanId))
+      .where(
+        and(
+          eq(Installments.repayMovementId, repayMovementId),
+          eq(Loans.groupId, groupId),
+        ),
+      );
+
+    return row ?? null;
+  }
+
   insertManyStmt(loanId: string, rows: NewLoanInstallment[]): Write {
     return this.db.insert(Installments).values(
       rows.map((i) => ({

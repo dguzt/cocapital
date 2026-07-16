@@ -23,16 +23,10 @@ export const ACTIONS_BY_TYPE: Record<MovementType, Allowed> = {
   buy_inventory: { edit: true, void: true },
   sell_inventory: { edit: true, void: true },
 
-  repay: {
-    edit: false,
-    void: true,
-    note: "El monto de un cobro no se edita — viene de la cuota. Anularlo devuelve la cuota a pendiente y podrás volver a cobrarla.",
-  },
-  lend: {
-    edit: false,
-    void: false,
-    note: "Movimiento generado por un préstamo — se corrige desde el préstamo.",
-  },
+  // lend/repay belong to a loan: the dialog derives to the loan page instead of
+  // acting here (the warning + "Ir al préstamo" replace these buttons/notes).
+  repay: { edit: false, void: false },
+  lend: { edit: false, void: false },
 };
 
 /** What the movement is open to right now: the rules, plus its live state. */
