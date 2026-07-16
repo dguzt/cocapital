@@ -21,6 +21,10 @@ export const frequency = pgEnum("frequency", [
   "monthly",
 ]);
 
+/** A loan is `voided` only by cancellation (corrección de un error de captura):
+ *  its lend + every repay are voided and its cuotas leave `lent`. */
+export const loanStatus = pgEnum("loan_status", ["active", "voided"]);
+
 export const Loans = pgTable(
   "loans",
   {
@@ -40,6 +44,7 @@ export const Loans = pgTable(
     rateBps: integer("rate_bps").notNull(),
     installmentCount: integer("installment_count").notNull(),
     frequency: frequency("frequency").notNull(),
+    status: loanStatus("status").notNull().default("active"),
     startDate: date("start_date", { mode: "string" }).notNull(),
     /** The auto-written lend movement (traceability M4 -> M3). */
     lendMovementId: uuid("lend_movement_id")

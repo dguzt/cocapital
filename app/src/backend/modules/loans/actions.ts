@@ -63,3 +63,33 @@ export async function collectInstallmentAction(
 
   return { ok: true as const, amount: result.value.amount };
 }
+
+/**
+ * UC-306: propose to cancel an entire loan. Goes pending — the partner approves
+ * it in the shared inbox, and only then is the lend + every collection voided.
+ */
+export async function proposeVoidLoanAction(loanId: string) {
+  const user = await requireUser();
+  const group = await findGroupOf(user.id);
+
+  if (!group) {
+    return { ok: false as const, error: "NoGroup" };
+  }
+
+  const result = await useCases.proposeVoidLoan.execute({
+    groupId: group.id,
+    actorId: user.id,
+    loanId,
+  });
+
+  if (!result.ok) {
+    return { ok: false as const, error: result.error.kind };
+  }
+
+  revalidatePath("/");
+  revalidatePath("/actividad");
+  revalidatePath("/prestamos");
+  revalidatePath(`/prestamos/${loanId}`);
+
+  return { ok: true as const };
+}

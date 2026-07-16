@@ -33,12 +33,25 @@ export class LoanRepository {
         capital: Loans.capital,
         rateBps: Loans.rateBps,
         frequency: Loans.frequency,
+        status: Loans.status,
         startDate: Loans.startDate,
+        lendMovementId: Loans.lendMovementId,
         borrowerName: Borrowers.name,
       })
       .from(Loans)
       .innerJoin(Borrowers, eq(Borrowers.id, Loans.borrowerId))
       .where(and(eq(Loans.id, loanId), eq(Loans.groupId, groupId)));
+
+    return row ?? null;
+  }
+
+  /** The loan a `lend` movement belongs to — the seam the dispatcher lands on
+   *  when a loan cancellation is approved (its change targets the lend). */
+  async findByLendMovement(lendMovementId: string) {
+    const [row] = await this.db
+      .select({ id: Loans.id })
+      .from(Loans)
+      .where(eq(Loans.lendMovementId, lendMovementId));
 
     return row ?? null;
   }
@@ -49,6 +62,7 @@ export class LoanRepository {
       .select({
         id: Loans.id,
         capital: Loans.capital,
+        status: Loans.status,
         borrowerName: Borrowers.name,
         instStatus: Installments.status,
         instAmount: Installments.amount,
@@ -63,5 +77,13 @@ export class LoanRepository {
 
   insertStmt(row: NewLoanRow): Write {
     return this.db.insert(Loans).values(row);
+  }
+
+  /** Mark a loan cancelled — its cuotas then drop out of `lent`. */
+  voidStmt(loanId: string): Write {
+    return this.db
+      .update(Loans)
+      .set({ status: "voided" })
+      .where(eq(Loans.id, loanId));
   }
 }

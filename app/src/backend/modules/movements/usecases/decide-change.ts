@@ -33,9 +33,10 @@ export type ApprovedChange =
       after: MovementSnapshot;
     };
 
-/** The port: "this change was approved — give me the writes that apply it." */
+/** The port: "this change was approved — give me the writes that apply it."
+ *  Async: some owners (voiding a loan) must read to know what to reverse. */
 export interface ChangeApplier {
-  writesFor(change: ApprovedChange): Write[];
+  writesFor(change: ApprovedChange): Promise<Write[]>;
 }
 
 export type DecideChangeInput = {
@@ -90,7 +91,7 @@ export class DecideChange {
     });
 
     const effects = outcome.value.apply
-      ? this.applier.writesFor(this.askOwnerFor(change, outcome.value))
+      ? await this.applier.writesFor(this.askOwnerFor(change, outcome.value))
       : [];
 
     await this.uow.run([decided, ...effects]);

@@ -50,38 +50,49 @@ export default async function LoansPage() {
         </section>
       ) : (
         <ul className="max-w-2xl space-y-2.5">
-          {loans.map((loan) => (
-            <li key={loan.id}>
-              <Link
-                href={`/prestamos/${loan.id}`}
-                className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:border-input"
-              >
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary font-bold">
-                  {loan.borrowerName[0]}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[15px] font-bold">
-                    {loan.borrowerName}
+          {loans.map((loan) => {
+            const voided = loan.status === "voided";
+            return (
+              <li key={loan.id}>
+                <Link
+                  href={`/prestamos/${loan.id}`}
+                  className={`flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:border-input ${voided ? "opacity-60" : ""}`}
+                >
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary font-bold">
+                    {loan.borrowerName[0]}
                   </span>
-                  <span className="block text-[12.5px] text-zinc-500">
-                    {loan.collectedCount}/{loan.totalCount} cobradas
+                  <span className="min-w-0 flex-1">
+                    <span
+                      className={`block truncate text-[15px] font-bold ${voided ? "line-through" : ""}`}
+                    >
+                      {loan.borrowerName}
+                    </span>
+                    <span className="block text-[12.5px] text-zinc-500">
+                      {loan.collectedCount}/{loan.totalCount} cobradas
+                    </span>
                   </span>
-                </span>
-                <span className="text-right">
-                  <span className="block font-mono text-[15px] font-medium tabular-nums">
-                    {formatCents(loan.pendingAmount)}
-                  </span>
-                  <span
-                    className={`block text-[11px] font-semibold ${loan.overdueCount > 0 ? "text-destructive" : "text-muted-foreground"}`}
-                  >
-                    {loan.overdueCount > 0
-                      ? `⚠ ${loan.overdueCount} vencida${loan.overdueCount > 1 ? "s" : ""}`
-                      : "al día"}
-                  </span>
-                </span>
-              </Link>
-            </li>
-          ))}
+                  {voided ? (
+                    <span className="rounded-full bg-secondary px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
+                      Anulado
+                    </span>
+                  ) : (
+                    <span className="text-right">
+                      <span className="block font-mono text-[15px] font-medium tabular-nums">
+                        {formatCents(loan.pendingAmount)}
+                      </span>
+                      <span
+                        className={`block text-[11px] font-semibold ${loan.overdueCount > 0 ? "text-destructive" : "text-muted-foreground"}`}
+                      >
+                        {loan.overdueCount > 0
+                          ? `⚠ ${loan.overdueCount} vencida${loan.overdueCount > 1 ? "s" : ""}`
+                          : "al día"}
+                      </span>
+                    </span>
+                  )}
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       )}
       <div className="md:hidden">
