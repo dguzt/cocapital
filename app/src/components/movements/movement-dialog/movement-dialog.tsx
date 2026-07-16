@@ -189,9 +189,9 @@ export function MovementDialog({
                   <ArrowRight className="size-4" /> Ir al préstamo
                 </Link>
               ) : (
-                <span>
+                <>
                   <Loader2 className="size-4 animate-spin" /> Ir al préstamo
-                </span>
+                </>
               )}
             </Button>
           </div>
