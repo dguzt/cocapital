@@ -216,6 +216,20 @@ export default async function LoanDetailPage({
             })}
           </ul>
         </section>
+
+        {/* The header actions are desktop-only; surface Anular on mobile here. */}
+        {!isVoided && !voidPending && (
+          <div className="md:hidden">
+            <VoidLoanButton
+              loanId={loan.value.id}
+              borrowerName={loan.value.borrowerName}
+              capitalCents={loan.value.capital}
+              collectedCount={collectedCount}
+              className="w-full"
+              label="Anular préstamo"
+            />
+          </div>
+        )}
       </div>
     </AppShell>
   );

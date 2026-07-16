@@ -22,11 +22,16 @@ export function VoidLoanButton({
   borrowerName,
   capitalCents,
   collectedCount,
+  className,
+  label = "Anular",
 }: {
   loanId: string;
   borrowerName: string;
   capitalCents: number;
   collectedCount: number;
+  /** Extra classes for the trigger — lets the mobile placement go full-width. */
+  className?: string;
+  label?: string;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -55,8 +60,11 @@ export function VoidLoanButton({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="text-destructive">
-          <Ban className="size-4" /> Anular
+        <Button
+          variant="outline"
+          className={`text-destructive ${className ?? ""}`}
+        >
+          <Ban className="size-4" /> {label}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-sm">
