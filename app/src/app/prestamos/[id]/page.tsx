@@ -151,9 +151,9 @@ export default async function LoanDetailPage({
                 <li
                   key={inst.id}
                   id={`cuota-${inst.id}`}
-                  className="flex items-center gap-3 rounded-lg py-3.5"
+                  className="flex items-center gap-2 rounded-lg py-3.5 md:gap-3"
                 >
-                  <span className="w-16 shrink-0 text-[15px] font-medium">
+                  <span className="w-14 shrink-0 text-[15px] font-medium md:w-16">
                     Cuota {inst.number}
                   </span>
                   <span className="min-w-0 flex-1">
@@ -161,7 +161,7 @@ export default async function LoanDetailPage({
                       {shortDate(inst.dueDate)}
                     </span>
                     <span
-                      className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                      className={`mt-1 inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold ${
                         awaitingUndo
                           ? "bg-amber-400/15 text-amber-400"
                           : inst.status === "collected"
@@ -171,20 +171,27 @@ export default async function LoanDetailPage({
                               : "bg-secondary text-muted-foreground"
                       }`}
                     >
-                      {awaitingUndo
-                        ? "Deshacer cobro · falta el OK"
-                        : inst.status === "collected"
-                          ? "Cobrada"
-                          : overdue
-                            ? "Vencida"
-                            : "Pendiente"}
+                      {awaitingUndo ? (
+                        <>
+                          <span className="md:hidden">Falta OK</span>
+                          <span className="hidden md:inline">
+                            Deshacer cobro · falta el OK
+                          </span>
+                        </>
+                      ) : inst.status === "collected" ? (
+                        "Cobrada"
+                      ) : overdue ? (
+                        "Vencida"
+                      ) : (
+                        "Pendiente"
+                      )}
                     </span>
                   </span>
-                  <span className="w-24 text-right font-mono text-[15px] font-medium tabular-nums">
+                  <span className="w-20 text-right font-mono text-[15px] font-medium tabular-nums md:w-24">
                     {formatCents(inst.amount)}
                   </span>
                   {isVoided ? (
-                    <span className="w-[68px] text-center text-xs text-muted-foreground">
+                    <span className="w-11 text-center text-xs text-muted-foreground md:w-[68px]">
                       —
                     </span>
                   ) : inst.status === "pending" ? (
@@ -197,7 +204,7 @@ export default async function LoanDetailPage({
                     />
                   ) : awaitingUndo || inst.repayMovementId === null ? (
                     <span
-                      className={`w-[68px] text-center text-xs ${
+                      className={`w-11 text-center text-xs md:w-[68px] ${
                         awaitingUndo ? "text-amber-400" : "text-emerald-400"
                       }`}
                     >
