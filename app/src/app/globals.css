@@ -103,3 +103,23 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Brief highlight when arriving at a cuota from its cobro in the ledger. */
+@keyframes cuota-flash {
+  0%,
+  100% {
+    background-color: transparent;
+  }
+  20%,
+  60% {
+    background-color: color-mix(
+      in oklab,
+      var(--color-emerald-400) 18%,
+      transparent
+    );
+  }
+}
+
+.cuota-flash {
+  animation: cuota-flash 1.6s ease-in-out;
+}

@@ -6,6 +6,7 @@ import { todayInLima } from "@/lib/dates";
 import { useCases } from "../../application/container";
 import { requireUser } from "../accounts/current-user";
 import { findGroupOf } from "../groups/data";
+import type { MovementType } from "../movements/domain/movement";
 import type { NewLoan } from "./domain/loan";
 
 export type CreateLoanInput = NewLoan;
@@ -92,4 +93,28 @@ export async function proposeVoidLoanAction(loanId: string) {
   revalidatePath(`/prestamos/${loanId}`);
 
   return { ok: true as const };
+}
+
+/**
+ * Where a ledger row sends the user: its loan (and, for a `repay`, the cuota to
+ * highlight). A read — no revalidate. The dialog calls it lazily on open.
+ */
+export async function getLoanTargetForMovementAction(
+  movementId: string,
+  movementType: MovementType,
+) {
+  const user = await requireUser();
+  const group = await findGroupOf(user.id);
+
+  if (!group) {
+    return { ok: false as const, error: "NoGroup" };
+  }
+
+  const target = await useCases.getLoanTargetForMovement.execute({
+    groupId: group.id,
+    movementId,
+    movementType,
+  });
+
+  return { ok: true as const, target };
 }

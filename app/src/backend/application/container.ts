@@ -22,6 +22,7 @@ import { LoanRepository } from "../modules/loans/repositories/loan-repository";
 import { CollectInstallment } from "../modules/loans/usecases/collect-installment";
 import { CreateLoan } from "../modules/loans/usecases/create-loan";
 import { GetLoanDetail } from "../modules/loans/usecases/get-loan-detail";
+import { GetLoanTargetForMovement } from "../modules/loans/usecases/get-loan-target-for-movement";
 import { ListBorrowers } from "../modules/loans/usecases/list-borrowers";
 import { ListGroupInstallments } from "../modules/loans/usecases/list-group-installments";
 import { ListLoans } from "../modules/loans/usecases/list-loans";
@@ -84,6 +85,7 @@ export const useCases = {
   createLoan: injector.injectClass(CreateLoan),
   collectInstallment: injector.injectClass(CollectInstallment),
   proposeVoidLoan: injector.injectClass(ProposeVoidLoan),
+  getLoanTargetForMovement: injector.injectClass(GetLoanTargetForMovement),
   getLoanDetail: injector.resolve("getLoanDetail"),
   listLoans: injector.injectClass(ListLoans),
   listBorrowers: injector.injectClass(ListBorrowers),

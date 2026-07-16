@@ -191,9 +191,9 @@ describe("UC-306/307: anular un préstamo", () => {
       cuota1.id,
       TODAY,
     );
-    expect(!collect.ok && collect.error.kind === "InstallmentNotCollectable").toBe(
-      true,
-    );
+    expect(
+      !collect.ok && collect.error.kind === "InstallmentNotCollectable",
+    ).toBe(true);
 
     const again = await proposeVoidLoan(group.id, ana.id, loanId);
     expect(!again.ok && again.error.kind === "LoanAlreadyVoided").toBe(true);
@@ -207,6 +207,8 @@ describe("UC-306/307: anular un préstamo", () => {
     expect(first.ok).toBe(true);
 
     const second = await proposeVoidLoan(group.id, ana.id, loanId);
-    expect(!second.ok && second.error.kind === "ChangeAlreadyPending").toBe(true);
+    expect(!second.ok && second.error.kind === "ChangeAlreadyPending").toBe(
+      true,
+    );
   });
 });

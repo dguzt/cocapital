@@ -5,6 +5,8 @@ import { useCases } from "@/backend/application/container";
 import { requireUser } from "@/backend/modules/accounts/current-user";
 import { findGroupOf } from "@/backend/modules/groups/data";
 import { CollectButton } from "@/components/loans/collect-button";
+import { HighlightCuota } from "@/components/loans/highlight-cuota";
+import { UndoCollectionButton } from "@/components/loans/undo-collection-button";
 import { VoidLoanButton } from "@/components/loans/void-loan-button";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
@@ -19,13 +21,16 @@ function shortDate(iso: string) {
 
 export default async function LoanDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ cuota?: string }>;
 }) {
   const user = await requireUser();
   const group = await findGroupOf(user.id);
   if (!group) return null;
   const { id } = await params;
+  const { cuota: highlightId } = await searchParams;
   const loan = await useCases.getLoanDetail.execute({
     groupId: group.id,
     loanId: id,
@@ -133,6 +138,7 @@ export default async function LoanDetailPage({
         </section>
 
         <section className="rounded-2xl border border-border bg-card p-5">
+          <HighlightCuota targetId={highlightId ?? null} />
           <h2 className="font-semibold">Cuotas</h2>
           <ul className="mt-2 divide-y divide-border">
             {loan.value.installments.map((inst) => {
@@ -142,7 +148,11 @@ export default async function LoanDetailPage({
                 inst.repayMovementId !== null &&
                 undoPending.has(inst.repayMovementId);
               return (
-                <li key={inst.id} className="flex items-center gap-3 py-3.5">
+                <li
+                  key={inst.id}
+                  id={`cuota-${inst.id}`}
+                  className="flex items-center gap-3 rounded-lg py-3.5"
+                >
                   <span className="w-16 shrink-0 text-[15px] font-medium">
                     Cuota {inst.number}
                   </span>
@@ -185,7 +195,7 @@ export default async function LoanDetailPage({
                       amountCents={inst.amount}
                       borrowerName={loan.value.borrowerName}
                     />
-                  ) : (
+                  ) : awaitingUndo || inst.repayMovementId === null ? (
                     <span
                       className={`w-[68px] text-center text-xs ${
                         awaitingUndo ? "text-amber-400" : "text-emerald-400"
@@ -193,6 +203,13 @@ export default async function LoanDetailPage({
                     >
                       {awaitingUndo ? "⏳" : "✓"}
                     </span>
+                  ) : (
+                    <UndoCollectionButton
+                      repayMovementId={inst.repayMovementId}
+                      number={inst.number}
+                      amountCents={inst.amount}
+                      borrowerName={loan.value.borrowerName}
+                    />
                   )}
                 </li>
               );

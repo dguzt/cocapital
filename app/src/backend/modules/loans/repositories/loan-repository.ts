@@ -56,6 +56,25 @@ export class LoanRepository {
     return row ?? null;
   }
 
+  /** The loan id owning a `lend` movement, scoped to the group (auth) — lets a
+   *  ledger row link back to its loan page. */
+  async loanIdByLendMovement(
+    groupId: string,
+    lendMovementId: string,
+  ): Promise<string | null> {
+    const [row] = await this.db
+      .select({ id: Loans.id })
+      .from(Loans)
+      .where(
+        and(
+          eq(Loans.lendMovementId, lendMovementId),
+          eq(Loans.groupId, groupId),
+        ),
+      );
+
+    return row?.id ?? null;
+  }
+
   /** Every loan of the group joined to its installments — one row per cuota. */
   async listWithInstallments(groupId: string) {
     return this.db
