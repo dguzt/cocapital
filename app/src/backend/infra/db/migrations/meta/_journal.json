@@ -15,6 +15,13 @@
       "when": 1783581501185,
       "tag": "0001_free_retro_girl",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784184361820,
+      "tag": "0002_classy_blindfold",
+      "breakpoints": true
     }
   ]
 }

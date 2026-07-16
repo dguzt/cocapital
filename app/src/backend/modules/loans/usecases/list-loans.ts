@@ -35,6 +35,7 @@ export class ListLoans {
           id,
           borrowerName: group[0].borrowerName,
           capital: group[0].capital,
+          status: group[0].status,
           collectedCount: group.length - pending.length,
           totalCount: group.length,
           overdueCount: pending.filter((r) => r.instDue < input.today).length,

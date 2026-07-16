@@ -33,7 +33,9 @@ export class LoanRepository {
         capital: Loans.capital,
         rateBps: Loans.rateBps,
         frequency: Loans.frequency,
+        status: Loans.status,
         startDate: Loans.startDate,
+        lendMovementId: Loans.lendMovementId,
         borrowerName: Borrowers.name,
       })
       .from(Loans)
@@ -43,12 +45,43 @@ export class LoanRepository {
     return row ?? null;
   }
 
+  /** The loan a `lend` movement belongs to — the seam the dispatcher lands on
+   *  when a loan cancellation is approved (its change targets the lend). */
+  async findByLendMovement(lendMovementId: string) {
+    const [row] = await this.db
+      .select({ id: Loans.id })
+      .from(Loans)
+      .where(eq(Loans.lendMovementId, lendMovementId));
+
+    return row ?? null;
+  }
+
+  /** The loan id owning a `lend` movement, scoped to the group (auth) — lets a
+   *  ledger row link back to its loan page. */
+  async loanIdByLendMovement(
+    groupId: string,
+    lendMovementId: string,
+  ): Promise<string | null> {
+    const [row] = await this.db
+      .select({ id: Loans.id })
+      .from(Loans)
+      .where(
+        and(
+          eq(Loans.lendMovementId, lendMovementId),
+          eq(Loans.groupId, groupId),
+        ),
+      );
+
+    return row?.id ?? null;
+  }
+
   /** Every loan of the group joined to its installments — one row per cuota. */
   async listWithInstallments(groupId: string) {
     return this.db
       .select({
         id: Loans.id,
         capital: Loans.capital,
+        status: Loans.status,
         borrowerName: Borrowers.name,
         instStatus: Installments.status,
         instAmount: Installments.amount,
@@ -63,5 +96,13 @@ export class LoanRepository {
 
   insertStmt(row: NewLoanRow): Write {
     return this.db.insert(Loans).values(row);
+  }
+
+  /** Mark a loan cancelled — its cuotas then drop out of `lent`. */
+  voidStmt(loanId: string): Write {
+    return this.db
+      .update(Loans)
+      .set({ status: "voided" })
+      .where(eq(Loans.id, loanId));
   }
 }

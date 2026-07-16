@@ -5,6 +5,9 @@ import { useCases } from "@/backend/application/container";
 import { requireUser } from "@/backend/modules/accounts/current-user";
 import { findGroupOf } from "@/backend/modules/groups/data";
 import { CollectButton } from "@/components/loans/collect-button";
+import { HighlightCuota } from "@/components/loans/highlight-cuota";
+import { UndoCollectionButton } from "@/components/loans/undo-collection-button";
+import { VoidLoanButton } from "@/components/loans/void-loan-button";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
 import { isOverdue, todayInLima } from "@/lib/dates";
@@ -18,13 +21,16 @@ function shortDate(iso: string) {
 
 export default async function LoanDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ cuota?: string }>;
 }) {
   const user = await requireUser();
   const group = await findGroupOf(user.id);
   if (!group) return null;
   const { id } = await params;
+  const { cuota: highlightId } = await searchParams;
   const loan = await useCases.getLoanDetail.execute({
     groupId: group.id,
     loanId: id,
@@ -47,6 +53,12 @@ export default async function LoanDetailPage({
   const undoPending = new Set(
     pendingChanges.filter((c) => c.kind === "void").map((c) => c.movementId),
   );
+  const isVoided = loan.value.status === "voided";
+  // A pending cancellation is a pending void on the loan's own lend movement.
+  const voidPending = undoPending.has(loan.value.lendMovementId);
+  const collectedCount = loan.value.installments.filter(
+    (i) => i.status === "collected",
+  ).length;
   const rate = (loan.value.rateBps / 100).toFixed(
     loan.value.rateBps % 100 === 0 ? 0 : 2,
   );
@@ -70,14 +82,43 @@ export default async function LoanDetailPage({
       title={loan.value.borrowerName}
       subtitle={`${formatCents(loan.value.capital)} al ${rate}%`}
       actions={
-        <Button asChild variant="outline">
-          <Link href="/prestamos">
-            <ArrowLeft className="size-4" /> Préstamos
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link href="/prestamos">
+              <ArrowLeft className="size-4" /> Préstamos
+            </Link>
+          </Button>
+          {!isVoided && !voidPending && (
+            <VoidLoanButton
+              loanId={loan.value.id}
+              borrowerName={loan.value.borrowerName}
+              capitalCents={loan.value.capital}
+              collectedCount={collectedCount}
+            />
+          )}
+        </div>
       }
     >
       <div className="flex max-w-3xl flex-col gap-5">
+        {isVoided && (
+          <section className="rounded-2xl border border-border bg-secondary p-4">
+            <p className="text-sm font-semibold">Préstamo anulado</p>
+            <p className="mt-1 text-[13px] text-muted-foreground">
+              Se revirtió por completo: el capital volvió a caja y sus cobros
+              fueron deshechos.
+            </p>
+          </section>
+        )}
+        {!isVoided && voidPending && (
+          <section className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4">
+            <p className="text-sm font-semibold text-amber-400">
+              Anulación pendiente — falta el OK de tu socio
+            </p>
+            <p className="mt-1 text-[13px] text-muted-foreground">
+              Se revierte el préstamo completo cuando tu socio lo apruebe.
+            </p>
+          </section>
+        )}
         <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {summary.map((s) => (
             <div
@@ -97,6 +138,7 @@ export default async function LoanDetailPage({
         </section>
 
         <section className="rounded-2xl border border-border bg-card p-5">
+          <HighlightCuota targetId={highlightId ?? null} />
           <h2 className="font-semibold">Cuotas</h2>
           <ul className="mt-2 divide-y divide-border">
             {loan.value.installments.map((inst) => {
@@ -106,8 +148,12 @@ export default async function LoanDetailPage({
                 inst.repayMovementId !== null &&
                 undoPending.has(inst.repayMovementId);
               return (
-                <li key={inst.id} className="flex items-center gap-3 py-3.5">
-                  <span className="w-16 shrink-0 text-[15px] font-medium">
+                <li
+                  key={inst.id}
+                  id={`cuota-${inst.id}`}
+                  className="flex items-center gap-2 rounded-lg py-3.5 md:gap-3"
+                >
+                  <span className="w-14 shrink-0 text-[15px] font-medium md:w-16">
                     Cuota {inst.number}
                   </span>
                   <span className="min-w-0 flex-1">
@@ -115,7 +161,7 @@ export default async function LoanDetailPage({
                       {shortDate(inst.dueDate)}
                     </span>
                     <span
-                      className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                      className={`mt-1 inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold ${
                         awaitingUndo
                           ? "bg-amber-400/15 text-amber-400"
                           : inst.status === "collected"
@@ -125,19 +171,30 @@ export default async function LoanDetailPage({
                               : "bg-secondary text-muted-foreground"
                       }`}
                     >
-                      {awaitingUndo
-                        ? "Deshacer cobro · falta el OK"
-                        : inst.status === "collected"
-                          ? "Cobrada"
-                          : overdue
-                            ? "Vencida"
-                            : "Pendiente"}
+                      {awaitingUndo ? (
+                        <>
+                          <span className="md:hidden">Falta OK</span>
+                          <span className="hidden md:inline">
+                            Deshacer cobro · falta el OK
+                          </span>
+                        </>
+                      ) : inst.status === "collected" ? (
+                        "Cobrada"
+                      ) : overdue ? (
+                        "Vencida"
+                      ) : (
+                        "Pendiente"
+                      )}
                     </span>
                   </span>
-                  <span className="w-24 text-right font-mono text-[15px] font-medium tabular-nums">
+                  <span className="w-20 text-right font-mono text-[15px] font-medium tabular-nums md:w-24">
                     {formatCents(inst.amount)}
                   </span>
-                  {inst.status === "pending" ? (
+                  {isVoided ? (
+                    <span className="w-11 text-center text-xs text-muted-foreground md:w-[68px]">
+                      —
+                    </span>
+                  ) : inst.status === "pending" ? (
                     <CollectButton
                       loanId={loan.value.id}
                       installmentId={inst.id}
@@ -145,20 +202,41 @@ export default async function LoanDetailPage({
                       amountCents={inst.amount}
                       borrowerName={loan.value.borrowerName}
                     />
-                  ) : (
+                  ) : awaitingUndo || inst.repayMovementId === null ? (
                     <span
-                      className={`w-[68px] text-center text-xs ${
+                      className={`w-11 text-center text-xs md:w-[68px] ${
                         awaitingUndo ? "text-amber-400" : "text-emerald-400"
                       }`}
                     >
                       {awaitingUndo ? "⏳" : "✓"}
                     </span>
+                  ) : (
+                    <UndoCollectionButton
+                      repayMovementId={inst.repayMovementId}
+                      number={inst.number}
+                      amountCents={inst.amount}
+                      borrowerName={loan.value.borrowerName}
+                    />
                   )}
                 </li>
               );
             })}
           </ul>
         </section>
+
+        {/* The header actions are desktop-only; surface Anular on mobile here. */}
+        {!isVoided && !voidPending && (
+          <div className="md:hidden">
+            <VoidLoanButton
+              loanId={loan.value.id}
+              borrowerName={loan.value.borrowerName}
+              capitalCents={loan.value.capital}
+              collectedCount={collectedCount}
+              className="w-full"
+              label="Anular préstamo"
+            />
+          </div>
+        )}
       </div>
     </AppShell>
   );

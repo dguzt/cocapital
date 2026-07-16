@@ -12,6 +12,7 @@ import {
   collectInstallment,
   createLoan,
   getLoanDetail,
+  getLoanTargetForMovement,
   listBorrowers,
   listGroupInstallments,
   listLoans,
@@ -157,6 +158,55 @@ describe("E3: lending lifecycle", () => {
     expect(!r.ok && r.error.kind === "InvalidInstallments").toBe(true);
     // Nothing partial got written
     expect(await listLoans(group.id, TODAY)).toHaveLength(0);
+  });
+
+  it("resolves the loan target a ledger row links to (lend + repay)", async () => {
+    const { diego, group } = await seed();
+    const karina = karinaLoan();
+    const created = await createLoan(group.id, diego.id, {
+      borrower: { name: "Karina" },
+      capital: karina.capital,
+      rateBps: 1000,
+      frequency: "monthly",
+      startDate: TODAY,
+      installments: karina.installments,
+    });
+    if (!created.ok) throw new Error("loan failed");
+
+    // A lend row links to the loan, no cuota to highlight.
+    const lend = (await listMovements(group.id)).find((m) => m.type === "lend");
+    if (!lend) throw new Error("lend movement missing");
+    expect(await getLoanTargetForMovement(group.id, lend.id, "lend")).toEqual({
+      loanId: created.value.loanId,
+      installmentId: null,
+    });
+
+    // A repay row links to the loan AND the exact cuota it collected.
+    const detail = await getLoanDetail(group.id, created.value.loanId);
+    if (!detail.ok) throw new Error("loan missing");
+    const cuota1 = detail.value.installments[0];
+    await collectInstallment(
+      group.id,
+      diego.id,
+      created.value.loanId,
+      cuota1.id,
+      TODAY,
+    );
+    const repay = (await listMovements(group.id)).find(
+      (m) => m.type === "repay",
+    );
+    if (!repay) throw new Error("repay movement missing");
+    expect(await getLoanTargetForMovement(group.id, repay.id, "repay")).toEqual(
+      {
+        loanId: created.value.loanId,
+        installmentId: cuota1.id,
+      },
+    );
+
+    // Group scope is the auth: another group sees nothing.
+    expect(
+      await getLoanTargetForMovement(crypto.randomUUID(), lend.id, "lend"),
+    ).toBeNull();
   });
 
   it("existing borrower is reused, not duplicated", async () => {

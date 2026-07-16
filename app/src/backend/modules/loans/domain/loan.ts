@@ -21,10 +21,13 @@ export type NewLoan = {
 
 export type InstallmentStatus = "pending" | "collected";
 
+export type LoanStatus = "active" | "voided";
+
 export type LoanListItem = {
   id: string;
   borrowerName: string;
   capital: Cents;
+  status: LoanStatus;
   collectedCount: number;
   totalCount: number;
   overdueCount: number;
@@ -37,6 +40,10 @@ export type LoanDetail = {
   capital: Cents;
   rateBps: number;
   frequency: Frequency;
+  status: LoanStatus;
+  /** The loan's `lend` movement — a pending void on it IS a pending
+   *  cancellation, surfaced on the loan page. */
+  lendMovementId: string;
   startDate: ISODate;
   expectedInterest: Cents;
   collectedAmount: Cents;
