@@ -56,53 +56,82 @@ export function PanelContent({
       swatch: "bg-zinc-700",
     },
   ];
+  // What the group has but can't spend today: inventory + outstanding loans.
+  const immobilized = capital.inventory + capital.lent;
+  const immobilizedRows = [
+    { label: "Inventario", value: capital.inventory, swatch: "bg-zinc-500" },
+    { label: "Prestado", value: capital.lent, swatch: "bg-zinc-700" },
+  ];
   const totalProfit = capital.salesProfit + capital.collectedInterest;
 
   return (
     <div className="grid gap-5 xl:grid-cols-[1.55fr_1fr] xl:items-start">
       <div className="flex min-w-0 flex-col gap-5">
-        {/* hero */}
+        {/* hero — liquidity first: cash is the headline, everything else
+            collapses into "inmovilizado" (what exists but can't be spent). */}
         <section className="rounded-2xl border border-border bg-gradient-to-br from-card to-[#121215] p-6 md:p-7">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Capital total
+            Efectivo disponible
           </p>
           <p className="mt-3 font-mono text-5xl font-semibold tracking-tighter tabular-nums md:text-[52px] md:leading-none">
-            {formatCents(capital.total)}
+            {formatCents(capital.cash)}
           </p>
+          {/* one thing only: how much is liquid vs. tied up */}
           <div className="mt-5 flex h-3 gap-0.5 overflow-hidden rounded-lg bg-secondary">
-            {buckets.map((b) => (
-              <div
-                key={b.label}
-                className={b.swatch}
-                style={{ width: pct(b.value) }}
-              />
-            ))}
+            <div
+              className="bg-emerald-400"
+              style={{ width: pct(capital.cash) }}
+            />
+            <div className="bg-zinc-600" style={{ width: pct(immobilized) }} />
           </div>
-          {/* Phones: full-width rows (nothing can truncate). ≥sm: 3 columns. */}
-          <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3.5">
-            {buckets.map((b) => (
-              <div
-                key={b.label}
-                className="flex items-center gap-3 rounded-xl border border-border bg-sidebar p-3.5 sm:block sm:p-4"
-              >
-                <div className="flex min-w-0 items-center gap-2">
-                  <span
-                    className={`size-2.5 shrink-0 rounded-sm ${b.swatch}`}
-                  />
-                  <span className="truncate text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    {b.label}
-                  </span>
-                </div>
-                <div className="ml-auto text-right sm:ml-0 sm:mt-2.5 sm:text-left">
-                  <p className="whitespace-nowrap font-mono font-semibold tabular-nums text-[15px] sm:text-base xl:text-[22px]">
-                    {formatCents(b.value)}
-                  </p>
-                  <p className="mt-0.5 whitespace-nowrap font-mono text-[11px] text-zinc-500 tabular-nums sm:text-[11.5px]">
-                    {pct(b.value)} del capital
-                  </p>
-                </div>
+          <div className="mt-2 flex justify-between font-mono text-[11px] tabular-nums text-zinc-500">
+            <span>Disponible · {pct(capital.cash)}</span>
+            <span>Inmovilizado · {pct(immobilized)}</span>
+          </div>
+          <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3.5">
+            {/* inmovilizado — the total, then its two pieces */}
+            <div className="rounded-xl border border-border bg-sidebar p-3.5 sm:p-4">
+              <div className="flex items-center gap-2">
+                <span className="size-2.5 shrink-0 rounded-sm bg-zinc-600" />
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Inmovilizado
+                </span>
               </div>
-            ))}
+              <p className="mt-2.5 whitespace-nowrap font-mono text-[22px] font-semibold tabular-nums">
+                {formatCents(immobilized)}
+              </p>
+              <div className="mt-3 flex flex-col gap-2">
+                {immobilizedRows.map((r) => (
+                  <div
+                    key={r.label}
+                    className="flex items-center justify-between gap-3"
+                  >
+                    <span className="flex items-center gap-2 text-[13px] text-zinc-300">
+                      <span className={`size-2 rounded-sm ${r.swatch}`} />
+                      {r.label}
+                    </span>
+                    <span className="whitespace-nowrap font-mono text-[13px] font-medium tabular-nums">
+                      {formatCents(r.value)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* capital total — context, not the headline anymore */}
+            <div className="rounded-xl border border-border bg-sidebar p-3.5 sm:p-4">
+              <div className="flex items-center gap-2">
+                <span className="size-2.5 shrink-0 rounded-sm border border-zinc-600 bg-secondary" />
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Capital total
+                </span>
+              </div>
+              <p className="mt-2.5 whitespace-nowrap font-mono text-[22px] font-semibold tabular-nums">
+                {formatCents(capital.total)}
+              </p>
+              <p className="mt-0.5 whitespace-nowrap font-mono text-[11px] text-zinc-500 tabular-nums">
+                efectivo + inmovilizado
+              </p>
+            </div>
           </div>
         </section>
 
