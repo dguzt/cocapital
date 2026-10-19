@@ -1,8 +1,9 @@
 import { Activity } from "lucide-react";
 import Link from "next/link";
 import { useCases } from "@/backend/application/container";
-import { getCurrentUser } from "@/backend/modules/accounts/current-user";
-import { findGroupOf } from "@/backend/modules/groups/data";
+import { getCurrentUser } from "@/backend/modules/accounts/adapters/in/next/session";
+import { toUserView } from "@/backend/modules/accounts/adapters/in/next/user-view";
+import { toGroupView } from "@/backend/modules/groups/adapters/in/next/group-view";
 import { PanelContent } from "@/components/dashboard/dashboard";
 import { InviteBanner } from "@/components/dashboard/invite-banner";
 import { Landing } from "@/components/landing/landing";
@@ -23,7 +24,7 @@ export default async function HomePage({
   if (!user) {
     return <Landing />;
   }
-  const group = await findGroupOf(user.id);
+  const group = await useCases.getMyGroup.execute({ userId: user.id });
   const { error } = await searchParams;
 
   if (!group) {
@@ -31,10 +32,11 @@ export default async function HomePage({
   }
 
   const today = todayInLima();
-  const [movements, installments, pendingChanges] = await Promise.all([
+  const [movements, installments, pendingChanges, capital] = await Promise.all([
     useCases.listMovements.execute({ groupId: group.id }),
     useCases.listGroupInstallments.execute({ groupId: group.id }),
     useCases.listPendingChanges.execute({ groupId: group.id }),
+    useCases.getCapitalSummary.execute({ groupId: group.id }),
   ]);
   const overdueCount = installments.filter(
     (i) => i.status === "pending" && isOverdue(i.dueDate, today),
@@ -44,8 +46,8 @@ export default async function HomePage({
 
   return (
     <AppShell
-      user={user}
-      group={group}
+      user={toUserView(user)}
+      group={toGroupView(group)}
       active="panel"
       overdueCount={overdueCount}
       title="Panel"
@@ -62,12 +64,12 @@ export default async function HomePage({
       }
     >
       <div className="flex flex-col gap-5">
-        {group.members.length < 2 && <InviteBanner code={group.inviteCode} />}
+        {group.hasFreeSeat() && <InviteBanner code={group.inviteCode.value} />}
         <PendingApprovals items={approvalsForMe} />
         <PanelContent
-          user={user}
+          user={toUserView(user)}
           movements={movements}
-          installments={installments}
+          capital={capital}
           pendingIds={pendingIds}
           today={today}
         />

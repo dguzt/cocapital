@@ -5,10 +5,9 @@
  */
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
-import type { SessionUser } from "@/backend/modules/accounts/current-user";
-import type { CapitalInstallment } from "@/backend/modules/capital/domain/derive";
-import { deriveCapital } from "@/backend/modules/capital/domain/derive";
-import type { LedgerMovement } from "@/backend/modules/movements/usecases/list-movements";
+import type { UserView } from "@/backend/modules/accounts/adapters/in/next/user-view";
+import type { CapitalSummary } from "@/backend/modules/capital/domain/capital-summary";
+import type { LedgerMovement } from "@/backend/modules/movements/domain/ledger-movement";
 import { ActivityFeed } from "@/components/movements/activity-feed";
 import { ActivityTable } from "@/components/movements/activity-table";
 import { MovementSheet } from "@/components/movements/movement-sheet";
@@ -18,17 +17,16 @@ import { formatCents } from "@/lib/money";
 export function PanelContent({
   user,
   movements,
-  installments,
+  capital,
   pendingIds,
   today,
 }: {
-  user: SessionUser;
+  user: UserView;
   movements: LedgerMovement[];
-  installments: CapitalInstallment[];
+  capital: CapitalSummary;
   pendingIds: string[];
   today: ISODate;
 }) {
-  const capital = deriveCapital(movements, installments);
   const positive =
     Math.max(capital.cash, 0) +
     Math.max(capital.inventory, 0) +
@@ -59,8 +57,18 @@ export function PanelContent({
   // What the group has but can't spend today: inventory + outstanding loans.
   const immobilized = capital.inventory + capital.lent;
   const immobilizedRows = [
-    { label: "Inventario", value: capital.inventory, swatch: "bg-zinc-500" },
-    { label: "Prestado", value: capital.lent, swatch: "bg-zinc-700" },
+    {
+      label: "Inventario",
+      value: capital.inventory,
+      swatch: "bg-zinc-500",
+      testId: "capital-inventory",
+    },
+    {
+      label: "Prestado",
+      value: capital.lent,
+      swatch: "bg-zinc-700",
+      testId: "capital-lent",
+    },
   ];
   const totalProfit = capital.salesProfit + capital.collectedInterest;
 
@@ -73,7 +81,10 @@ export function PanelContent({
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
             Efectivo disponible
           </p>
-          <p className="mt-3 font-mono text-5xl font-semibold tracking-tighter tabular-nums md:text-[52px] md:leading-none">
+          <p
+            data-testid="capital-cash"
+            className="mt-3 font-mono text-5xl font-semibold tracking-tighter tabular-nums md:text-[52px] md:leading-none"
+          >
             {formatCents(capital.cash)}
           </p>
           {/* one thing only: how much is liquid vs. tied up */}
@@ -110,7 +121,10 @@ export function PanelContent({
                       <span className={`size-2 rounded-sm ${r.swatch}`} />
                       {r.label}
                     </span>
-                    <span className="whitespace-nowrap font-mono text-[13px] font-medium tabular-nums">
+                    <span
+                      data-testid={r.testId}
+                      className="whitespace-nowrap font-mono text-[13px] font-medium tabular-nums"
+                    >
                       {formatCents(r.value)}
                     </span>
                   </div>
@@ -125,7 +139,10 @@ export function PanelContent({
                   Capital total
                 </span>
               </div>
-              <p className="mt-2.5 whitespace-nowrap font-mono text-[22px] font-semibold tabular-nums">
+              <p
+                data-testid="capital-total"
+                className="mt-2.5 whitespace-nowrap font-mono text-[22px] font-semibold tabular-nums"
+              >
                 {formatCents(capital.total)}
               </p>
               <p className="mt-0.5 whitespace-nowrap font-mono text-[11px] text-zinc-500 tabular-nums">

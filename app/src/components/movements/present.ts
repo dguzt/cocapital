@@ -1,5 +1,5 @@
 /** Shared presenter: one movement → everything the feed/table shows. */
-import type { LedgerMovement } from "@/backend/modules/movements/usecases/list-movements";
+import type { LedgerMovement } from "@/backend/modules/movements/domain/ledger-movement";
 import type { ISODate } from "@/lib/dates";
 import { limaDateOf, limaTimeOf } from "@/lib/dates";
 import { formatCents } from "@/lib/money";

@@ -1,6 +1,7 @@
 import { useCases } from "@/backend/application/container";
-import { requireUser } from "@/backend/modules/accounts/current-user";
-import { findGroupOf } from "@/backend/modules/groups/data";
+import { toUserView } from "@/backend/modules/accounts/adapters/in/next/user-view";
+import { toGroupView } from "@/backend/modules/groups/adapters/in/next/group-view";
+import { requireMembership } from "@/backend/modules/groups/adapters/in/next/membership";
 import { ActivityFeed } from "@/components/movements/activity-feed";
 import { ActivityTable } from "@/components/movements/activity-table";
 import { PendingApprovals } from "@/components/movements/pending-approvals";
@@ -8,9 +9,7 @@ import { AppShell } from "@/components/shell/app-shell";
 import { isOverdue, todayInLima } from "@/lib/dates";
 
 export default async function ActivityPage() {
-  const user = await requireUser();
-  const group = await findGroupOf(user.id);
-  if (!group) return null;
+  const { user, group } = await requireMembership();
 
   const today = todayInLima();
   const [movements, installments, pendingChanges] = await Promise.all([
@@ -26,8 +25,8 @@ export default async function ActivityPage() {
 
   return (
     <AppShell
-      user={user}
-      group={group}
+      user={toUserView(user)}
+      group={toGroupView(group)}
       active="activity"
       overdueCount={overdueCount}
       title="Actividad"

@@ -2,17 +2,16 @@ import { Plus } from "lucide-react";
 import Link from "next/link";
 import * as R from "remeda";
 import { useCases } from "@/backend/application/container";
-import { requireUser } from "@/backend/modules/accounts/current-user";
-import { findGroupOf } from "@/backend/modules/groups/data";
+import { toUserView } from "@/backend/modules/accounts/adapters/in/next/user-view";
+import { toGroupView } from "@/backend/modules/groups/adapters/in/next/group-view";
+import { requireMembership } from "@/backend/modules/groups/adapters/in/next/membership";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
 import { todayInLima } from "@/lib/dates";
 import { formatCents } from "@/lib/money";
 
 export default async function LoansPage() {
-  const user = await requireUser();
-  const group = await findGroupOf(user.id);
-  if (!group) return null;
+  const { user, group } = await requireMembership();
   const loans = await useCases.listLoans.execute({
     groupId: group.id,
     today: todayInLima(),
@@ -21,8 +20,8 @@ export default async function LoansPage() {
 
   return (
     <AppShell
-      user={user}
-      group={group}
+      user={toUserView(user)}
+      group={toGroupView(group)}
       active="loans"
       overdueCount={overdueCount}
       title="Préstamos"

@@ -1,6 +1,4 @@
-/** Shared integration-test reset: clear ALL tables, children before parents.
- *  Every suite must use this — a partial truncate breaks other suites via FKs. */
-import { db } from "../backend/infra/db/client";
+import { db } from "@/backend/infra/db/client";
 import {
   Borrowers,
   Groups,
@@ -10,8 +8,9 @@ import {
   MovementChanges,
   Movements,
   Users,
-} from "../backend/infra/db/schema";
+} from "@/backend/infra/db/schema";
 
+/** Empties every table, children before parents, before each integration test. */
 export async function truncateAll() {
   await db.delete(Installments);
   await db.delete(Loans);

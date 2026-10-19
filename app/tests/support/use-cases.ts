@@ -1,23 +1,12 @@
-/**
- * The real container, adapted to the call shape the tests already had.
- *
- * The tests are the proof that this refactor changed nothing, so their
- * assertions must not move. These adapters are therefore the entire visible
- * difference between the old API and the new one: same behaviour, now reached
- * through `useCases.<name>.execute({ ... })` with a named input object.
- *
- * They run against the REAL graph (real repositories, real Neon test branch) —
- * nothing is faked here. To fake a repository, build your own injector with
- * `.provideValue("loans", fake)` instead of importing this.
- */
+/** The real use cases, called with the positional arguments the integration tests use. */
 import { useCases } from "@/backend/application/container";
-import type { NewLoan } from "@/backend/modules/loans/domain/loan";
+import type { NewLoan } from "@/backend/modules/loans/domain/new-loan";
+import type { ChangeKind } from "@/backend/modules/movements/domain/change-kind";
 import type {
   MovementSnapshot,
   MovementType,
 } from "@/backend/modules/movements/domain/movement";
-import type { ChangeKind } from "@/backend/modules/movements/domain/pending";
-import type { NewMovement } from "@/backend/modules/movements/domain/validate";
+import type { NewMovement } from "@/backend/modules/movements/domain/new-movement";
 import type { ISODate } from "@/lib/dates";
 
 export const addMovement = (
@@ -103,3 +92,17 @@ export const listBorrowers = (groupId: string) =>
 
 export const listGroupInstallments = (groupId: string) =>
   useCases.listGroupInstallments.execute({ groupId });
+
+type SeededUser = { id: string; name: string };
+
+export const createGroup = (creator: SeededUser, name: string) =>
+  useCases.createGroup.execute({
+    creator: { userId: creator.id, name: creator.name },
+    name,
+  });
+
+export const joinGroup = (partner: SeededUser, code: string) =>
+  useCases.joinGroup.execute({
+    partner: { userId: partner.id, name: partner.name },
+    code,
+  });

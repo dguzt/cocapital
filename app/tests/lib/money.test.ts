@@ -42,7 +42,7 @@ describe("formatCents", () => {
   });
 });
 
-describe("splitEvenly (D5: last absorbs)", () => {
+describe("splitEvenly (last absorbs)", () => {
   it("splits exactly when divisible: S/330 × 4", () => {
     expect(splitEvenly(33000, 4)).toEqual([8250, 8250, 8250, 8250]);
   });

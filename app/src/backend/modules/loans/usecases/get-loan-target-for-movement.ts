@@ -1,17 +1,7 @@
-/**
- * UC-308 · Resolve the loan a ledger row links to.
- *
- * A `lend`/`repay` movement is corrected from the loan, never from the ledger
- * (the movement dialog derives the user here). But `movements` may not know
- * about loans, so this loans use case answers "where does this movement send
- * me?" — the loan, and for a `repay`, the exact cuota to highlight.
- *
- * Authorizes by group like the other reads: a movement of another group
- * resolves to null.
- */
-import type { MovementType } from "../../movements/domain/movement";
-import type { InstallmentRepository } from "../repositories/installment-repository";
-import type { LoanRepository } from "../repositories/loan-repository";
+import type { LoanTarget } from "@/backend/modules/loans/domain/loan-target";
+import type { InstallmentRepository } from "@/backend/modules/loans/ports/installment-repository";
+import type { LoanRepository } from "@/backend/modules/loans/ports/loan-repository";
+import type { MovementType } from "@/backend/modules/movements/domain/movement";
 
 export type GetLoanTargetForMovementInput = {
   groupId: string;
@@ -19,12 +9,7 @@ export type GetLoanTargetForMovementInput = {
   movementType: MovementType;
 };
 
-export type LoanTarget = {
-  loanId: string;
-  /** The cuota to highlight — set for a `repay`, null for a `lend`. */
-  installmentId: string | null;
-};
-
+/** Finds the loan, and for a repay the cuota, that a ledger row belongs to. */
 export class GetLoanTargetForMovement {
   static inject = ["loans", "installments"] as const;
 
@@ -33,27 +18,30 @@ export class GetLoanTargetForMovement {
     private readonly installments: InstallmentRepository,
   ) {}
 
+  /**
+   * Resolves where the movement leads.
+   *
+   * @param input - The group asking, the movement and its type.
+   * @returns The loan and cuota, or null for a movement that is not a lend or
+   *   repay of this group.
+   */
   async execute(
     input: GetLoanTargetForMovementInput,
   ): Promise<LoanTarget | null> {
     if (input.movementType === "lend") {
-      const loanId = await this.loans.loanIdByLendMovement(
-        input.groupId,
+      const loanId = await this.loans.idByLendMovement(
         input.movementId,
+        input.groupId,
       );
 
       return loanId ? { loanId, installmentId: null } : null;
     }
 
     if (input.movementType === "repay") {
-      const row = await this.installments.findByRepayMovement(
+      return this.installments.findByRepayMovement(
         input.groupId,
         input.movementId,
       );
-
-      return row
-        ? { loanId: row.loanId, installmentId: row.installmentId }
-        : null;
     }
 
     return null;

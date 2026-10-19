@@ -1,16 +1,23 @@
-/** UC-301 · The group's reusable borrowers, for select-or-create. */
-import type { BorrowerRepository } from "../repositories/borrower-repository";
+import type { Borrower } from "@/backend/modules/loans/domain/borrower";
+import type { BorrowerRepository } from "@/backend/modules/loans/ports/borrower-repository";
 
 export type ListBorrowersInput = {
   groupId: string;
 };
 
+/** Reads the borrowers a group can lend to again. */
 export class ListBorrowers {
   static inject = ["borrowers"] as const;
 
   constructor(private readonly borrowers: BorrowerRepository) {}
 
-  async execute(input: ListBorrowersInput) {
+  /**
+   * Lists the borrowers.
+   *
+   * @param input - The group.
+   * @returns Its borrowers, by name.
+   */
+  async execute(input: ListBorrowersInput): Promise<Borrower[]> {
     return this.borrowers.listByGroup(input.groupId);
   }
 }

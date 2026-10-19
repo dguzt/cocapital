@@ -34,7 +34,7 @@ describe("addPeriods", () => {
   });
 });
 
-describe("isOverdue (vencida — derived, D3 #10)", () => {
+describe("isOverdue (vencida — derived)", () => {
   it("strictly before today is overdue", () => {
     expect(isOverdue("2026-07-08", "2026-07-09")).toBe(true);
   });

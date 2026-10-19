@@ -1,14 +1,13 @@
 import { useCases } from "@/backend/application/container";
-import { requireUser } from "@/backend/modules/accounts/current-user";
-import { findGroupOf } from "@/backend/modules/groups/data";
+import { toUserView } from "@/backend/modules/accounts/adapters/in/next/user-view";
+import { toGroupView } from "@/backend/modules/groups/adapters/in/next/group-view";
+import { requireMembership } from "@/backend/modules/groups/adapters/in/next/membership";
 import { LoanWizard } from "@/components/loans/loan-wizard/loan-wizard";
 import { AppShell } from "@/components/shell/app-shell";
 import { isOverdue, todayInLima } from "@/lib/dates";
 
 export default async function NewLoanPage() {
-  const user = await requireUser();
-  const group = await findGroupOf(user.id);
-  if (!group) return null;
+  const { user, group } = await requireMembership();
   const today = todayInLima();
   const [borrowers, installments] = await Promise.all([
     useCases.listBorrowers.execute({ groupId: group.id }),
@@ -20,8 +19,8 @@ export default async function NewLoanPage() {
 
   return (
     <AppShell
-      user={user}
-      group={group}
+      user={toUserView(user)}
+      group={toGroupView(group)}
       active="loans"
       overdueCount={overdueCount}
       title="Nuevo préstamo"

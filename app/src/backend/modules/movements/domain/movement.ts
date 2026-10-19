@@ -1,7 +1,7 @@
 import type { ISODate } from "@/lib/dates";
 import type { Cents } from "@/lib/money";
 
-/** Fixed list — vision decision #3. lend/repay are auto-written by M4. */
+/** Every kind of movement the ledger knows. */
 export const MOVEMENT_TYPES = [
   "contribute",
   "buy_inventory",
@@ -12,7 +12,7 @@ export const MOVEMENT_TYPES = [
 ] as const;
 export type MovementType = (typeof MOVEMENT_TYPES)[number];
 
-/** Types a user can hand-enter from the "+" sheet (lend/repay go via M4 flows). */
+/** The kinds a partner can type by hand; loans write lend and repay. */
 export const MANUAL_MOVEMENT_TYPES = [
   "contribute",
   "buy_inventory",
@@ -22,7 +22,7 @@ export const MANUAL_MOVEMENT_TYPES = [
 
 export type MovementStatus = "active" | "voided";
 
-/** The editable surface of a movement — what an E4 edit can change. */
+/** The fields of a movement an edit can change. */
 export type MovementSnapshot = {
   type: MovementType;
   amount: Cents;

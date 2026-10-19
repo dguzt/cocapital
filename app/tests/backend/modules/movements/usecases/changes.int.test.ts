@@ -1,25 +1,27 @@
-/** E4 integration: propose → old value stands → decide → applied/rejected. */
-import { eq } from "drizzle-orm";
-import { beforeEach, describe, expect, it } from "vitest";
-import { db } from "@/backend/infra/db/client";
-import { Installments, Users } from "@/backend/infra/db/schema";
-import { deriveCapital } from "@/backend/modules/capital/domain/derive";
-import { createGroup, joinGroup } from "@/backend/modules/groups/data";
-import { generateSchedule } from "@/backend/modules/loans/domain/schedule";
-import { validateNewMovement } from "@/backend/modules/movements/domain/validate";
-import { truncateAll } from "@/test/truncate";
+/** Integration: propose → old value stands → decide → applied/rejected. */
+
 import {
   addMovement,
   collectInstallment,
+  createGroup,
   createLoan,
   decideMovementChange,
   getLoanDetail,
+  joinGroup,
   listGroupInstallments,
   listMovementHistory,
   listMovements,
   listPendingChanges,
   proposeMovementChange,
-} from "../../../../support/use-cases";
+} from "@tests/support/use-cases";
+import { eq } from "drizzle-orm";
+import { beforeEach, describe, expect, it } from "vitest";
+import { db } from "@/backend/infra/db/client";
+import { Installments, Users } from "@/backend/infra/db/schema";
+import { CapitalSummary } from "@/backend/modules/capital/domain/capital-summary";
+import { Schedule } from "@/backend/modules/loans/domain/schedule";
+import { ManualMovement } from "@/backend/modules/movements/domain/manual-movement";
+import { truncateAll } from "@/test/truncate";
 
 const TODAY = "2026-07-09";
 
@@ -32,11 +34,11 @@ async function seed() {
     .insert(Users)
     .values({ clerkId: "clerk_rosa", name: "Rosa", email: "r@test.pe" })
     .returning();
-  const created = await createGroup(ana.id, "Inversiones DR");
+  const created = await createGroup(ana, "Inversiones DR");
   if (!created.ok) throw new Error("seed failed");
-  await joinGroup(rosa.id, created.value.inviteCode);
+  await joinGroup(rosa, created.value.inviteCode.value);
 
-  const contribute = validateNewMovement({
+  const contribute = ManualMovement.parse({
     type: "contribute",
     amountSoles: "50",
     today: TODAY,
@@ -60,7 +62,7 @@ const editedTo45 = (m: { type: "contribute" }) => ({
 
 beforeEach(truncateAll);
 
-describe("E4: the D1 story — Ana cambió S/50 → S/45", () => {
+describe("Ana cambió S/50 → S/45", () => {
   it("propose → pending; ledger still shows S/50; Rosa approves → S/45", async () => {
     const { ana, rosa, group, movement } = await seed();
 
@@ -161,7 +163,7 @@ describe("E4: the D1 story — Ana cambió S/50 → S/45", () => {
     const ledger = await listMovements(group.id);
     expect(ledger).toHaveLength(1); // still visible — never deleted
     expect(ledger[0].status).toBe("voided");
-    expect(deriveCapital(ledger, []).total).toBe(0); // excluded from capital
+    expect(CapitalSummary.derive(ledger, []).total).toBe(0); // excluded from capital
   });
 
   it("a lend movement is the loan itself → not even voidable here", async () => {
@@ -184,7 +186,7 @@ describe("E4: the D1 story — Ana cambió S/50 → S/45", () => {
 /** A loan of S/40 at 10% → 2 cuotas of S/22 (principal 2000 + interés 200). */
 async function seedLoan() {
   const { ana, rosa, group } = await seed();
-  const s = generateSchedule({
+  const s = Schedule.generate({
     capital: 4000,
     ratePercent: 10,
     installmentCount: 2,
@@ -205,7 +207,7 @@ async function seedLoan() {
 }
 
 async function capitalOf(groupId: string) {
-  return deriveCapital(
+  return CapitalSummary.derive(
     await listMovements(groupId),
     await listGroupInstallments(groupId),
   );

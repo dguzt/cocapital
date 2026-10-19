@@ -12,10 +12,11 @@ __pycache__/
 dist/
 build/
 .next/
-out/
+/out/
 
 # os / editor
 .DS_Store
 *.log
 .idea/
 .vscode/
+.vercel

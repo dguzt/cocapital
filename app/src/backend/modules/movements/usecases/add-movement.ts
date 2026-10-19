@@ -1,24 +1,22 @@
-/** UC-201 · Append one validated movement. Creation is append-only (A-4). */
-import type { NewMovement } from "../domain/validate";
-import type {
-  LedgerMovement,
-  MovementRepository,
-} from "../repositories/movement-repository";
+import type { LedgerMovement } from "@/backend/modules/movements/domain/ledger-movement";
+import type { MovementEntry } from "@/backend/modules/movements/domain/movement-entry";
+import type { MovementRepository } from "@/backend/modules/movements/ports/movement-repository";
 
-export type AddMovementInput = NewMovement & {
-  groupId: string;
-  userId: string;
-};
+export type AddMovementInput = MovementEntry;
 
+/** Writes one movement to a group's ledger. Movements are append-only. */
 export class AddMovement {
   static inject = ["movements"] as const;
 
   constructor(private readonly movements: MovementRepository) {}
 
+  /**
+   * Appends the movement.
+   *
+   * @param input - The validated movement, its group and its author.
+   * @returns The movement as the feed shows it.
+   */
   async execute(input: AddMovementInput): Promise<LedgerMovement> {
-    const row = await this.movements.insert(input);
-    const author = await this.movements.findAuthorName(input.userId);
-
-    return { ...row, authorId: input.userId, authorName: author ?? "?" };
+    return this.movements.append(input);
   }
 }

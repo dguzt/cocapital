@@ -1,15 +1,9 @@
-/** E3 integration: create loan → schedule persisted → collect → capital. */
-import { beforeEach, describe, expect, it } from "vitest";
-import { db } from "@/backend/infra/db/client";
-import { Users } from "@/backend/infra/db/schema";
-import { deriveCapital } from "@/backend/modules/capital/domain/derive";
-import { createGroup } from "@/backend/modules/groups/data";
-import { generateSchedule } from "@/backend/modules/loans/domain/schedule";
-import { validateNewMovement } from "@/backend/modules/movements/domain/validate";
-import { truncateAll } from "@/test/truncate";
+/** Integration: create loan → schedule persisted → collect → capital. */
+
 import {
   addMovement,
   collectInstallment,
+  createGroup,
   createLoan,
   getLoanDetail,
   getLoanTargetForMovement,
@@ -17,7 +11,15 @@ import {
   listGroupInstallments,
   listLoans,
   listMovements,
-} from "../../../../support/use-cases";
+} from "@tests/support/use-cases";
+import { beforeEach, describe, expect, it } from "vitest";
+import { db } from "@/backend/infra/db/client";
+import { Users } from "@/backend/infra/db/schema";
+import { CapitalSummary } from "@/backend/modules/capital/domain/capital-summary";
+import { Schedule } from "@/backend/modules/loans/domain/schedule";
+import type { ScheduleInput } from "@/backend/modules/loans/domain/schedule-input";
+import { ManualMovement } from "@/backend/modules/movements/domain/manual-movement";
+import { truncateAll } from "@/test/truncate";
 
 const TODAY = "2026-07-09";
 
@@ -26,9 +28,9 @@ async function seed() {
     .insert(Users)
     .values({ clerkId: "clerk_diego", name: "Diego", email: "d@test.pe" })
     .returning();
-  const created = await createGroup(diego.id, "Inversiones DR");
+  const created = await createGroup(diego, "Inversiones DR");
   if (!created.ok) throw new Error("seed failed");
-  const contribute = validateNewMovement({
+  const contribute = ManualMovement.parse({
     type: "contribute",
     amountSoles: "500",
     today: TODAY,
@@ -38,8 +40,8 @@ async function seed() {
   return { diego, group: created.value };
 }
 
-function schedule(input: Partial<Parameters<typeof generateSchedule>[0]> = {}) {
-  const r = generateSchedule({
+function schedule(input: Partial<ScheduleInput> = {}) {
+  const r = Schedule.generate({
     capital: 30000,
     ratePercent: 10,
     installmentCount: 4,
@@ -51,17 +53,16 @@ function schedule(input: Partial<Parameters<typeof generateSchedule>[0]> = {}) {
   return r.value;
 }
 
-/** Karina's D3 seed loan through the real engine. */
+/** Karina's sample loan through the real engine. */
 const karinaLoan = () => schedule();
 
 beforeEach(truncateAll);
 
-describe("E3: lending lifecycle", () => {
+describe("lending lifecycle", () => {
   it("create → collect → capital, end to end", async () => {
     const { diego, group } = await seed();
     const karina = karinaLoan();
 
-    // UC-301+302: new borrower + loan in one shot
     const created = await createLoan(group.id, diego.id, {
       borrower: { name: "Karina" },
       capital: karina.capital,
@@ -73,20 +74,18 @@ describe("E3: lending lifecycle", () => {
     expect(created.ok).toBe(true);
     if (!created.ok) return;
 
-    // The lend movement was auto-written (D3 #5: principal only)
     const ledger = await listMovements(group.id);
     expect(ledger[0].type).toBe("lend");
     expect(ledger[0].amount).toBe(30000);
 
     // Capital: cash 200, lent 300, total unchanged at 500
     const terms1 = await listGroupInstallments(group.id);
-    const cap1 = deriveCapital(ledger, terms1);
+    const cap1 = CapitalSummary.derive(ledger, terms1);
     expect(cap1.cash).toBe(20000);
     expect(cap1.lent).toBe(30000);
     expect(cap1.total).toBe(50000);
     expect(cap1.expectedInterest).toBe(3000);
 
-    // UC-303: list + detail
     const list = await listLoans(group.id, TODAY);
     expect(list).toHaveLength(1);
     expect(list[0]).toMatchObject({
@@ -99,7 +98,6 @@ describe("E3: lending lifecycle", () => {
     expect(detail.ok && detail.value.installments).toHaveLength(4);
     if (!detail.ok) return;
 
-    // UC-304: collect cuota 1
     const first = detail.value.installments[0];
     const collected = await collectInstallment(
       group.id,
@@ -120,7 +118,10 @@ describe("E3: lending lifecycle", () => {
     });
 
     // Capital realized the interest: total 500 + 7.50
-    const cap2 = deriveCapital(ledger2, await listGroupInstallments(group.id));
+    const cap2 = CapitalSummary.derive(
+      ledger2,
+      await listGroupInstallments(group.id),
+    );
     expect(cap2.cash).toBe(28250);
     expect(cap2.lent).toBe(22500);
     expect(cap2.collectedInterest).toBe(750);
@@ -139,6 +140,58 @@ describe("E3: lending lifecycle", () => {
     );
     // ...and it left no orphan repay movement behind
     expect(await listMovements(group.id)).toHaveLength(3);
+  });
+
+  it("two partners collecting the same cuota at once book it only once", async () => {
+    const { diego, group } = await seed();
+
+    const karina = karinaLoan();
+
+    const created = await createLoan(group.id, diego.id, {
+      borrower: { name: "Karina" },
+      capital: karina.capital,
+      rateBps: 1000,
+      frequency: "monthly",
+      startDate: TODAY,
+      installments: karina.installments,
+    });
+
+    if (!created.ok) {
+      throw new Error("seed failed");
+    }
+
+    const detail = await getLoanDetail(group.id, created.value.loanId);
+
+    if (!detail.ok) {
+      throw new Error("seed failed");
+    }
+
+    const first = detail.value.installments[0];
+
+    const results = await Promise.all([
+      collectInstallment(
+        group.id,
+        diego.id,
+        created.value.loanId,
+        first.id,
+        TODAY,
+      ),
+      collectInstallment(
+        group.id,
+        diego.id,
+        created.value.loanId,
+        first.id,
+        TODAY,
+      ),
+    ]);
+
+    expect(results.filter((result) => result.ok)).toHaveLength(1);
+
+    const repays = (await listMovements(group.id)).filter(
+      (movement) => movement.type === "repay",
+    );
+
+    expect(repays).toHaveLength(1);
   });
 
   it("rejects installments that break the invariants", async () => {

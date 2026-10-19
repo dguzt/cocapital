@@ -1,27 +1,17 @@
-/**
- * UC-303 · One loan with its schedule.
- *
- * A read, but still a use case: it authorizes (the loan must belong to the
- * caller's group) and it derives (expected interest is the sum over every
- * installment; collected/pending split the rows).
- *
- * "Vencida" is NOT derived here — it depends on what day it is today, so the
- * page decides it at render (D3). A row stored as overdue would be lying
- * tomorrow.
- */
 import * as R from "remeda";
 
+import type { LoanError } from "@/backend/modules/loans/domain/errors";
+import type { LoanDetail } from "@/backend/modules/loans/domain/loan-detail";
+import type { InstallmentRepository } from "@/backend/modules/loans/ports/installment-repository";
+import type { LoanRepository } from "@/backend/modules/loans/ports/loan-repository";
 import { err, ok, type Result } from "@/lib/result";
-import type { LoanError } from "../domain/errors";
-import type { LoanDetail } from "../domain/loan";
-import type { InstallmentRepository } from "../repositories/installment-repository";
-import type { LoanRepository } from "../repositories/loan-repository";
 
 export type GetLoanDetailInput = {
   groupId: string;
   loanId: string;
 };
 
+/** Reads one loan of the group with its schedule and totals. */
 export class GetLoanDetail {
   static inject = ["loans", "installments"] as const;
 
@@ -30,6 +20,14 @@ export class GetLoanDetail {
     private readonly installments: InstallmentRepository,
   ) {}
 
+  /**
+   * Reads the loan. Whether a cuota is overdue depends on today, so the
+   * caller decides it.
+   *
+   * @param input - The group asking and the loan.
+   * @returns The loan with its cuotas, expected interest and collected and
+   *   pending amounts, or `LoanNotFound`.
+   */
   async execute(
     input: GetLoanDetailInput,
   ): Promise<Result<LoanDetail, LoanError>> {
@@ -43,26 +41,27 @@ export class GetLoanDetail {
       });
     }
 
-    const rows = await this.installments.listByLoan(input.loanId);
+    const installments = await this.installments.listByLoan(input.loanId);
+
     const [collected, pending] = R.partition(
-      rows,
-      (r) => r.status === "collected",
+      installments,
+      (installment) => installment.status === "collected",
     );
 
     return ok({
       ...loan,
-      expectedInterest: R.sumBy(rows, (r) => r.interest),
-      collectedAmount: R.sumBy(collected, (r) => r.amount),
-      pendingAmount: R.sumBy(pending, (r) => r.amount),
-      installments: rows.map((r) => ({
-        id: r.id,
-        number: r.number,
-        dueDate: r.dueDate,
-        amount: r.amount,
-        principal: r.principal,
-        interest: r.interest,
-        status: r.status,
-        repayMovementId: r.repayMovementId,
+      expectedInterest: R.sumBy(installments, (row) => row.interest),
+      collectedAmount: R.sumBy(collected, (row) => row.amount),
+      pendingAmount: R.sumBy(pending, (row) => row.amount),
+      installments: installments.map((row) => ({
+        id: row.id,
+        number: row.number,
+        dueDate: row.dueDate,
+        amount: row.amount,
+        principal: row.principal,
+        interest: row.interest,
+        status: row.status,
+        repayMovementId: row.repayMovementId,
       })),
     });
   }

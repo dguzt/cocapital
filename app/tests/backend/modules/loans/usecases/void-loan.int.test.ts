@@ -1,31 +1,33 @@
 /**
- * UC-306/307 integration: anular un préstamo (corrección de un error de captura).
+ * Integration: cancelling a whole loan.
  *
  * A loan is cancelled from the loan, through the same doble confirmación as any
  * change: it PROPOSES a void on the loan's own `lend` movement, and only on the
  * partner's approval is the lend + every collection reversed. The capital must
  * return to EXACTLY where it was before the loan ever existed.
  */
-import { beforeEach, describe, expect, it } from "vitest";
-import { db } from "@/backend/infra/db/client";
-import { Users } from "@/backend/infra/db/schema";
-import { deriveCapital } from "@/backend/modules/capital/domain/derive";
-import { createGroup, joinGroup } from "@/backend/modules/groups/data";
-import { generateSchedule } from "@/backend/modules/loans/domain/schedule";
-import { validateNewMovement } from "@/backend/modules/movements/domain/validate";
-import { truncateAll } from "@/test/truncate";
+
 import {
   addMovement,
   collectInstallment,
+  createGroup,
   createLoan,
   decideMovementChange,
   getLoanDetail,
+  joinGroup,
   listGroupInstallments,
   listLoans,
   listMovements,
   listPendingChanges,
   proposeVoidLoan,
-} from "../../../../support/use-cases";
+} from "@tests/support/use-cases";
+import { beforeEach, describe, expect, it } from "vitest";
+import { db } from "@/backend/infra/db/client";
+import { Users } from "@/backend/infra/db/schema";
+import { CapitalSummary } from "@/backend/modules/capital/domain/capital-summary";
+import { Schedule } from "@/backend/modules/loans/domain/schedule";
+import { ManualMovement } from "@/backend/modules/movements/domain/manual-movement";
+import { truncateAll } from "@/test/truncate";
 
 const TODAY = "2026-07-09";
 
@@ -38,11 +40,11 @@ async function seed() {
     .insert(Users)
     .values({ clerkId: "clerk_rosa", name: "Rosa", email: "r@test.pe" })
     .returning();
-  const created = await createGroup(ana.id, "Inversiones DR");
+  const created = await createGroup(ana, "Inversiones DR");
   if (!created.ok) throw new Error("seed failed");
-  await joinGroup(rosa.id, created.value.inviteCode);
+  await joinGroup(rosa, created.value.inviteCode.value);
 
-  const contribute = validateNewMovement({
+  const contribute = ManualMovement.parse({
     type: "contribute",
     amountSoles: "500",
     today: TODAY,
@@ -54,7 +56,7 @@ async function seed() {
 
 /** Karina: S/300 at 10% → 4 monthly cuotas (principal 7500 + interés 750). */
 async function seedLoan(groupId: string, userId: string) {
-  const s = generateSchedule({
+  const s = Schedule.generate({
     capital: 30000,
     ratePercent: 10,
     installmentCount: 4,
@@ -75,7 +77,7 @@ async function seedLoan(groupId: string, userId: string) {
 }
 
 async function capitalOf(groupId: string) {
-  return deriveCapital(
+  return CapitalSummary.derive(
     await listMovements(groupId),
     await listGroupInstallments(groupId),
   );
@@ -83,7 +85,7 @@ async function capitalOf(groupId: string) {
 
 beforeEach(truncateAll);
 
-describe("UC-306/307: anular un préstamo", () => {
+describe("anular un préstamo", () => {
   it("con un cobro hecho, anular devuelve el capital exactamente a antes del préstamo", async () => {
     const { ana, rosa, group } = await seed();
 

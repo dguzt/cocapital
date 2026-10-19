@@ -8,15 +8,16 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { getLoanTargetForMovementAction } from "@/backend/modules/loans/actions";
-import type { LoanTarget } from "@/backend/modules/loans/usecases/get-loan-target-for-movement";
+import { getLoanTargetForMovementAction } from "@/backend/modules/loans/adapters/in/next/loan-actions";
+import type { LoanTarget } from "@/backend/modules/loans/domain/loan-target";
 import {
   getMovementHistoryAction,
   proposeEditAction,
   proposeVoidAction,
-} from "@/backend/modules/movements/actions";
-import type { ChangeHistoryItem } from "@/backend/modules/movements/usecases/get-movement-history";
-import type { LedgerMovement } from "@/backend/modules/movements/usecases/list-movements";
+} from "@/backend/modules/movements/adapters/in/next/movement-actions";
+import type { ChangeHistoryItem } from "@/backend/modules/movements/domain/change-history-item";
+import type { LedgerMovement } from "@/backend/modules/movements/domain/ledger-movement";
+import { MOVEMENT_META } from "@/components/movements/movement-meta";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -27,7 +28,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { formatCents } from "@/lib/money";
-import { MOVEMENT_META } from "../movement-meta";
 import { allowedActions } from "./actions-by-type";
 import { ChangeHistory } from "./change-history";
 import { type EditDraft, EditForm } from "./edit-form";

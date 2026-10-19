@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { Schedule } from "@/backend/modules/loans/domain/schedule";
-import {
-  generateSchedule,
-  type ScheduleInput,
-} from "@/backend/modules/loans/domain/schedule";
+import { Schedule } from "@/backend/modules/loans/domain/schedule";
+import type { ScheduleInput } from "@/backend/modules/loans/domain/schedule-input";
 
 const base: ScheduleInput = {
   capital: 30000, // S/300
@@ -14,12 +11,12 @@ const base: ScheduleInput = {
 };
 
 function unwrap(input: ScheduleInput): Schedule {
-  const r = generateSchedule(input);
+  const r = Schedule.generate(input);
   if (!r.ok) throw new Error(`expected ok, got ${r.error.kind}`);
   return r.value;
 }
 
-/** The D5 invariants — every valid schedule must satisfy all four. */
+/** The money rules every valid schedule satisfies. */
 function assertInvariants(s: Schedule, capital: number) {
   const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
   expect(sum(s.installments.map((i) => i.amount))).toBe(s.total);
@@ -30,7 +27,7 @@ function assertInvariants(s: Schedule, capital: number) {
   }
 }
 
-describe("generateSchedule — golden: S/300 @ 10% × 4 monthly (D3 seed)", () => {
+describe("Schedule.generate — golden: S/300 @ 10% × 4 monthly", () => {
   const s = unwrap(base);
   it("totals: S/330, interest S/30", () => {
     expect(s.total).toBe(33000);
@@ -55,9 +52,9 @@ describe("generateSchedule — golden: S/300 @ 10% × 4 monthly (D3 seed)", () =
   it("holds all invariants", () => assertInvariants(s, 30000));
 });
 
-describe("generateSchedule — remainder cent (S/100 @ 10% × 3)", () => {
+describe("Schedule.generate — remainder cent (S/100 @ 10% × 3)", () => {
   const s = unwrap({ ...base, capital: 10000, installmentCount: 3 });
-  it("last installment absorbs (D5)", () => {
+  it("last installment absorbs the rounding", () => {
     expect(s.installments.map((i) => i.amount)).toEqual([3666, 3666, 3668]);
     expect(s.installments.map((i) => i.principal)).toEqual([3333, 3333, 3334]);
     expect(s.installments.map((i) => i.interest)).toEqual([333, 333, 334]);
@@ -65,7 +62,7 @@ describe("generateSchedule — remainder cent (S/100 @ 10% × 3)", () => {
   it("holds all invariants", () => assertInvariants(s, 10000));
 });
 
-describe("generateSchedule — edges", () => {
+describe("Schedule.generate — edges", () => {
   it("single installment gets everything", () => {
     const s = unwrap({ ...base, installmentCount: 1 });
     expect(s.installments).toHaveLength(1);
@@ -134,7 +131,7 @@ describe("generateSchedule — edges", () => {
   });
 });
 
-describe("generateSchedule — rejects bad input with typed errors", () => {
+describe("Schedule.generate — rejects bad input with typed errors", () => {
   it.each([
     [{ ...base, capital: 0 }, "InvalidCapital"],
     [{ ...base, capital: -100 }, "InvalidCapital"],
@@ -147,7 +144,7 @@ describe("generateSchedule — rejects bad input with typed errors", () => {
     [{ ...base, startDate: "31/01/2026" }, "InvalidStartDate"],
     [{ ...base, startDate: "" }, "InvalidStartDate"],
   ] as const)("%o → %s", (input, kind) => {
-    const r = generateSchedule(input as ScheduleInput);
+    const r = Schedule.generate(input as ScheduleInput);
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error.kind).toBe(kind);
   });

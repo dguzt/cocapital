@@ -1,8 +1,4 @@
-/**
- * Money in CoCapital is ALWAYS integer cents (D5): S/ 36.66 = 3666.
- * Never floats — floats can't represent 0.1 and rounding dust becomes
- * real missing cents in a loan schedule.
- */
+/** Money as whole cents: S/ 36.66 is 3666. */
 export type Cents = number;
 
 /** Parse user-entered soles ("36.66", "1,234.5") into cents. NaN-safe. */
@@ -25,8 +21,7 @@ export function formatCents(c: Cents): string {
 
 /**
  * Split a total into `parts` near-equal integer amounts.
- * Each part = floor(total/parts); the LAST part absorbs the remainder (D5).
- * Invariant: sum(result) === total, result.length === parts.
+ * The last part absorbs the remainder, so the parts always add up to total.
  */
 export function splitEvenly(total: Cents, parts: number): Cents[] {
   if (!Number.isInteger(total) || total < 0)

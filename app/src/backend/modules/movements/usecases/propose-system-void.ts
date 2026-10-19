@@ -1,25 +1,10 @@
-/**
- * The legitimate door to propose a void on a SYSTEM-written movement.
- *
- * The movement dialog uses ProposeChange, which refuses `lend`/`repay` on
- * purpose ("corrígelo desde el préstamo"). But a feature that OWNS such a
- * movement may still propose to void it — a loan cancellation proposes a void
- * on its own `lend` (loans/usecases/propose-void-loan.ts). Routing it through
- * a real movement_changes row is what makes it appear in the same approval
- * inbox and go through the same doble confirmación.
- *
- * It still enforces the two invariants every proposal has: the movement is not
- * already voided, and at most one undecided change exists per movement (the
- * partial unique index is the one that actually holds under a race).
- */
+import { ChangeProposal } from "@/backend/modules/movements/domain/change-proposal";
+import type { PendingChangeError } from "@/backend/modules/movements/domain/errors";
+import type { MovementSnapshot } from "@/backend/modules/movements/domain/movement";
+import type { StoredMovement } from "@/backend/modules/movements/domain/stored-movement";
+import type { ChangeRepository } from "@/backend/modules/movements/ports/change-repository";
+import type { MovementRepository } from "@/backend/modules/movements/ports/movement-repository";
 import { err, ok, type Result } from "@/lib/result";
-import type { PendingChangeError } from "../domain/errors";
-import { proposeChange as decide } from "../domain/pending";
-import type { ChangeRepository } from "../repositories/change-repository";
-import type {
-  MovementRepository,
-  MovementRow,
-} from "../repositories/movement-repository";
 
 export type ProposeSystemVoidInput = {
   groupId: string;
@@ -27,6 +12,10 @@ export type ProposeSystemVoidInput = {
   movementId: string;
 };
 
+/**
+ * Proposes a void of a movement written by another module, such as a loan's
+ * lend. It goes through the same approvals inbox as any other change.
+ */
 export class ProposeSystemVoid {
   static inject = ["movements", "changes"] as const;
 
@@ -35,6 +24,12 @@ export class ProposeSystemVoid {
     private readonly changes: ChangeRepository,
   ) {}
 
+  /**
+   * Opens a pending void on the movement.
+   *
+   * @param input - The group, the proposing partner and the movement.
+   * @returns The pending change's id, or why it cannot be proposed.
+   */
   async execute(
     input: ProposeSystemVoidInput,
   ): Promise<Result<{ pendingId: string }, PendingChangeError>> {
@@ -51,7 +46,7 @@ export class ProposeSystemVoid {
       });
     }
 
-    const proposal = decide({
+    const proposal = ChangeProposal.propose({
       movement: {
         id: movement.id,
         status: movement.status,
@@ -66,12 +61,12 @@ export class ProposeSystemVoid {
       return proposal;
     }
 
-    const row = await this.changes.insert(proposal.value);
+    const stored = await this.changes.propose(proposal.value);
 
-    return ok({ pendingId: row.id });
+    return ok({ pendingId: stored.id });
   }
 
-  private snapshotOf(movement: MovementRow) {
+  private snapshotOf(movement: StoredMovement): MovementSnapshot {
     return {
       type: movement.type,
       amount: movement.amount,

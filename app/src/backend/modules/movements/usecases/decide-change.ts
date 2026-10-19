@@ -1,43 +1,12 @@
-/**
- * UC-403 · The OTHER partner approves or rejects. Applying is atomic.
- *
- * This use case owns the TRÁMITE, not the EFFECT. It knows who may decide
- * (never the proposer — D1) and that the decision and its consequences land in
- * one transaction. It does NOT know that voiding a `repay` reopens a cuota, or
- * that voiding a `sell_inventory` will one day restock: that belongs to each
- * owner module.
- *
- * It depends on the ChangeApplier INTERFACE, never on an implementation. The
- * container hands it the real one (application/apply-approved-change.ts), which
- * is the only place allowed to know every module. That is the rule that keeps
- * the ledger from slowly learning everyone's rules.
- */
+import type { ApprovedChange } from "@/backend/modules/movements/domain/approved-change";
+import type { ChangeUnderDecision } from "@/backend/modules/movements/domain/change-under-decision";
+import type { DecisionOutcome } from "@/backend/modules/movements/domain/decision-outcome";
+import type { PendingChangeError } from "@/backend/modules/movements/domain/errors";
+import { PendingChange } from "@/backend/modules/movements/domain/pending-change";
+import type { ChangeApplier } from "@/backend/modules/movements/ports/change-applier";
+import type { ChangeRepository } from "@/backend/modules/movements/ports/change-repository";
+import type { UnitOfWork } from "@/backend/shared/ports/unit-of-work";
 import { err, ok, type Result } from "@/lib/result";
-import type { UnitOfWork, Write } from "../../../infra/db/write";
-import type { PendingChangeError } from "../domain/errors";
-import type { MovementSnapshot, MovementType } from "../domain/movement";
-import type { DecisionOutcome } from "../domain/pending";
-import { decideChange as decide } from "../domain/pending";
-import type {
-  ChangeRepository,
-  ChangeWithMovement,
-} from "../repositories/change-repository";
-
-/** What an approved change asks the owner module to do. */
-export type ApprovedChange =
-  | { kind: "void"; movementId: string; movementType: MovementType }
-  | {
-      kind: "edit";
-      movementId: string;
-      movementType: MovementType;
-      after: MovementSnapshot;
-    };
-
-/** The port: "this change was approved — give me the writes that apply it."
- *  Async: some owners (voiding a loan) must read to know what to reverse. */
-export interface ChangeApplier {
-  writesFor(change: ApprovedChange): Promise<Write[]>;
-}
 
 export type DecideChangeInput = {
   groupId: string;
@@ -46,6 +15,11 @@ export type DecideChangeInput = {
   decision: "approve" | "reject";
 };
 
+/**
+ * Lets a partner other than the proposer approve or reject a change. An
+ * approval is applied by the movement's owner, through the ChangeApplier, in
+ * the same unit of work as the decision.
+ */
 export class DecideChange {
   static inject = ["changes", "applier", "uow"] as const;
 
@@ -55,10 +29,17 @@ export class DecideChange {
     private readonly uow: UnitOfWork,
   ) {}
 
+  /**
+   * Decides the change and, when approved, applies it.
+   *
+   * @param input - The group, the deciding partner, the change and the
+   *   decision.
+   * @returns Whether the change was applied, or why it cannot be decided.
+   */
   async execute(
     input: DecideChangeInput,
   ): Promise<Result<{ applied: boolean }, PendingChangeError>> {
-    const change = await this.changes.findWithMovement(input.pendingId);
+    const change = await this.changes.findUnderDecision(input.pendingId);
 
     if (!change || change.movementGroup !== input.groupId) {
       return err({
@@ -68,40 +49,32 @@ export class DecideChange {
       });
     }
 
-    const outcome = decide({
-      pending: {
-        id: change.id,
-        status: change.status,
-        proposedBy: change.proposedBy,
-        kind: change.kind,
-        after: change.after,
-      },
-      decision: input.decision,
-      actorId: input.actorId,
-    });
+    const outcome = PendingChange.restore(change).decide(
+      input.decision,
+      input.actorId,
+    );
 
     if (!outcome.ok) {
       return outcome;
     }
 
-    const decided = this.changes.decideStmt(input.pendingId, {
-      status: outcome.value.pendingStatus,
-      decidedBy: input.actorId,
-      decidedAt: new Date(),
+    return this.uow.run(async () => {
+      await this.changes.decide(input.pendingId, {
+        status: outcome.value.pendingStatus,
+        decidedBy: input.actorId,
+        decidedAt: new Date(),
+      });
+
+      if (outcome.value.apply) {
+        await this.applier.apply(this.approvedChange(change, outcome.value));
+      }
+
+      return ok({ applied: outcome.value.apply });
     });
-
-    const effects = outcome.value.apply
-      ? await this.applier.writesFor(this.askOwnerFor(change, outcome.value))
-      : [];
-
-    await this.uow.run([decided, ...effects]);
-
-    return ok({ applied: outcome.value.apply });
   }
 
-  /** Turns an approved outcome into the request the owner module answers. */
-  private askOwnerFor(
-    change: ChangeWithMovement,
+  private approvedChange(
+    change: ChangeUnderDecision,
     outcome: Extract<DecisionOutcome, { apply: true }>,
   ): ApprovedChange {
     if (outcome.action.kind === "edit") {

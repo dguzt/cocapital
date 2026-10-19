@@ -1,5 +1,10 @@
-/** Fail fast at boot: a missing env var must crash with a clear message,
- *  not surface later as a cryptic driver error. */
+/**
+ * Reads a required environment variable.
+ *
+ * @param name - The variable.
+ * @returns Its value.
+ * @throws When it is missing, naming where to set it.
+ */
 export function requireEnv(name: string): string {
   const value = process.env[name];
   if (!value) {

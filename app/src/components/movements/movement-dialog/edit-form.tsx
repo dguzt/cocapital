@@ -1,7 +1,7 @@
 "use client";
 /** UC-401 · The edit form. Submitting only PROPOSES — the partner applies it. */
 import { Loader2 } from "lucide-react";
-import type { LedgerMovement } from "@/backend/modules/movements/usecases/list-movements";
+import type { LedgerMovement } from "@/backend/modules/movements/domain/ledger-movement";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

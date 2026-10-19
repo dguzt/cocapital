@@ -1,20 +1,24 @@
-/**
- * Undo a purchase.
- *
- * Same story as undo-sale: today inventory is a derived number, so voiding the
- * entry is the whole undo. When stock becomes real, the check that belongs here
- * is "you cannot un-buy goods you have already sold" — the stock would go
- * negative. Nobody outside this module needs to know that.
- */
-import type { Write } from "../../../infra/db/write";
-import type { VoidEntry } from "../../movements/usecases/void-entry";
+import type { VoidEntry } from "@/backend/modules/movements/usecases/void-entry";
 
+export type UndoPurchaseInput = {
+  movementId: string;
+};
+
+/**
+ * Reverses a purchase. Inventory is derived from the ledger today, so voiding
+ * the purchase's movement is the whole undo.
+ */
 export class UndoPurchase {
   static inject = ["voidEntry"] as const;
 
   constructor(private readonly voidEntry: VoidEntry) {}
 
-  writesFor(movementId: string): Write[] {
-    return this.voidEntry.writesFor(movementId);
+  /**
+   * Undoes the purchase.
+   *
+   * @param input - The purchase's movement.
+   */
+  async execute(input: UndoPurchaseInput): Promise<void> {
+    await this.voidEntry.execute(input);
   }
 }

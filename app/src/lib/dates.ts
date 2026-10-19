@@ -1,8 +1,4 @@
-/**
- * Dates in CoCapital are plain calendar dates ("YYYY-MM-DD"), no time, no tz
- * stored. "Today" is the America/Lima calendar day (D5/A-1). ISO strings
- * compare correctly with < > ===.
- */
+/** A calendar day as "YYYY-MM-DD", in Lima; compares correctly with < and >. */
 export type ISODate = string;
 
 /** UI labels are Spanish (Diario/Semanal/Quincenal/Mensual); values English. */
@@ -38,7 +34,7 @@ function daysInMonth(year: number, monthIndex: number): number {
 }
 
 /**
- * Step `n` periods forward from `start` (D5/A-2):
+ * Steps `n` periods forward from `start`:
  * daily +1d · weekly +7d · biweekly +15d (quincenal) ·
  * monthly +1 month keeping the start's day-of-month as anchor, clamped to the
  * target month's last day (Jan 31 → Feb 28 → Mar 31, anchor preserved).
@@ -70,7 +66,7 @@ export function addPeriods(
   }
 }
 
-/** "Vencida" is DERIVED at render, never stored (D3 #10): due strictly before today. */
+/** Whether a cuota is overdue: due strictly before today. */
 export function isOverdue(dueDate: ISODate, today: ISODate): boolean {
   return dueDate < today;
 }
@@ -85,7 +81,7 @@ export function formatDayMonth(date: ISODate): string {
   return `${d} ${SHORT_MONTHS[m - 1]}`;
 }
 
-/** Approximate loan length in days — the D3 "interés anual ~X%" reference. */
+/** Approximate loan length in days, for the annual rate shown as reference. */
 export const PERIOD_DAYS: Record<Frequency, number> = {
   daily: 1,
   weekly: 7,
