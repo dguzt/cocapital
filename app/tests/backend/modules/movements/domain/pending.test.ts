@@ -8,7 +8,7 @@ import {
 
 const snapshot: MovementSnapshot = {
   type: "contribute",
-  amount: 5000, // S/50 — the D1 example
+  amount: 5000,
   cost: null,
   concept: "aporte",
   date: "2026-07-09",

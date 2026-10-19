@@ -56,5 +56,43 @@
         "organizeImports": "on"
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": [
+        "src/backend/modules/*/domain/**",
+        "src/backend/modules/*/ports/**",
+        "src/backend/modules/*/usecases/**",
+        "src/backend/shared/**"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["../*", "../**"],
+                    "message": "Import from a parent folder with the alias (@/ or @tests/); use ./ only for siblings."
+                  },
+                  {
+                    "group": [
+                      "next",
+                      "next/**",
+                      "@clerk/**",
+                      "drizzle-orm",
+                      "drizzle-orm/**",
+                      "@neondatabase/**"
+                    ],
+                    "message": "The core (domain, ports, use cases) stays framework-free; reach Next, Clerk or Drizzle through an adapter."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
 }

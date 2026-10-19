@@ -1,4 +1,4 @@
-/** The money rules that keep capital honest (D5 #1) — pure, no DB. */
+/** The money rules of a schedule. */
 import { describe, expect, it } from "vitest";
 import { checkSchedule } from "@/backend/modules/loans/domain/invariants";
 import type { NewLoanInstallment } from "@/backend/modules/loans/domain/loan";

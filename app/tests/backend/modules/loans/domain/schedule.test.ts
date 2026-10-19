@@ -19,7 +19,7 @@ function unwrap(input: ScheduleInput): Schedule {
   return r.value;
 }
 
-/** The D5 invariants — every valid schedule must satisfy all four. */
+/** The money rules every valid schedule satisfies. */
 function assertInvariants(s: Schedule, capital: number) {
   const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
   expect(sum(s.installments.map((i) => i.amount))).toBe(s.total);
@@ -30,7 +30,7 @@ function assertInvariants(s: Schedule, capital: number) {
   }
 }
 
-describe("generateSchedule — golden: S/300 @ 10% × 4 monthly (D3 seed)", () => {
+describe("generateSchedule — golden: S/300 @ 10% × 4 monthly", () => {
   const s = unwrap(base);
   it("totals: S/330, interest S/30", () => {
     expect(s.total).toBe(33000);
@@ -57,7 +57,7 @@ describe("generateSchedule — golden: S/300 @ 10% × 4 monthly (D3 seed)", () =
 
 describe("generateSchedule — remainder cent (S/100 @ 10% × 3)", () => {
   const s = unwrap({ ...base, capital: 10000, installmentCount: 3 });
-  it("last installment absorbs (D5)", () => {
+  it("last installment absorbs the rounding", () => {
     expect(s.installments.map((i) => i.amount)).toEqual([3666, 3666, 3668]);
     expect(s.installments.map((i) => i.principal)).toEqual([3333, 3333, 3334]);
     expect(s.installments.map((i) => i.interest)).toEqual([333, 333, 334]);

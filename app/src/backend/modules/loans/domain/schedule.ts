@@ -1,8 +1,3 @@
-/**
- * Schedule engine (TASK-301) — CoCapital's core math.
- * Flat interest, equal split (D3 #2, locked D4): total = capital × (1 + rate);
- * remainders go to the LAST installment (D5). Pure: no I/O, no now().
- */
 import { addPeriods, type Frequency, type ISODate } from "@/lib/dates";
 import { type Cents, splitEvenly } from "@/lib/money";
 import { err, ok, type Result } from "@/lib/result";
@@ -15,7 +10,7 @@ export type ScheduleInput = {
   ratePercent: number;
   installmentCount: number;
   frequency: Frequency;
-  /** Loan start; first installment = start + 1 period (D3 #4). */
+  /** The loan's start; the first cuota falls one period later. */
   startDate: ISODate;
 };
 
@@ -37,6 +32,15 @@ export type Schedule = {
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_INSTALLMENTS = 360;
 
+/**
+ * Builds a loan's cuotas with flat interest split in equal parts; the last
+ * cuota absorbs the rounding cents.
+ *
+ * @param input - Capital, flat rate over the whole loan, number of cuotas,
+ *   frequency and start date.
+ * @returns The capital, interest, total and cuotas, or why the input is
+ *   invalid.
+ */
 export function generateSchedule(
   input: ScheduleInput,
 ): Result<Schedule, ScheduleError> {
@@ -79,9 +83,6 @@ export function generateSchedule(
   const interest = Math.round((capital * ratePercent) / 100);
   const total = capital + interest;
 
-  // Derivation guarantees the D5 invariants by construction:
-  // Σamounts = total, Σprincipals = capital, and per row
-  // interest = amount − principal ⇒ Σinterests = interest.
   const amounts = splitEvenly(total, installmentCount);
   const principals = splitEvenly(capital, installmentCount);
 

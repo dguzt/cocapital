@@ -9,6 +9,7 @@ export default defineConfig({
     },
   },
   test: {
+    globals: true,
     include: ["tests/**/*.test.ts"],
     exclude: ["tests/**/*.int.test.ts", "node_modules/**"],
   },

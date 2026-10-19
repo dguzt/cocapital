@@ -1,11 +1,3 @@
-/**
- * The money invariants of a schedule (D5 #1). Pure — these are the rules that
- * make the capital honest, so they get tested without a database.
- *
- *   Σ principal        = capital        (the loan lends exactly its principal)
- *   principal+interest = amount         (per row, no cents lost to rounding)
- *   amount             > 0
- */
 import * as R from "remeda";
 import type { Cents } from "@/lib/money";
 import type { Result } from "@/lib/result";
@@ -13,6 +5,14 @@ import { err, ok } from "@/lib/result";
 import type { LoanError } from "./errors";
 import type { NewLoanInstallment } from "./loan";
 
+/**
+ * Checks that a schedule adds up: the principals sum to the capital, each
+ * cuota is principal plus interest, and every amount is positive.
+ *
+ * @param installments - The cuotas, possibly edited in the wizard.
+ * @param capital - The loan's principal in cents.
+ * @returns Ok, or `InvalidInstallments` with the broken rule.
+ */
 export function checkSchedule(
   installments: NewLoanInstallment[],
   capital: Cents,

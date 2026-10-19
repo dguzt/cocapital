@@ -1,5 +1,5 @@
 /**
- * UC-306/307 integration: anular un préstamo (corrección de un error de captura).
+ * Integration: cancelling a whole loan.
  *
  * A loan is cancelled from the loan, through the same doble confirmación as any
  * change: it PROPOSES a void on the loan's own `lend` movement, and only on the
@@ -85,7 +85,7 @@ async function capitalOf(groupId: string) {
 
 beforeEach(truncateAll);
 
-describe("UC-306/307: anular un préstamo", () => {
+describe("anular un préstamo", () => {
   it("con un cobro hecho, anular devuelve el capital exactamente a antes del préstamo", async () => {
     const { ana, rosa, group } = await seed();
 

@@ -1,4 +1,4 @@
-/** E4 integration: propose → old value stands → decide → applied/rejected. */
+/** Integration: propose → old value stands → decide → applied/rejected. */
 
 import {
   addMovement,
@@ -62,7 +62,7 @@ const editedTo45 = (m: { type: "contribute" }) => ({
 
 beforeEach(truncateAll);
 
-describe("E4: the D1 story — Ana cambió S/50 → S/45", () => {
+describe("Ana cambió S/50 → S/45", () => {
   it("propose → pending; ledger still shows S/50; Rosa approves → S/45", async () => {
     const { ana, rosa, group, movement } = await seed();
 

@@ -97,7 +97,7 @@ describe("deriveCapital — movement effects", () => {
   });
 });
 
-describe("deriveCapital — lending (realized-only, D3 #5)", () => {
+describe("deriveCapital — lending (interest counts only once collected)", () => {
   // Karina's seed loan: S/300 @ 10% × 4 → installments of 82.50 (75 + 7.50)
   const lentLedger = [mv("contribute", 50000), mv("lend", 30000)];
   const freshLoan = [

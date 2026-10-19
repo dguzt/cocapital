@@ -1,4 +1,4 @@
-/** E2 integration: record movements → ledger → capital derivation. */
+/** Integration: record movements → ledger → capital derivation. */
 
 import {
   addMovement,
@@ -30,7 +30,7 @@ function valid(input: Parameters<typeof validateNewMovement>[0]) {
 
 beforeEach(truncateAll);
 
-describe("E2: record → ledger → capital", () => {
+describe("record → ledger → capital", () => {
   it("appends movements and derives the dashboard numbers", async () => {
     const { diego, group } = await seed();
     const today = "2026-07-09";

@@ -1,4 +1,4 @@
-/** E3 integration: create loan → schedule persisted → collect → capital. */
+/** Integration: create loan → schedule persisted → collect → capital. */
 
 import {
   addMovement,
@@ -52,17 +52,16 @@ function schedule(input: Partial<Parameters<typeof generateSchedule>[0]> = {}) {
   return r.value;
 }
 
-/** Karina's D3 seed loan through the real engine. */
+/** Karina's sample loan through the real engine. */
 const karinaLoan = () => schedule();
 
 beforeEach(truncateAll);
 
-describe("E3: lending lifecycle", () => {
+describe("lending lifecycle", () => {
   it("create → collect → capital, end to end", async () => {
     const { diego, group } = await seed();
     const karina = karinaLoan();
 
-    // UC-301+302: new borrower + loan in one shot
     const created = await createLoan(group.id, diego.id, {
       borrower: { name: "Karina" },
       capital: karina.capital,
@@ -74,7 +73,6 @@ describe("E3: lending lifecycle", () => {
     expect(created.ok).toBe(true);
     if (!created.ok) return;
 
-    // The lend movement was auto-written (D3 #5: principal only)
     const ledger = await listMovements(group.id);
     expect(ledger[0].type).toBe("lend");
     expect(ledger[0].amount).toBe(30000);
@@ -87,7 +85,6 @@ describe("E3: lending lifecycle", () => {
     expect(cap1.total).toBe(50000);
     expect(cap1.expectedInterest).toBe(3000);
 
-    // UC-303: list + detail
     const list = await listLoans(group.id, TODAY);
     expect(list).toHaveLength(1);
     expect(list[0]).toMatchObject({
@@ -100,7 +97,6 @@ describe("E3: lending lifecycle", () => {
     expect(detail.ok && detail.value.installments).toHaveLength(4);
     if (!detail.ok) return;
 
-    // UC-304: collect cuota 1
     const first = detail.value.installments[0];
     const collected = await collectInstallment(
       group.id,

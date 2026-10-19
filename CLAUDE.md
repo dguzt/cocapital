@@ -38,39 +38,60 @@ specs/
 
 ## Backend architecture (non-negotiable)
 
-The folders name the business, not the framework. Per module:
+Hexagonal, Java-style, and **screaming**: the business module comes first, the framework last.
 
 ```
-modules/<module>/
-  domain/         pure FUNCTIONS and types. No I/O, no Drizzle, no clock. Unit-tested.
-  usecases/       ONE CLASS PER THING THE BUSINESS DOES — reads included.
-  repositories/   one class per table. The only place Drizzle lives.
-  actions.ts      "use server": session → use case → revalidate. Zero logic.
-application/      container.ts (the whole dependency graph) + the dispatch.
-infra/db/schema/  one file per table. Table variables are PascalCase (Movements).
-tests/            mirrors this tree exactly. *.test.ts = unit · *.int.test.ts = DB.
+src/backend/
+  modules/<module>/
+    domain/         entities (classes), value objects, types, pure rules. No I/O, no clock.
+    ports/          interfaces the use cases need (repositories, identity provider, ChangeApplier).
+    usecases/       ONE CLASS PER THING THE BUSINESS DOES — reads included. `execute(input)`.
+    adapters/
+      in/next/      server actions, session, requireMembership, *View DTOs for Client Components.
+      out/drizzle/  *.table.ts, Drizzle<X>Repository implements the port, <X>Mapper row <-> entity.
+      out/clerk/    what is asked of Clerk.
+  shared/ports/     UnitOfWork.
+  application/      container.ts (the whole graph) + apply-approved-change.ts (the dispatch).
+  infra/db/         client (neon-serverless Pool), transaction context, DrizzleUnitOfWork,
+                    schema/index.ts (re-exports every *.table.ts), migrations.
+tests/              mirrors src. *.test.ts = unit · *.int.test.ts = Neon test branch ·
+                    tests/architecture = boundaries · tests/e2e = Playwright.
 ```
 
-### Classes vs functions
+### Classes, files, comments
 
-- **Use cases and repositories are classes.** The constructor is the list of dependencies — that is the whole point, it's what you read first. Public `execute(input)`; helpers are `private`. Input is a **named object**, never a pile of positional params.
-- **The domain stays pure functions** with descriptive names (`generateSchedule`, `checkSchedule`). They have no collaborators to inject, so a class would add ceremony and no information. `execute()` is reserved for use cases.
-- **A read is a use case too.** `GetLoanDetail` authorizes the group and derives the expected interest — decisions, not a query. There is no `queries/` folder.
+- **No loose functions except helpers.** Entities are classes with a private constructor and named factories (`Group.create`, `Group.restore(snapshot)`); value objects only when they carry rules (`InviteCode`). One concept per file.
+- **Use cases and repositories are classes**; the constructor is the dependency list. Input is a **named object**.
+- **Entities never cross into Client Components**: adapters map them to plain `*View` types.
+- **Mappers** (`GroupMapper.toDomain/toRow`) translate rows ↔ entities; `*Snapshot` is a domain type, never a Drizzle row.
+- **Imports:** `@/` (src) or `@tests/` for anything outside the folder; `./` only for siblings. Biome rejects `../`.
+- **Comments:** JSDoc only — a one-line summary, then `@param` / `@returns` / `@throws`, in English, in the business's language. No ids (UC/D/M/TASK), no history, no rules: rules become lint or architecture tests.
+- **Breathing room:** one call per line in chains, blank lines around every `if` and between unrelated `const`s.
 
 ### Dependency injection: `typed-inject`
 
-`application/container.ts` wires everything, and **the compiler checks it**: add a dependency to a use case and the container stops compiling. No decorators (Next 16 discourages legacy decorators and does not support `emitDecoratorMetadata`, so tsyringe/Inversify would degrade to unchecked string tokens).
+`application/container.ts` wires everything and **the compiler checks it**. No decorators.
 
-> ⚠️ **The container's instances are module-level singletons, shared across requests.** NEVER put request state (`groupId`, `userId`, `actorId`) in a constructor or on `this` — it would leak between users. Request state always travels as an argument to `execute()`.
+> ⚠️ Container instances are singletons shared across requests. NEVER keep request state (`groupId`, `userId`, `actorId`) on `this` — it travels as an argument to `execute()`. `tests/architecture/container.test.ts` fails if a use case holds anything but collaborators.
 
-### Rules that hold the whole thing together
+### Transactions
 
-- **Imports:** `usecases → domain + own repositories` (and other modules' *use cases*, never their repositories). `movements` (the ledger) **must never import `loans` or `inventory`** — that direction is how the ledger starts learning everyone's rules. `DecideChange` depends on the `ChangeApplier` **interface**; the container injects the real one.
-- **Atomicity:** neon-http has no interactive tx. Repositories return **unexecuted Drizzle statements**; the use case that owns the rule collects them and hands them to the injected `UnitOfWork`. That's how one use case writes across tables without a repository reaching into another module.
+The driver is `neon-serverless` (WebSocket), so transactions are real. A use case that writes more than once wraps the writes in `this.uow.run(async () => … return ok(…) )`: an `err` result or a throw rolls everything back, and a unit already running is joined. Repositories just run their queries; the `db` they hold follows the transaction in progress (AsyncLocalStorage).
+
+### Rules that hold it together (enforced)
+
+| Rule | Enforced by |
+|---|---|
+| domain/ports/usecases never import Next, Clerk, Drizzle or Neon | Biome override (`noRestrictedImports`) |
+| domain depends only on domain | `tests/architecture/boundaries.test.ts` |
+| ports/usecases never reach adapters, infra or the container | same |
+| a module's use cases reach another module only through its **use cases** | same |
+| `movements` (the ledger) never imports `loans`, `inventory` or `capital` | same |
+| no dependency cycles in `src/backend` | same |
 
 ### The rule behind all of it
 
-**A movement is how the ledger SHOWS a fact, not how the fact behaves.** Anular un cobro reopens a cuota (loans); anular una venta will restock (inventory); anular un aporte touches nothing else. So **every movement type names its owner**, and `application/apply-approved-change.ts` dispatches with an **exhaustive switch** — add a type and it stops compiling until you say who reverses it. Never grow an `if (type === …)` inside the ledger; that is the bug this architecture exists to prevent.
+**A movement is how the ledger SHOWS a fact, not how the fact behaves.** Anular un cobro reopens a cuota (loans); anular una venta will restock (inventory); anular un aporte touches nothing else. So **every movement type names its owner**, and `application/apply-approved-change.ts` dispatches with an **exhaustive switch** — add a type and it stops compiling until you say who reverses it. Never grow an `if (type === …)` inside the ledger.
 
 > Open: whether `movements` becomes a real double-entry **ledger** (Cuentas por Cobrar / por Pagar, accrual — selling ≠ getting paid). Decide before building inventory.
 

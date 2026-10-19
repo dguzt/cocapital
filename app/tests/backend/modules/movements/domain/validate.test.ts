@@ -7,7 +7,7 @@ const base = {
   today: "2026-07-09",
 };
 
-describe("validateNewMovement (UC-201)", () => {
+describe("validateNewMovement", () => {
   it("accepts a plain contribute", () => {
     const r = validateNewMovement(base);
     expect(r.ok).toBe(true);
@@ -54,7 +54,7 @@ describe("validateNewMovement (UC-201)", () => {
     });
     expect(r.ok && r.value.cost === null).toBe(true);
   });
-  it("rejects lend/repay (M4-only) and unknown types", () => {
+  it("rejects lend/repay (loans write them) and unknown types", () => {
     for (const type of ["lend", "repay", "steal"]) {
       const r = validateNewMovement({ ...base, type });
       expect(!r.ok && r.error.kind === "InvalidType").toBe(true);

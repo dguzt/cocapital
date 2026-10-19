@@ -1,11 +1,3 @@
-/**
- * Capital read-model (TASK-201, M5). Pure reducer — zero tables, zero writes.
- * Identity: total = cash + inventory + lent. Realized-only (D3 #5): expected
- * interest NEVER enters the total; collected interest enters it through cash
- * the moment an installment is collected.
- * UI labels: cash=Efectivo · inventory=Inventario · lent=Prestado ·
- * collectedInterest=ganancia cobrada · expectedInterest=ganancia esperada.
- */
 import * as R from "remeda";
 import type {
   MovementStatus,
@@ -13,35 +5,37 @@ import type {
 } from "@/backend/modules/movements/domain/movement";
 import type { Cents } from "@/lib/money";
 
+/** What the capital needs from a movement. */
 export type CapitalMovement = {
   type: MovementType;
   amount: Cents;
-  /** sell_inventory only: cost of goods. null ⇒ cost = amount (margin 0). */
+  /** Cost of goods of a sale; null means no margin. */
   cost: Cents | null;
   status: MovementStatus;
 };
 
+/** What the capital needs from a cuota. */
 export type CapitalInstallment = {
   principal: Cents;
   interest: Cents;
   status: "pending" | "collected";
 };
 
+/** Where the group's capital is. Total is always cash + inventory + lent. */
 export type CapitalSummary = {
   total: Cents;
   cash: Cents;
   inventory: Cents;
   lent: Cents;
-  /** "Ganancia por ventas": Σ(sale − cost) of sells with a cost. */
+  /** Profit from sales: sale price minus cost of goods. */
   salesProfit: Cents;
   collectedInterest: Cents;
-  /** Info only — never part of total (D3 #5). */
+  /** Interest not collected yet; shown apart, never part of the total. */
   expectedInterest: Cents;
 };
 
 type Buckets = { cash: Cents; inventory: Cents; salesProfit: Cents };
 
-/** Each movement's delta on the buckets — the whole ledger folds over this. */
 function movementDelta(m: CapitalMovement): Buckets {
   const cost = m.cost ?? m.amount;
   switch (m.type) {
@@ -52,18 +46,14 @@ function movementDelta(m: CapitalMovement): Buckets {
     case "buy_inventory":
       return { cash: -m.amount, inventory: m.amount, salesProfit: 0 };
     case "sell_inventory":
-      // Cash in at sale price; inventory out at cost. The margin lands in
-      // total automatically via the identity.
       return {
         cash: m.amount,
         inventory: -cost,
         salesProfit: m.amount - cost,
       };
     case "lend":
-      // Principal only (D3 #5) — total unchanged, money changes bucket.
       return { cash: -m.amount, inventory: 0, salesProfit: 0 };
     case "repay":
-      // Full installment (principal + interest) comes back as cash.
       return { cash: m.amount, inventory: 0, salesProfit: 0 };
   }
 }
@@ -74,6 +64,15 @@ const addBuckets = (a: Buckets, b: Buckets): Buckets => ({
   salesProfit: a.salesProfit + b.salesProfit,
 });
 
+/**
+ * Derives the capital from the ledger and the loans' cuotas. Voided
+ * movements count for nothing; pending principal is lent; interest enters
+ * the total only once collected.
+ *
+ * @param movements - Every movement of the group.
+ * @param installments - Every cuota of its live loans.
+ * @returns The capital summary.
+ */
 export function deriveCapital(
   movements: CapitalMovement[],
   installments: CapitalInstallment[],

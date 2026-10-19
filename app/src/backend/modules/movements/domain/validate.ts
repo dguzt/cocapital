@@ -1,4 +1,3 @@
-/** UC-201 input rules, pure. lend/repay never come through here (M4 writes them). */
 import type { ISODate } from "@/lib/dates";
 import type { Cents } from "@/lib/money";
 import { solesToCents } from "@/lib/money";
@@ -19,6 +18,15 @@ export type NewMovement = {
   date: ISODate;
 };
 
+/**
+ * Validates a movement typed by a partner. Lends and repays never come
+ * through here; loans write them.
+ *
+ * @param input - Type, amount and optional cost in soles, optional concept
+ *   and today's date.
+ * @returns The movement in cents, or `InvalidType`, `InvalidAmount` or
+ *   `InvalidCost`.
+ */
 export function validateNewMovement(input: {
   type: string;
   amountSoles: string;
@@ -44,7 +52,6 @@ export function validateNewMovement(input: {
     });
   }
 
-  // Optional cost, only meaningful on sells (A/Gate-1 decision).
   const hasCost = type === "sell_inventory" && Boolean(input.costSoles?.trim());
   const cost = hasCost ? solesToCents(input.costSoles ?? "") : null;
   if (hasCost && (cost === null || cost <= 0)) {
@@ -55,6 +62,6 @@ export function validateNewMovement(input: {
     });
   }
 
-  const concept = input.concept?.trim() || null; // optional (A-3)
+  const concept = input.concept?.trim() || null;
   return ok({ type, amount, cost, concept, date: input.today });
 }

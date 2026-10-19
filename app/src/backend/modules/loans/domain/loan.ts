@@ -1,4 +1,3 @@
-/** M4 shapes. Pure types — no Drizzle, no I/O. */
 import type { Frequency, ISODate } from "@/lib/dates";
 import type { Cents } from "@/lib/money";
 
