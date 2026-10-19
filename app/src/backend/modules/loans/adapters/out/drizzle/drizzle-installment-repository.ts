@@ -1,17 +1,19 @@
-/** Installments table. Drizzle lives here; rules do not. */
 import { and, asc, eq, isNotNull, ne } from "drizzle-orm";
 
 import type { Database } from "@/backend/infra/db/client";
-import { Installments, Loans } from "@/backend/infra/db/schema";
-import type { Write } from "@/backend/infra/db/write";
+import type { Installment } from "@/backend/modules/loans/domain/installment";
+import type { InstallmentTerm } from "@/backend/modules/loans/domain/installment-term";
 import type { NewLoanInstallment } from "@/backend/modules/loans/domain/loan";
+import type { InstallmentRepository } from "@/backend/modules/loans/ports/installment-repository";
+import { Installments } from "./installments.table";
+import { Loans } from "./loans.table";
 
-export class InstallmentRepository {
+export class DrizzleInstallmentRepository implements InstallmentRepository {
   static inject = ["db"] as const;
 
   constructor(private readonly db: Database) {}
 
-  async listByLoan(loanId: string) {
+  async listByLoan(loanId: string): Promise<Installment[]> {
     return this.db
       .select()
       .from(Installments)
@@ -19,9 +21,7 @@ export class InstallmentRepository {
       .orderBy(asc(Installments.number));
   }
 
-  /** Every installment term of the group — feeds M5's realized-only capital.
-   *  A voided loan's cuotas are excluded: they no longer count as `lent`. */
-  async listByGroup(groupId: string) {
+  async listTermsByGroup(groupId: string): Promise<InstallmentTerm[]> {
     return this.db
       .select({
         principal: Installments.principal,
@@ -34,8 +34,6 @@ export class InstallmentRepository {
       .where(and(eq(Loans.groupId, groupId), ne(Loans.status, "voided")));
   }
 
-  /** The repay movements of a loan's collected cuotas — voided as a batch when
-   *  the loan is cancelled, so each collection's cash comes back out. */
   async repayMovementIdsOf(loanId: string): Promise<string[]> {
     const rows = await this.db
       .select({ repayMovementId: Installments.repayMovementId })
@@ -47,11 +45,9 @@ export class InstallmentRepository {
         ),
       );
 
-    return rows.map((r) => r.repayMovementId).filter((id) => id !== null);
+    return rows.map((row) => row.repayMovementId).filter((id) => id !== null);
   }
 
-  /** The cuota a `repay` movement collected, scoped to the group (auth) — lets a
-   *  cobro row link to its cuota on the loan page. */
   async findByRepayMovement(
     groupId: string,
     repayMovementId: string,
@@ -70,30 +66,28 @@ export class InstallmentRepository {
     return row ?? null;
   }
 
-  insertManyStmt(loanId: string, rows: NewLoanInstallment[]): Write {
-    return this.db.insert(Installments).values(
-      rows.map((i) => ({
+  async schedule(
+    loanId: string,
+    installments: NewLoanInstallment[],
+  ): Promise<void> {
+    await this.db.insert(Installments).values(
+      installments.map((installment) => ({
         loanId,
-        number: i.number,
-        dueDate: i.dueDate,
-        amount: i.amount,
-        principal: i.principal,
-        interest: i.interest,
+        number: installment.number,
+        dueDate: installment.dueDate,
+        amount: installment.amount,
+        principal: installment.principal,
+        interest: installment.interest,
       })),
     );
   }
 
-  /**
-   * Flip to collected — but only if still pending. That WHERE is the
-   * double-collect guard: a racing second collect updates zero rows, and the
-   * statement returns the ids it touched so the caller can tell.
-   */
-  markCollectedStmt(
+  async markCollected(
     installmentId: string,
     repayMovementId: string,
     collectedAt: Date,
-  ) {
-    return this.db
+  ): Promise<boolean> {
+    const updated = await this.db
       .update(Installments)
       .set({ status: "collected", collectedAt, repayMovementId })
       .where(
@@ -103,11 +97,12 @@ export class InstallmentRepository {
         ),
       )
       .returning({ id: Installments.id });
+
+    return updated.length > 0;
   }
 
-  /** The exact inverse of markCollected: the cuota is collectable again. */
-  reopenByRepayMovementStmt(repayMovementId: string): Write {
-    return this.db
+  async reopenByRepayMovement(repayMovementId: string): Promise<void> {
+    await this.db
       .update(Installments)
       .set({ status: "pending", collectedAt: null, repayMovementId: null })
       .where(eq(Installments.repayMovementId, repayMovementId));

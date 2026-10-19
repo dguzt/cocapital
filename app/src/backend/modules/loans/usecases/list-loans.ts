@@ -1,13 +1,7 @@
-/**
- * UC-303 · The loans list, with the numbers each card shows.
- *
- * Overdue is derived against `today`, which arrives as INPUT — no function in
- * this backend reads the clock on its own, which is what makes the tests
- * deterministic.
- */
 import * as R from "remeda";
+
 import type { LoanListItem } from "@/backend/modules/loans/domain/loan";
-import type { LoanRepository } from "@/backend/modules/loans/repositories/loan-repository";
+import type { LoanRepository } from "@/backend/modules/loans/ports/loan-repository";
 import type { ISODate } from "@/lib/dates";
 
 export type ListLoansInput = {
@@ -15,30 +9,38 @@ export type ListLoansInput = {
   today: ISODate;
 };
 
+/** Reads the group's loans with the figures each card shows. */
 export class ListLoans {
   static inject = ["loans"] as const;
 
   constructor(private readonly loans: LoanRepository) {}
 
+  /**
+   * Lists the loans.
+   *
+   * @param input - The group and today's date, to count overdue cuotas.
+   * @returns One item per loan, newest first.
+   */
   async execute(input: ListLoansInput): Promise<LoanListItem[]> {
-    const rows = await this.loans.listWithInstallments(input.groupId);
+    const rows = await this.loans.listSchedules(input.groupId);
 
     return R.pipe(
       rows,
-      R.groupBy((r) => r.id),
+      R.groupBy((row) => row.id),
       R.entries(),
-      R.map(([id, group]) => {
-        const pending = group.filter((r) => r.instStatus === "pending");
+      R.map(([id, cuotas]) => {
+        const pending = cuotas.filter((row) => row.instStatus === "pending");
 
         return {
           id,
-          borrowerName: group[0].borrowerName,
-          capital: group[0].capital,
-          status: group[0].status,
-          collectedCount: group.length - pending.length,
-          totalCount: group.length,
-          overdueCount: pending.filter((r) => r.instDue < input.today).length,
-          pendingAmount: R.sumBy(pending, (r) => r.instAmount),
+          borrowerName: cuotas[0].borrowerName,
+          capital: cuotas[0].capital,
+          status: cuotas[0].status,
+          collectedCount: cuotas.length - pending.length,
+          totalCount: cuotas.length,
+          overdueCount: pending.filter((row) => row.instDue < input.today)
+            .length,
+          pendingAmount: R.sumBy(pending, (row) => row.instAmount),
         };
       }),
     );

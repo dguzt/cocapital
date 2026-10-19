@@ -1,34 +1,24 @@
-/**
- * The composition root's dispatcher — the ONLY place allowed to know every
- * module.
- *
- * A change was approved. Who executes it? Its owner. "Movimiento" is how the
- * ledger SHOWS these facts, not how they behave: anular un cobro reabre una
- * cuota (loans), anular una venta repondrá stock (inventory), anular un aporte
- * no toca nada más (ledger). Wiring that here is what keeps the ledger from
- * growing an `if` per module.
- *
- * The switch is exhaustive on purpose: add a movement type and this stops
- * compiling until you say who reverses it. The question "and who undoes this?"
- * is no longer something anyone can forget — the compiler asks it.
- */
-import type { Write } from "@/backend/infra/db/write";
 import type { UndoPurchase } from "@/backend/modules/inventory/usecases/undo-purchase";
 import type { UndoSale } from "@/backend/modules/inventory/usecases/undo-sale";
 import type { UndoCollection } from "@/backend/modules/loans/usecases/undo-collection";
 import type { VoidLoan } from "@/backend/modules/loans/usecases/void-loan";
-import type {
-  ApprovedChange,
-  ChangeApplier,
-} from "@/backend/modules/movements/usecases/decide-change";
+import type { ApprovedChange } from "@/backend/modules/movements/domain/approved-change";
+import type { ChangeApplier } from "@/backend/modules/movements/ports/change-applier";
+import type { EditEntry } from "@/backend/modules/movements/usecases/edit-entry";
 import type { VoidEntry } from "@/backend/modules/movements/usecases/void-entry";
 
+/**
+ * Hands each approved change to the module that owns its movement: a repay to
+ * loans, a sale or purchase to inventory, an aporte or gasto to the ledger.
+ * Every movement type must name its owner here or this stops compiling.
+ */
 export class ApplyApprovedChange implements ChangeApplier {
   static inject = [
     "undoCollection",
     "undoSale",
     "undoPurchase",
     "voidEntry",
+    "editEntry",
     "voidLoan",
   ] as const;
 
@@ -37,31 +27,37 @@ export class ApplyApprovedChange implements ChangeApplier {
     private readonly undoSale: UndoSale,
     private readonly undoPurchase: UndoPurchase,
     private readonly voidEntry: VoidEntry,
+    private readonly editEntry: EditEntry,
     private readonly voidLoan: VoidLoan,
   ) {}
 
-  async writesFor(change: ApprovedChange): Promise<Write[]> {
+  /**
+   * Applies the change through its owner.
+   *
+   * @param change - The approved edit or void.
+   */
+  async apply(change: ApprovedChange): Promise<void> {
     if (change.kind === "edit") {
-      // Only the plain ledger types are editable — propose-change refuses the
-      // rest, so anything reaching here edits its own row and nothing else.
-      return this.voidEntry.editWritesFor(change.movementId, change.after);
+      return this.editEntry.execute({
+        movementId: change.movementId,
+        after: change.after,
+      });
     }
 
     switch (change.movementType) {
       case "repay":
-        return this.undoCollection.writesFor(change.movementId);
+        return this.undoCollection.execute({
+          repayMovementId: change.movementId,
+        });
       case "sell_inventory":
-        return this.undoSale.writesFor(change.movementId);
+        return this.undoSale.execute({ movementId: change.movementId });
       case "buy_inventory":
-        return this.undoPurchase.writesFor(change.movementId);
+        return this.undoPurchase.execute({ movementId: change.movementId });
       case "contribute":
       case "expense":
-        return this.voidEntry.writesFor(change.movementId);
+        return this.voidEntry.execute({ movementId: change.movementId });
       case "lend":
-        // Voiding a loan's entry IS voiding the loan — that reverses every
-        // collection too. The proposal enters here from the loan page
-        // (loans/usecases/propose-void-loan.ts), never from the movement.
-        return this.voidLoan.writesFor(change.movementId);
+        return this.voidLoan.execute({ lendMovementId: change.movementId });
     }
   }
 }

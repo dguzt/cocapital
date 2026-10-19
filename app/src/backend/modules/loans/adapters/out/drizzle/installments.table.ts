@@ -1,7 +1,3 @@
-/**
- * M4 · one cuota. Status is binary on purpose (D4 scope): a partial payment
- * has nowhere to live yet — that is a schema change, not a button.
- */
 import {
   date,
   index,
@@ -11,15 +7,15 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
-
-import { Loans } from "./loans";
-import { Movements } from "./movements";
+import { Movements } from "@/backend/modules/movements/adapters/out/drizzle/movements.table";
+import { Loans } from "./loans.table";
 
 export const installmentStatus = pgEnum("installment_status", [
   "pending",
   "collected",
 ]);
 
+/** One cuota of a loan's schedule. */
 export const Installments = pgTable(
   "installments",
   {
@@ -28,14 +24,14 @@ export const Installments = pgTable(
       .notNull()
       .references(() => Loans.id),
     number: integer("number").notNull(),
-    /** Editable in the wizard; overdue is DERIVED at render, never stored. */
+    /** The day the cuota falls due. */
     dueDate: date("due_date", { mode: "string" }).notNull(),
     amount: integer("amount").notNull(),
     principal: integer("principal").notNull(),
     interest: integer("interest").notNull(),
     status: installmentStatus("status").notNull().default("pending"),
     collectedAt: timestamp("collected_at"),
-    /** The auto-written repay movement once collected; null again if undone. */
+    /** The repay movement of the collection; null while pending. */
     repayMovementId: uuid("repay_movement_id").references(() => Movements.id),
   },
   (t) => [index("installments_loan_idx").on(t.loanId)],

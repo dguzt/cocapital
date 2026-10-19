@@ -1,27 +1,16 @@
-/**
- * UC-307 · Reverse an entire loan on approval — the inverse of create-loan,
- * plus every collection it produced.
- *
- * This is the `loans/usecases/void-loan.ts` named in apply-approved-change.ts:
- * voiding a loan's `lend` entry IS voiding the loan. It is a loan concern and
- * not a ledger void because only the loan knows which `repay` movements are its
- * collections.
- *
- * Capital stays whole only if all of it lands in one transaction (same reason
- * as undo-collection): the loan is marked voided so its cuotas leave `lent`,
- * the `lend` movement is voided so its principal returns to cash, and every
- * `repay` is voided so each collection's cash comes back out. It returns the
- * writes; DecideChange batches them with the approval.
- *
- * Async because it must enumerate the collected cuotas' repay movements — the
- * ChangeApplier facade awaits it. Movement voids go through VoidEntry (a
- * movements use case), so this loans use case never writes the movements table.
- */
-import type { Write } from "@/backend/infra/db/write";
-import type { InstallmentRepository } from "@/backend/modules/loans/repositories/installment-repository";
-import type { LoanRepository } from "@/backend/modules/loans/repositories/loan-repository";
+import type { InstallmentRepository } from "@/backend/modules/loans/ports/installment-repository";
+import type { LoanRepository } from "@/backend/modules/loans/ports/loan-repository";
 import type { VoidEntry } from "@/backend/modules/movements/usecases/void-entry";
 
+export type VoidLoanInput = {
+  lendMovementId: string;
+};
+
+/**
+ * Cancels a loan: the loan stops counting as lent, its lend movement returns
+ * the capital to cash, and every collection's repay movement takes its cash
+ * back out.
+ */
 export class VoidLoan {
   static inject = ["loans", "installments", "voidEntry"] as const;
 
@@ -31,22 +20,28 @@ export class VoidLoan {
     private readonly voidEntry: VoidEntry,
   ) {}
 
-  async writesFor(lendMovementId: string): Promise<Write[]> {
-    const loan = await this.loans.findByLendMovement(lendMovementId);
+  /**
+   * Voids the loan behind a lend movement. Runs inside the unit of work of
+   * the approval.
+   *
+   * @param input - The loan's lend movement.
+   * @throws When no loan was booked by that movement.
+   */
+  async execute(input: VoidLoanInput): Promise<void> {
+    const loanId = await this.loans.idByLendMovement(input.lendMovementId);
 
-    if (!loan) {
-      // Unreachable: the approved change targeted a real loan's lend movement.
+    if (!loanId) {
       throw new Error("no loan owns this lend movement");
     }
 
-    const repayMovementIds = await this.installments.repayMovementIdsOf(
-      loan.id,
-    );
+    const repayMovementIds = await this.installments.repayMovementIdsOf(loanId);
 
-    return [
-      this.loans.voidStmt(loan.id),
-      ...this.voidEntry.writesFor(lendMovementId),
-      ...repayMovementIds.flatMap((id) => this.voidEntry.writesFor(id)),
-    ];
+    await this.loans.void(loanId);
+
+    await this.voidEntry.execute({ movementId: input.lendMovementId });
+
+    for (const movementId of repayMovementIds) {
+      await this.voidEntry.execute({ movementId });
+    }
   }
 }

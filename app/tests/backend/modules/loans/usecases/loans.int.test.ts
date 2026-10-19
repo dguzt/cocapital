@@ -142,6 +142,58 @@ describe("E3: lending lifecycle", () => {
     expect(await listMovements(group.id)).toHaveLength(3);
   });
 
+  it("two partners collecting the same cuota at once book it only once", async () => {
+    const { diego, group } = await seed();
+
+    const karina = karinaLoan();
+
+    const created = await createLoan(group.id, diego.id, {
+      borrower: { name: "Karina" },
+      capital: karina.capital,
+      rateBps: 1000,
+      frequency: "monthly",
+      startDate: TODAY,
+      installments: karina.installments,
+    });
+
+    if (!created.ok) {
+      throw new Error("seed failed");
+    }
+
+    const detail = await getLoanDetail(group.id, created.value.loanId);
+
+    if (!detail.ok) {
+      throw new Error("seed failed");
+    }
+
+    const first = detail.value.installments[0];
+
+    const results = await Promise.all([
+      collectInstallment(
+        group.id,
+        diego.id,
+        created.value.loanId,
+        first.id,
+        TODAY,
+      ),
+      collectInstallment(
+        group.id,
+        diego.id,
+        created.value.loanId,
+        first.id,
+        TODAY,
+      ),
+    ]);
+
+    expect(results.filter((result) => result.ok)).toHaveLength(1);
+
+    const repays = (await listMovements(group.id)).filter(
+      (movement) => movement.type === "repay",
+    );
+
+    expect(repays).toHaveLength(1);
+  });
+
   it("rejects installments that break the invariants", async () => {
     const { diego, group } = await seed();
     const karina = karinaLoan();

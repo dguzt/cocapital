@@ -1,13 +1,16 @@
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import { Pool } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-serverless";
+
 import { requireEnv } from "@/backend/config/env";
 import * as schema from "./schema";
+import { transactionAware } from "./transaction-context";
 
-// Talks to a Neon branch over HTTP via the edge-ready neon-http driver.
-// Locally this points at a dev branch; in prod, at the production branch —
-// same driver, same code, only DATABASE_URL differs.
-const sql = neon(requireEnv("DATABASE_URL"));
-export const db = drizzle(sql, { schema });
+const pool = new Pool({ connectionString: requireEnv("DATABASE_URL") });
 
-/** What repositories are injected with — never the module singleton directly. */
-export type Database = typeof db;
+const root = drizzle({ client: pool, schema });
+
+/** What repositories are injected with. */
+export type Database = typeof root;
+
+/** The database, or the transaction of the unit of work in progress. */
+export const db: Database = transactionAware(root);

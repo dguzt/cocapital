@@ -1,10 +1,11 @@
 /**
  * DB-level invariants — things only the real database can prove:
- * constraint enforcement, the one-pending partial index, batch atomicity.
+ * constraint enforcement, the one-pending partial index, transactions.
  * Runs against the isolated Neon "test" branch (see integration-setup.ts).
  */
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/backend/infra/db/client";
+import { DrizzleUnitOfWork } from "@/backend/infra/db/drizzle-unit-of-work";
 import {
   Groups,
   Memberships,
@@ -12,6 +13,7 @@ import {
   Movements,
   Users,
 } from "@/backend/infra/db/schema";
+import { err, ok } from "@/lib/result";
 import { truncateAll } from "@/test/truncate";
 
 /** Flatten an error's cause chain into one searchable string, immutably. */
@@ -93,21 +95,61 @@ describe("one pending change per movement (partial unique index)", () => {
   });
 });
 
-describe("batch atomicity (neon-http regression of the tx experiment)", () => {
-  it("a failing statement rolls back the whole batch", async () => {
-    const dup = { clerkId: "clerk_dup", name: "D", email: "d@t.pe" };
-    await expectUniqueViolation(
-      db.batch([db.insert(Users).values(dup), db.insert(Users).values(dup)]),
-    );
-    const rows = await db.select().from(Users);
-    expect(rows).toHaveLength(0); // first insert rolled back too
+describe("DrizzleUnitOfWork", () => {
+  const uow = new DrizzleUnitOfWork(db);
+
+  const ana = { clerkId: "c1", name: "A", email: "a@t.pe" };
+
+  const bruno = { clerkId: "c2", name: "B", email: "b@t.pe" };
+
+  it("commits every write when the work returns ok", async () => {
+    await uow.run(async () => {
+      await db.insert(Users).values(ana);
+
+      await db.insert(Users).values(bruno);
+
+      return ok(true);
+    });
+
+    expect(await db.select().from(Users)).toHaveLength(2);
   });
 
-  it("a valid batch commits everything", async () => {
-    await db.batch([
-      db.insert(Users).values({ clerkId: "c1", name: "A", email: "a@t.pe" }),
-      db.insert(Users).values({ clerkId: "c2", name: "B", email: "b@t.pe" }),
-    ]);
-    expect(await db.select().from(Users)).toHaveLength(2);
+  it("rolls every write back when the work returns an error", async () => {
+    const result = await uow.run(async () => {
+      await db.insert(Users).values(ana);
+
+      return err({ kind: "Nope", message: "changed my mind" });
+    });
+
+    expect(result.ok).toBe(false);
+    expect(await db.select().from(Users)).toHaveLength(0);
+  });
+
+  it("rolls every write back when a statement fails", async () => {
+    await expectUniqueViolation(
+      uow.run(async () => {
+        await db.insert(Users).values(ana);
+
+        await db.insert(Users).values(ana);
+
+        return ok(true);
+      }),
+    );
+
+    expect(await db.select().from(Users)).toHaveLength(0);
+  });
+
+  it("joins a unit already running instead of committing on its own", async () => {
+    await uow.run(async () => {
+      await uow.run(async () => {
+        await db.insert(Users).values(ana);
+
+        return ok(true);
+      });
+
+      return err({ kind: "Nope", message: "outer unit fails" });
+    });
+
+    expect(await db.select().from(Users)).toHaveLength(0);
   });
 });

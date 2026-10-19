@@ -32,10 +32,11 @@ export default async function HomePage({
   }
 
   const today = todayInLima();
-  const [movements, installments, pendingChanges] = await Promise.all([
+  const [movements, installments, pendingChanges, capital] = await Promise.all([
     useCases.listMovements.execute({ groupId: group.id }),
     useCases.listGroupInstallments.execute({ groupId: group.id }),
     useCases.listPendingChanges.execute({ groupId: group.id }),
+    useCases.getCapitalSummary.execute({ groupId: group.id }),
   ]);
   const overdueCount = installments.filter(
     (i) => i.status === "pending" && isOverdue(i.dueDate, today),
@@ -68,7 +69,7 @@ export default async function HomePage({
         <PanelContent
           user={toUserView(user)}
           movements={movements}
-          installments={installments}
+          capital={capital}
           pendingIds={pendingIds}
           today={today}
         />

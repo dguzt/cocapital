@@ -1,15 +1,13 @@
 import { useCases } from "@/backend/application/container";
-import { requireUser } from "@/backend/modules/accounts/adapters/in/next/session";
 import { toUserView } from "@/backend/modules/accounts/adapters/in/next/user-view";
 import { toGroupView } from "@/backend/modules/groups/adapters/in/next/group-view";
+import { requireMembership } from "@/backend/modules/groups/adapters/in/next/membership";
 import { LoanWizard } from "@/components/loans/loan-wizard/loan-wizard";
 import { AppShell } from "@/components/shell/app-shell";
 import { isOverdue, todayInLima } from "@/lib/dates";
 
 export default async function NewLoanPage() {
-  const user = await requireUser();
-  const group = await useCases.getMyGroup.execute({ userId: user.id });
-  if (!group) return null;
+  const { user, group } = await requireMembership();
   const today = todayInLima();
   const [borrowers, installments] = await Promise.all([
     useCases.listBorrowers.execute({ groupId: group.id }),

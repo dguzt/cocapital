@@ -40,6 +40,9 @@
             ]
           }
         }
+      },
+      "complexity": {
+        "noStaticOnlyClass": "off"
       }
     },
     "domains": {

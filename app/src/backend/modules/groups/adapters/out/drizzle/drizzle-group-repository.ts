@@ -43,16 +43,17 @@ export class DrizzleGroupRepository implements GroupRepository {
   }
 
   async create(group: Group): Promise<void> {
-    await this.db.batch([
-      this.db.insert(Groups).values(GroupMapper.toRow(group)),
-      this.db
+    await this.db.transaction(async (tx) => {
+      await tx.insert(Groups).values(GroupMapper.toRow(group));
+
+      await tx
         .insert(Memberships)
         .values(
           group.members.map((member) =>
             GroupMapper.toMembershipRow(group.id, member),
           ),
-        ),
-    ]);
+        );
+    });
   }
 
   async addMember(groupId: string, member: Member): Promise<void> {

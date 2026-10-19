@@ -1,29 +1,10 @@
-/**
- * UC-401/402 · Propose an edit or a void. Nothing is applied yet: the movement
- * keeps its old value until the OTHER partner approves (D1).
- *
- * What may be proposed depends on who owns the movement:
- *
- *   lend   → nothing. A loan's own entry is corrected from the loan.
- *   repay  → void only. Its amount belongs to the cuota, not to the movement,
- *            so editing it here would desync the two. Voiding it IS "deshacer
- *            cobro", and the loans module reverses it on approval.
- *   others → edit and void.
- *
- * The one-pending-change-per-movement rule is enforced twice: here, and by a
- * partial unique index in the schema. The index is the one that actually holds
- * under a race.
- */
-
 import type { PendingChangeError } from "@/backend/modules/movements/domain/errors";
 import type { MovementSnapshot } from "@/backend/modules/movements/domain/movement";
 import type { ChangeKind } from "@/backend/modules/movements/domain/pending";
-import { proposeChange as decide } from "@/backend/modules/movements/domain/pending";
-import type { ChangeRepository } from "@/backend/modules/movements/repositories/change-repository";
-import type {
-  MovementRepository,
-  MovementRow,
-} from "@/backend/modules/movements/repositories/movement-repository";
+import { proposeChange as propose } from "@/backend/modules/movements/domain/pending";
+import type { StoredMovement } from "@/backend/modules/movements/domain/stored-movement";
+import type { ChangeRepository } from "@/backend/modules/movements/ports/change-repository";
+import type { MovementRepository } from "@/backend/modules/movements/ports/movement-repository";
 import { err, ok, type Result } from "@/lib/result";
 
 export type ProposeChangeInput = {
@@ -34,6 +15,11 @@ export type ProposeChangeInput = {
   after?: MovementSnapshot;
 };
 
+/**
+ * Proposes an edit or a void of a movement from the ledger. Nothing changes
+ * until another partner approves it. A loan's own movements are corrected
+ * from the loan: a lend accepts nothing here, a repay accepts only a void.
+ */
 export class ProposeChange {
   static inject = ["movements", "changes"] as const;
 
@@ -42,6 +28,13 @@ export class ProposeChange {
     private readonly changes: ChangeRepository,
   ) {}
 
+  /**
+   * Opens a pending change on the movement.
+   *
+   * @param input - The group, the proposing partner, the movement, the kind of
+   *   change and, for an edit, the proposed values.
+   * @returns The pending change's id, or why it cannot be proposed.
+   */
   async execute(
     input: ProposeChangeInput,
   ): Promise<Result<{ pendingId: string }, PendingChangeError>> {
@@ -66,7 +59,7 @@ export class ProposeChange {
       });
     }
 
-    const proposal = decide({
+    const proposal = propose({
       movement: {
         id: movement.id,
         status: movement.status,
@@ -82,19 +75,18 @@ export class ProposeChange {
       return proposal;
     }
 
-    const row = await this.changes.insert(proposal.value);
+    const stored = await this.changes.propose(proposal.value);
 
-    return ok({ pendingId: row.id });
+    return ok({ pendingId: stored.id });
   }
 
-  /** A lend is untouchable here; a repay is voidable but never editable. */
-  private isOwnedByALoan(movement: MovementRow, kind: ChangeKind): boolean {
+  private isOwnedByALoan(movement: StoredMovement, kind: ChangeKind): boolean {
     return (
       movement.type === "lend" || (movement.type === "repay" && kind === "edit")
     );
   }
 
-  private snapshotOf(movement: MovementRow): MovementSnapshot {
+  private snapshotOf(movement: StoredMovement): MovementSnapshot {
     return {
       type: movement.type,
       amount: movement.amount,

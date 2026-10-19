@@ -1,36 +1,31 @@
-/**
- * UC-305 · Undo a collection — the exact inverse of collect-installment.
- *
- * This is the use case the ledger must NOT own. Anular un cobro no es anular
- * una venta: this one has to know that a `repay` movement is the shadow of an
- * installment, and put the installment back.
- *
- * Why both writes or neither: capital is `cash + inventory + lent`, where
- * `lent` is the principal of PENDING installments. Voiding the movement alone
- * takes the cuota's cash out while its principal stays "collected" — hence out
- * of `lent` too — and the total silently shrinks by the principal. Reopening
- * the cuota in the same transaction restores it exactly: cash −amount,
- * lent +principal, interest back to expected.
- *
- * It returns writes instead of running them, so the caller can approve the
- * pending change and undo the collection in a single transaction.
- */
-import type { Write } from "@/backend/infra/db/write";
-import type { InstallmentRepository } from "@/backend/modules/loans/repositories/installment-repository";
-import type { MovementRepository } from "@/backend/modules/movements/repositories/movement-repository";
+import type { InstallmentRepository } from "@/backend/modules/loans/ports/installment-repository";
+import type { VoidEntry } from "@/backend/modules/movements/usecases/void-entry";
 
+export type UndoCollectionInput = {
+  repayMovementId: string;
+};
+
+/**
+ * Reverses a collection: the repay movement is voided and its cuota is
+ * pending again, so cash, lent and expected interest go back to where they
+ * were before the collection.
+ */
 export class UndoCollection {
-  static inject = ["movements", "installments"] as const;
+  static inject = ["voidEntry", "installments"] as const;
 
   constructor(
-    private readonly movements: MovementRepository,
+    private readonly voidEntry: VoidEntry,
     private readonly installments: InstallmentRepository,
   ) {}
 
-  writesFor(repayMovementId: string): Write[] {
-    return [
-      this.movements.voidStmt(repayMovementId),
-      this.installments.reopenByRepayMovementStmt(repayMovementId),
-    ];
+  /**
+   * Undoes the collection. Runs inside the unit of work of the approval.
+   *
+   * @param input - The repay movement of the collection.
+   */
+  async execute(input: UndoCollectionInput): Promise<void> {
+    await this.voidEntry.execute({ movementId: input.repayMovementId });
+
+    await this.installments.reopenByRepayMovement(input.repayMovementId);
   }
 }

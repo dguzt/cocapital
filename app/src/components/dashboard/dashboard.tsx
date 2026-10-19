@@ -6,9 +6,8 @@
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import type { UserView } from "@/backend/modules/accounts/adapters/in/next/user-view";
-import type { CapitalInstallment } from "@/backend/modules/capital/domain/derive";
-import { deriveCapital } from "@/backend/modules/capital/domain/derive";
-import type { LedgerMovement } from "@/backend/modules/movements/usecases/list-movements";
+import type { CapitalSummary } from "@/backend/modules/capital/domain/derive";
+import type { LedgerMovement } from "@/backend/modules/movements/domain/ledger-movement";
 import { ActivityFeed } from "@/components/movements/activity-feed";
 import { ActivityTable } from "@/components/movements/activity-table";
 import { MovementSheet } from "@/components/movements/movement-sheet";
@@ -18,17 +17,16 @@ import { formatCents } from "@/lib/money";
 export function PanelContent({
   user,
   movements,
-  installments,
+  capital,
   pendingIds,
   today,
 }: {
   user: UserView;
   movements: LedgerMovement[];
-  installments: CapitalInstallment[];
+  capital: CapitalSummary;
   pendingIds: string[];
   today: ISODate;
 }) {
-  const capital = deriveCapital(movements, installments);
   const positive =
     Math.max(capital.cash, 0) +
     Math.max(capital.inventory, 0) +

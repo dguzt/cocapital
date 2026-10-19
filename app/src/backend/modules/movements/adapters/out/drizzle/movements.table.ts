@@ -1,7 +1,3 @@
-/**
- * M3 · the ledger. Append-only: rows are never updated on creation, and never
- * deleted — "borrar" is status = 'voided'.
- */
 import {
   date,
   index,
@@ -15,7 +11,6 @@ import {
 import { Users } from "@/backend/modules/accounts/adapters/out/drizzle/users.table";
 import { Groups } from "@/backend/modules/groups/adapters/out/drizzle/groups.table";
 
-/** Fixed list (vision decision #3). lend/repay are auto-written by M4. */
 export const movementType = pgEnum("movement_type", [
   "contribute",
   "buy_inventory",
@@ -27,6 +22,7 @@ export const movementType = pgEnum("movement_type", [
 
 export const movementStatus = pgEnum("movement_status", ["active", "voided"]);
 
+/** The shared ledger: every money event of a group. */
 export const Movements = pgTable(
   "movements",
   {
@@ -38,12 +34,12 @@ export const Movements = pgTable(
       .notNull()
       .references(() => Users.id),
     type: movementType("type").notNull(),
-    /** Integer cents, always >= 0; sign semantics live in the reducer. */
+    /** Cents, never negative. */
     amount: integer("amount").notNull(),
-    /** sell_inventory only: cost of goods (cents). null => margin 0. */
+    /** Cost of goods in cents for a sale, or the principal of a repay. */
     cost: integer("cost"),
     concept: text("concept"),
-    /** Calendar day the event belongs to (Lima). */
+    /** Calendar day of the event, in Lima. */
     date: date("date", { mode: "string" }).notNull(),
     status: movementStatus("status").notNull().default("active"),
     createdAt: timestamp("created_at").notNull().defaultNow(),

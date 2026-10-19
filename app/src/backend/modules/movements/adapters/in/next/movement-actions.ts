@@ -1,21 +1,21 @@
 "use server";
-/** M3's edge with Next: session → use case → revalidate. No rules here. */
+
 import { revalidatePath } from "next/cache";
+
 import { useCases } from "@/backend/application/container";
-import { requireUser } from "@/backend/modules/accounts/adapters/in/next/session";
+import { requireMembership } from "@/backend/modules/groups/adapters/in/next/membership";
+import type { MovementSnapshot } from "@/backend/modules/movements/domain/movement";
+import { validateNewMovement } from "@/backend/modules/movements/domain/validate";
 import { todayInLima } from "@/lib/dates";
 import { solesToCents } from "@/lib/money";
-import type { MovementSnapshot } from "./domain/movement";
-import { validateNewMovement } from "./domain/validate";
 
-export type AddMovementInput = {
+export type AddMovementForm = {
   type: string;
   amountSoles: string;
   costSoles?: string;
   concept?: string;
 };
 
-/** A void on a `repay` flips its cuota back to pending — refresh loans too. */
 function revalidateLedgerAndLoans() {
   revalidatePath("/");
   revalidatePath("/actividad");
@@ -23,13 +23,14 @@ function revalidateLedgerAndLoans() {
   revalidatePath("/prestamos/[id]", "page");
 }
 
-export async function addMovementAction(input: AddMovementInput) {
-  const user = await requireUser();
-  const group = await useCases.getMyGroup.execute({ userId: user.id });
-
-  if (!group) {
-    return { ok: false as const, error: "NoGroup" };
-  }
+/**
+ * Writes a movement typed in the "Nuevo movimiento" sheet.
+ *
+ * @param input - The form fields, amounts in soles.
+ * @returns Ok, or the kind of validation error.
+ */
+export async function addMovementAction(input: AddMovementForm) {
+  const { user, group } = await requireMembership();
 
   const validated = validateNewMovement({ ...input, today: todayInLima() });
 
@@ -48,18 +49,20 @@ export async function addMovementAction(input: AddMovementInput) {
   return { ok: true as const };
 }
 
-/** UC-401: propose an edit (amount / concept / cost). Goes pending. */
+/**
+ * Proposes new values for a movement; another partner must approve them.
+ *
+ * @param movementId - The movement.
+ * @param input - The new amount, concept and cost, in soles.
+ * @param before - The movement as the partner saw it.
+ * @returns Ok, or the kind of error.
+ */
 export async function proposeEditAction(
   movementId: string,
   input: { amountSoles: string; concept: string; costSoles?: string },
   before: MovementSnapshot,
 ) {
-  const user = await requireUser();
-  const group = await useCases.getMyGroup.execute({ userId: user.id });
-
-  if (!group) {
-    return { ok: false as const, error: "NoGroup" };
-  }
+  const { user, group } = await requireMembership();
 
   const amount = solesToCents(input.amountSoles);
 
@@ -99,17 +102,14 @@ export async function proposeEditAction(
 }
 
 /**
- * UC-402: propose a void — never a delete. Goes pending.
- * On a `repay` this is "deshacer cobro": approving it returns the cuota to
- * pending, so the loan pages must be revalidated too.
+ * Proposes voiding a movement; on a repay this undoes the collection once
+ * another partner approves it.
+ *
+ * @param movementId - The movement.
+ * @returns Ok, or the kind of error.
  */
 export async function proposeVoidAction(movementId: string) {
-  const user = await requireUser();
-  const group = await useCases.getMyGroup.execute({ userId: user.id });
-
-  if (!group) {
-    return { ok: false as const, error: "NoGroup" };
-  }
+  const { user, group } = await requireMembership();
 
   const result = await useCases.proposeChange.execute({
     groupId: group.id,
@@ -127,17 +127,18 @@ export async function proposeVoidAction(movementId: string) {
   return { ok: true as const };
 }
 
-/** UC-403: the other partner approves or rejects. */
+/**
+ * Approves or rejects a change another partner proposed.
+ *
+ * @param pendingId - The change.
+ * @param decision - Approve or reject.
+ * @returns Whether it was applied, or the kind of error.
+ */
 export async function decideChangeAction(
   pendingId: string,
   decision: "approve" | "reject",
 ) {
-  const user = await requireUser();
-  const group = await useCases.getMyGroup.execute({ userId: user.id });
-
-  if (!group) {
-    return { ok: false as const, error: "NoGroup" };
-  }
+  const { user, group } = await requireMembership();
 
   const result = await useCases.decideChange.execute({
     groupId: group.id,
@@ -155,14 +156,14 @@ export async function decideChangeAction(
   return { ok: true as const, applied: result.value.applied };
 }
 
-/** UC-404: immutable history of one movement, for the detail dialog. */
+/**
+ * Reads every change proposed on a movement, for its detail dialog.
+ *
+ * @param movementId - The movement.
+ * @returns The history, newest first.
+ */
 export async function getMovementHistoryAction(movementId: string) {
-  const user = await requireUser();
-  const group = await useCases.getMyGroup.execute({ userId: user.id });
-
-  if (!group) {
-    return { ok: false as const, error: "NoGroup" };
-  }
+  const { group } = await requireMembership();
 
   const history = await useCases.getMovementHistory.execute({
     groupId: group.id,

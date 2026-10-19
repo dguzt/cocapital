@@ -1,7 +1,7 @@
 import { useCases } from "@/backend/application/container";
-import { requireUser } from "@/backend/modules/accounts/adapters/in/next/session";
 import { toUserView } from "@/backend/modules/accounts/adapters/in/next/user-view";
 import { toGroupView } from "@/backend/modules/groups/adapters/in/next/group-view";
+import { requireMembership } from "@/backend/modules/groups/adapters/in/next/membership";
 import { ActivityFeed } from "@/components/movements/activity-feed";
 import { ActivityTable } from "@/components/movements/activity-table";
 import { PendingApprovals } from "@/components/movements/pending-approvals";
@@ -9,9 +9,7 @@ import { AppShell } from "@/components/shell/app-shell";
 import { isOverdue, todayInLima } from "@/lib/dates";
 
 export default async function ActivityPage() {
-  const user = await requireUser();
-  const group = await useCases.getMyGroup.execute({ userId: user.id });
-  if (!group) return null;
+  const { user, group } = await requireMembership();
 
   const today = todayInLima();
   const [movements, installments, pendingChanges] = await Promise.all([

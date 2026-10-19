@@ -1,4 +1,3 @@
-/** M4 · a loan. Its lend movement is NOT NULL: a loan cannot exist unbooked. */
 import {
   date,
   index,
@@ -10,8 +9,8 @@ import {
 } from "drizzle-orm/pg-core";
 import { Users } from "@/backend/modules/accounts/adapters/out/drizzle/users.table";
 import { Groups } from "@/backend/modules/groups/adapters/out/drizzle/groups.table";
-import { Borrowers } from "./borrowers";
-import { Movements } from "./movements";
+import { Movements } from "@/backend/modules/movements/adapters/out/drizzle/movements.table";
+import { Borrowers } from "./borrowers.table";
 
 export const frequency = pgEnum("frequency", [
   "daily",
@@ -20,10 +19,9 @@ export const frequency = pgEnum("frequency", [
   "monthly",
 ]);
 
-/** A loan is `voided` only by cancellation (corrección de un error de captura):
- *  its lend + every repay are voided and its cuotas leave `lent`. */
 export const loanStatus = pgEnum("loan_status", ["active", "voided"]);
 
+/** A loan to a borrower, paid back in cuotas. */
 export const Loans = pgTable(
   "loans",
   {
@@ -45,7 +43,7 @@ export const Loans = pgTable(
     frequency: frequency("frequency").notNull(),
     status: loanStatus("status").notNull().default("active"),
     startDate: date("start_date", { mode: "string" }).notNull(),
-    /** The auto-written lend movement (traceability M4 -> M3). */
+    /** The lend movement that took the capital out of cash. */
     lendMovementId: uuid("lend_movement_id")
       .notNull()
       .references(() => Movements.id),

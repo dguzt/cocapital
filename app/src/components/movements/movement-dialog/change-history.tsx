@@ -1,6 +1,6 @@
 "use client";
 /** UC-404 · Every proposal ever made on this movement, decided or not. */
-import type { ChangeHistoryItem } from "@/backend/modules/movements/usecases/get-movement-history";
+import type { ChangeHistoryItem } from "@/backend/modules/movements/domain/change-history-item";
 import { formatCents } from "@/lib/money";
 
 const STATUS_CLS = {

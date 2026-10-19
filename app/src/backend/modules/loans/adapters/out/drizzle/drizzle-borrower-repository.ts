@@ -1,23 +1,17 @@
-/** Borrowers table. Drizzle lives here; rules do not. */
 import { and, asc, eq } from "drizzle-orm";
 
 import type { Database } from "@/backend/infra/db/client";
-import { Borrowers } from "@/backend/infra/db/schema";
-import type { Write } from "@/backend/infra/db/write";
+import type { Borrower } from "@/backend/modules/loans/domain/borrower";
+import type { BorrowerEntry } from "@/backend/modules/loans/domain/borrower-entry";
+import type { BorrowerRepository } from "@/backend/modules/loans/ports/borrower-repository";
+import { Borrowers } from "./borrowers.table";
 
-export type NewBorrowerRow = {
-  id: string;
-  groupId: string;
-  name: string;
-  phone: string | null;
-};
-
-export class BorrowerRepository {
+export class DrizzleBorrowerRepository implements BorrowerRepository {
   static inject = ["db"] as const;
 
   constructor(private readonly db: Database) {}
 
-  async listByGroup(groupId: string) {
+  async listByGroup(groupId: string): Promise<Borrower[]> {
     return this.db
       .select({ id: Borrowers.id, name: Borrowers.name })
       .from(Borrowers)
@@ -35,7 +29,12 @@ export class BorrowerRepository {
     return row !== undefined;
   }
 
-  insertStmt(row: NewBorrowerRow): Write {
-    return this.db.insert(Borrowers).values(row);
+  async register(entry: BorrowerEntry): Promise<string> {
+    const [inserted] = await this.db
+      .insert(Borrowers)
+      .values(entry)
+      .returning({ id: Borrowers.id });
+
+    return inserted.id;
   }
 }

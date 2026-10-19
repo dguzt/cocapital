@@ -13,7 +13,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { addMovementAction } from "@/backend/modules/movements/actions";
+import { addMovementAction } from "@/backend/modules/movements/adapters/in/next/movement-actions";
 import type { MovementType } from "@/backend/modules/movements/domain/movement";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,7 +41,6 @@ const ERROR_TEXT: Record<string, string> = {
   InvalidAmount: "Ingresa un monto válido en soles.",
   InvalidCost: "El costo debe ser un número válido.",
   InvalidType: "Elige un tipo de movimiento.",
-  NoGroup: "Aún no perteneces a un grupo.",
 };
 
 /** Manual types record here; lend/repay open their own flows (D3 #7). */

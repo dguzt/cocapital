@@ -1,8 +1,8 @@
-/** M4 · people the group lends to. Reusable: select-or-create (UC-301). */
 import { index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 import { Groups } from "@/backend/modules/groups/adapters/out/drizzle/groups.table";
 
+/** The people a group lends to. */
 export const Borrowers = pgTable(
   "borrowers",
   {

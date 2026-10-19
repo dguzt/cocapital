@@ -1,21 +1,21 @@
 "use server";
-/** M4's edge with Next: session → use case → revalidate. No rules here. */
+
 import { revalidatePath } from "next/cache";
+
 import { useCases } from "@/backend/application/container";
-import { requireUser } from "@/backend/modules/accounts/adapters/in/next/session";
+import { requireMembership } from "@/backend/modules/groups/adapters/in/next/membership";
+import type { NewLoan } from "@/backend/modules/loans/domain/loan";
 import type { MovementType } from "@/backend/modules/movements/domain/movement";
 import { todayInLima } from "@/lib/dates";
-import type { NewLoan } from "./domain/loan";
 
-export type CreateLoanInput = NewLoan;
-
-export async function createLoanAction(input: CreateLoanInput) {
-  const user = await requireUser();
-  const group = await useCases.getMyGroup.execute({ userId: user.id });
-
-  if (!group) {
-    return { ok: false as const, error: "NoGroup" };
-  }
+/**
+ * Lends money from the loan wizard.
+ *
+ * @param input - The loan as built in the wizard.
+ * @returns The new loan's id, or the kind of error.
+ */
+export async function createLoanAction(input: NewLoan) {
+  const { user, group } = await requireMembership();
 
   const result = await useCases.createLoan.execute({
     ...input,
@@ -33,16 +33,18 @@ export async function createLoanAction(input: CreateLoanInput) {
   return { ok: true as const, loanId: result.value.loanId };
 }
 
+/**
+ * Collects one cuota today.
+ *
+ * @param loanId - The loan.
+ * @param installmentId - The cuota.
+ * @returns The amount collected, or the kind of error.
+ */
 export async function collectInstallmentAction(
   loanId: string,
   installmentId: string,
 ) {
-  const user = await requireUser();
-  const group = await useCases.getMyGroup.execute({ userId: user.id });
-
-  if (!group) {
-    return { ok: false as const, error: "NoGroup" };
-  }
+  const { user, group } = await requireMembership();
 
   const result = await useCases.collectInstallment.execute({
     groupId: group.id,
@@ -64,16 +66,13 @@ export async function collectInstallmentAction(
 }
 
 /**
- * UC-306: propose to cancel an entire loan. Goes pending — the partner approves
- * it in the shared inbox, and only then is the lend + every collection voided.
+ * Proposes cancelling a whole loan; another partner must approve it.
+ *
+ * @param loanId - The loan.
+ * @returns Ok, or the kind of error.
  */
 export async function proposeVoidLoanAction(loanId: string) {
-  const user = await requireUser();
-  const group = await useCases.getMyGroup.execute({ userId: user.id });
-
-  if (!group) {
-    return { ok: false as const, error: "NoGroup" };
-  }
+  const { user, group } = await requireMembership();
 
   const result = await useCases.proposeVoidLoan.execute({
     groupId: group.id,
@@ -94,19 +93,17 @@ export async function proposeVoidLoanAction(loanId: string) {
 }
 
 /**
- * Where a ledger row sends the user: its loan (and, for a `repay`, the cuota to
- * highlight). A read — no revalidate. The dialog calls it lazily on open.
+ * Finds the loan, and for a repay the cuota, that a ledger row leads to.
+ *
+ * @param movementId - The movement.
+ * @param movementType - Its type.
+ * @returns The target, or null when the movement is not a loan's.
  */
 export async function getLoanTargetForMovementAction(
   movementId: string,
   movementType: MovementType,
 ) {
-  const user = await requireUser();
-  const group = await useCases.getMyGroup.execute({ userId: user.id });
-
-  if (!group) {
-    return { ok: false as const, error: "NoGroup" };
-  }
+  const { group } = await requireMembership();
 
   const target = await useCases.getLoanTargetForMovement.execute({
     groupId: group.id,

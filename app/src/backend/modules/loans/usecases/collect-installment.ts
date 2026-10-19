@@ -1,29 +1,8 @@
-/**
- * UC-304 · Collect one installment.
- *
- * The cuota flips to collected and a `repay` movement lands in the ledger, in
- * one atomic write. Two things are load-bearing and neither is visible in the
- * code below:
- *
- * 1. The movement is written BEFORE the flip. Batch statements run in order
- *    inside the one transaction, and the installment's FK points at the
- *    movement — so it has to exist first.
- *
- * 2. `markCollectedStmt` carries a `WHERE status = 'pending'`. That guard is
- *    what makes a double collect impossible: if both partners tap "Cobrar" at
- *    once, the loser updates zero rows. Its batch still inserted a movement,
- *    though, so we delete the orphan it left behind. That is the only real
- *    DELETE in the system, and it exists solely for this race.
- *
- * The repay movement stores the cuota's principal in `cost`, which is how the
- * feed can show what part of the payment was interest.
- */
-
-import type { UnitOfWork } from "@/backend/infra/db/write";
 import type { LoanError } from "@/backend/modules/loans/domain/errors";
 import type { LoanDetail } from "@/backend/modules/loans/domain/loan";
-import type { InstallmentRepository } from "@/backend/modules/loans/repositories/installment-repository";
-import type { MovementRepository } from "@/backend/modules/movements/repositories/movement-repository";
+import type { InstallmentRepository } from "@/backend/modules/loans/ports/installment-repository";
+import type { AddMovement } from "@/backend/modules/movements/usecases/add-movement";
+import type { UnitOfWork } from "@/backend/shared/ports/unit-of-work";
 import type { ISODate } from "@/lib/dates";
 import type { Cents } from "@/lib/money";
 import { err, ok, type Result } from "@/lib/result";
@@ -42,21 +21,34 @@ type Collectable = {
   borrowerName: string;
 };
 
+/**
+ * Collects one cuota: its full amount enters cash as a repay movement that
+ * keeps the principal in `cost`, so the feed can tell interest apart.
+ */
 export class CollectInstallment {
   static inject = [
     "getLoanDetail",
     "installments",
-    "movements",
+    "addMovement",
     "uow",
   ] as const;
 
   constructor(
     private readonly getLoanDetail: GetLoanDetail,
     private readonly installments: InstallmentRepository,
-    private readonly movements: MovementRepository,
+    private readonly addMovement: AddMovement,
     private readonly uow: UnitOfWork,
   ) {}
 
+  /**
+   * Books the repay movement and marks the cuota collected, all or nothing.
+   * When two partners collect the same cuota at once, only one succeeds.
+   *
+   * @param input - The group, the collecting partner, the loan, the cuota and
+   *   today's date.
+   * @returns The amount collected, or `LoanNotFound` or
+   *   `InstallmentNotCollectable`.
+   */
   async execute(
     input: CollectInstallmentInput,
   ): Promise<Result<{ amount: Cents }, LoanError>> {
@@ -66,16 +58,37 @@ export class CollectInstallment {
       return target;
     }
 
-    const written = await this.writeCollection(input, target.value);
+    const { installment, borrowerName } = target.value;
 
-    if (!written.ok) {
-      return written;
-    }
+    return this.uow.run(async () => {
+      const repay = await this.addMovement.execute({
+        groupId: input.groupId,
+        userId: input.userId,
+        type: "repay",
+        amount: installment.amount,
+        cost: installment.principal,
+        concept: `${borrowerName} · cuota ${installment.number}`,
+        date: input.today,
+      });
 
-    return ok({ amount: target.value.installment.amount });
+      const collected = await this.installments.markCollected(
+        installment.id,
+        repay.id,
+        new Date(),
+      );
+
+      if (!collected) {
+        return err({
+          kind: "InstallmentNotCollectable",
+          message: "installment was already collected",
+          installmentId: installment.id,
+        });
+      }
+
+      return ok({ amount: installment.amount });
+    });
   }
 
-  /** The loan must be yours, and the cuota must exist and still be pending. */
   private async findCollectable(
     input: CollectInstallmentInput,
   ): Promise<Result<Collectable, LoanError>> {
@@ -97,7 +110,7 @@ export class CollectInstallment {
     }
 
     const installment = loan.value.installments.find(
-      (i) => i.id === input.installmentId,
+      (candidate) => candidate.id === input.installmentId,
     );
 
     if (!installment || installment.status !== "pending") {
@@ -109,44 +122,5 @@ export class CollectInstallment {
     }
 
     return ok({ installment, borrowerName: loan.value.borrowerName });
-  }
-
-  /** The repay movement and the flip, together — or neither. */
-  private async writeCollection(
-    input: CollectInstallmentInput,
-    target: Collectable,
-  ): Promise<Result<true, LoanError>> {
-    const { installment, borrowerName } = target;
-    const repayMovementId = crypto.randomUUID();
-
-    const [, flipped] = await this.uow.run([
-      this.movements.insertStmt({
-        id: repayMovementId,
-        groupId: input.groupId,
-        userId: input.userId,
-        type: "repay",
-        amount: installment.amount,
-        cost: installment.principal,
-        concept: `${borrowerName} · cuota ${installment.number}`,
-        date: input.today,
-      }),
-      this.installments.markCollectedStmt(
-        installment.id,
-        repayMovementId,
-        new Date(),
-      ),
-    ]);
-
-    if ((flipped as { id: string }[]).length === 0) {
-      await this.movements.hardDelete(repayMovementId);
-
-      return err({
-        kind: "InstallmentNotCollectable",
-        message: "installment was already collected",
-        installmentId: installment.id,
-      });
-    }
-
-    return ok(true);
   }
 }

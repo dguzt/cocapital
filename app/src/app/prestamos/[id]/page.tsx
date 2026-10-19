@@ -2,9 +2,9 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { useCases } from "@/backend/application/container";
-import { requireUser } from "@/backend/modules/accounts/adapters/in/next/session";
 import { toUserView } from "@/backend/modules/accounts/adapters/in/next/user-view";
 import { toGroupView } from "@/backend/modules/groups/adapters/in/next/group-view";
+import { requireMembership } from "@/backend/modules/groups/adapters/in/next/membership";
 import { CollectButton } from "@/components/loans/collect-button";
 import { HighlightCuota } from "@/components/loans/highlight-cuota";
 import { UndoCollectionButton } from "@/components/loans/undo-collection-button";
@@ -27,9 +27,7 @@ export default async function LoanDetailPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ cuota?: string }>;
 }) {
-  const user = await requireUser();
-  const group = await useCases.getMyGroup.execute({ userId: user.id });
-  if (!group) return null;
+  const { user, group } = await requireMembership();
   const { id } = await params;
   const { cuota: highlightId } = await searchParams;
   const loan = await useCases.getLoanDetail.execute({

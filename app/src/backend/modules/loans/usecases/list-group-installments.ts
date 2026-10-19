@@ -1,20 +1,23 @@
-/**
- * Every installment term of the group. Feeds M5's realized-only capital:
- * pending principal is what is still "Prestado", and pending interest is only
- * "ganancia esperada" — it enters the total when the cuota is collected.
- */
-import type { InstallmentRepository } from "@/backend/modules/loans/repositories/installment-repository";
+import type { InstallmentTerm } from "@/backend/modules/loans/domain/installment-term";
+import type { InstallmentRepository } from "@/backend/modules/loans/ports/installment-repository";
 
 export type ListGroupInstallmentsInput = {
   groupId: string;
 };
 
+/** Reads what every cuota of the group's live loans owes or paid. */
 export class ListGroupInstallments {
   static inject = ["installments"] as const;
 
   constructor(private readonly installments: InstallmentRepository) {}
 
-  async execute(input: ListGroupInstallmentsInput) {
-    return this.installments.listByGroup(input.groupId);
+  /**
+   * Lists the cuotas of loans that are not voided.
+   *
+   * @param input - The group.
+   * @returns Principal, interest, status and due date of each cuota.
+   */
+  async execute(input: ListGroupInstallmentsInput): Promise<InstallmentTerm[]> {
+    return this.installments.listTermsByGroup(input.groupId);
   }
 }

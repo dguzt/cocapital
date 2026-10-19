@@ -4,7 +4,7 @@ import { Ban, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { proposeVoidLoanAction } from "@/backend/modules/loans/actions";
+import { proposeVoidLoanAction } from "@/backend/modules/loans/adapters/in/next/loan-actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

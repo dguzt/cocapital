@@ -8,7 +8,7 @@ import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { createLoanAction } from "@/backend/modules/loans/actions";
+import { createLoanAction } from "@/backend/modules/loans/adapters/in/next/loan-actions";
 import {
   generateSchedule,
   type ScheduledInstallment,

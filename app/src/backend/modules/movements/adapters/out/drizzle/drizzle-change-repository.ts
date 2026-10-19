@@ -1,56 +1,22 @@
-/** movement_changes table — the append-only trail of proposals. */
 import { and, desc, eq, inArray } from "drizzle-orm";
 
 import type { Database } from "@/backend/infra/db/client";
-import { MovementChanges, Movements, Users } from "@/backend/infra/db/schema";
-import type { Write } from "@/backend/infra/db/write";
-import type {
-  MovementSnapshot,
-  MovementType,
-} from "@/backend/modules/movements/domain/movement";
-import type {
-  ChangeKind,
-  PendingStatus,
-} from "@/backend/modules/movements/domain/pending";
+import { Users } from "@/backend/modules/accounts/adapters/out/drizzle/users.table";
+import type { ChangeDecision } from "@/backend/modules/movements/domain/change-decision";
+import type { ChangeHistoryItem } from "@/backend/modules/movements/domain/change-history-item";
+import type { ChangeUnderDecision } from "@/backend/modules/movements/domain/change-under-decision";
+import type { MovementSnapshot } from "@/backend/modules/movements/domain/movement";
+import type { ProposedChange } from "@/backend/modules/movements/domain/pending";
+import type { PendingChangeItem } from "@/backend/modules/movements/domain/pending-change-item";
+import type { ChangeRepository } from "@/backend/modules/movements/ports/change-repository";
+import { MovementChanges } from "./movement-changes.table";
+import { Movements } from "./movements.table";
 
-export type PendingChangeItem = {
-  id: string;
-  movementId: string;
-  kind: ChangeKind;
-  proposedBy: string;
-  proposerName: string;
-  before: MovementSnapshot;
-  after: MovementSnapshot | null;
-  createdAt: Date;
-};
-
-export type ChangeHistoryItem = PendingChangeItem & {
-  status: PendingStatus;
-  deciderName: string | null;
-  decidedAt: Date | null;
-};
-
-/** A change plus the type and group of the movement it targets. */
-export type ChangeWithMovement = {
-  id: string;
-  movementId: string;
-  movementGroup: string;
-  movementType: MovementType;
-  status: PendingStatus;
-  kind: ChangeKind;
-  proposedBy: string;
-  after: MovementSnapshot | null;
-};
-
-export class ChangeRepository {
+export class DrizzleChangeRepository implements ChangeRepository {
   static inject = ["db"] as const;
 
   constructor(private readonly db: Database) {}
 
-  /**
-   * LIMIT 1 because we only need existence. The partial unique index (one
-   * pending change per movement) lets Postgres answer this from the index.
-   */
   async hasPendingFor(movementId: string): Promise<boolean> {
     const [row] = await this.db
       .select({ id: MovementChanges.id })
@@ -66,24 +32,18 @@ export class ChangeRepository {
     return row !== undefined;
   }
 
-  async insert(row: {
-    movementId: string;
-    kind: ChangeKind;
-    proposedBy: string;
-    before: MovementSnapshot;
-    after: MovementSnapshot | null;
-  }): Promise<{ id: string }> {
+  async propose(change: ProposedChange): Promise<{ id: string }> {
     const [inserted] = await this.db
       .insert(MovementChanges)
-      .values(row)
+      .values(change)
       .returning({ id: MovementChanges.id });
 
     return inserted;
   }
 
-  async findWithMovement(
+  async findUnderDecision(
     pendingId: string,
-  ): Promise<ChangeWithMovement | null> {
+  ): Promise<ChangeUnderDecision | null> {
     const [row] = await this.db
       .select({
         change: MovementChanges,
@@ -110,13 +70,10 @@ export class ChangeRepository {
     };
   }
 
-  decideStmt(
-    pendingId: string,
-    patch: { status: PendingStatus; decidedBy: string; decidedAt: Date },
-  ): Write {
-    return this.db
+  async decide(pendingId: string, decision: ChangeDecision): Promise<void> {
+    await this.db
       .update(MovementChanges)
-      .set(patch)
+      .set(decision)
       .where(eq(MovementChanges.id, pendingId));
   }
 
@@ -143,10 +100,10 @@ export class ChangeRepository {
       )
       .orderBy(desc(MovementChanges.createdAt));
 
-    return rows.map((r) => ({
-      ...r,
-      before: r.before as MovementSnapshot,
-      after: r.after as MovementSnapshot | null,
+    return rows.map((row) => ({
+      ...row,
+      before: row.before as MovementSnapshot,
+      after: row.after as MovementSnapshot | null,
     }));
   }
 
@@ -183,18 +140,18 @@ export class ChangeRepository {
 
     const names = await this.namesOf(rows);
 
-    return rows.map((r) => ({
-      id: r.id,
-      movementId: r.movementId,
-      kind: r.kind,
-      proposedBy: r.proposedBy,
-      proposerName: names.get(r.proposedBy) ?? "?",
-      before: r.before as MovementSnapshot,
-      after: r.after as MovementSnapshot | null,
-      createdAt: r.createdAt,
-      status: r.status,
-      deciderName: r.decidedBy ? (names.get(r.decidedBy) ?? "?") : null,
-      decidedAt: r.decidedAt,
+    return rows.map((row) => ({
+      id: row.id,
+      movementId: row.movementId,
+      kind: row.kind,
+      proposedBy: row.proposedBy,
+      proposerName: names.get(row.proposedBy) ?? "?",
+      before: row.before as MovementSnapshot,
+      after: row.after as MovementSnapshot | null,
+      createdAt: row.createdAt,
+      status: row.status,
+      deciderName: row.decidedBy ? (names.get(row.decidedBy) ?? "?") : null,
+      decidedAt: row.decidedAt,
     }));
   }
 
@@ -203,7 +160,7 @@ export class ChangeRepository {
   ): Promise<Map<string, string>> {
     const ids = [
       ...new Set(
-        rows.flatMap((r) => [r.proposedBy, r.decidedBy]).filter(Boolean),
+        rows.flatMap((row) => [row.proposedBy, row.decidedBy]).filter(Boolean),
       ),
     ] as string[];
 
@@ -212,6 +169,6 @@ export class ChangeRepository {
       .from(Users)
       .where(inArray(Users.id, ids));
 
-    return new Map(names.map((n) => [n.id, n.name]));
+    return new Map(names.map((name) => [name.id, name.name]));
   }
 }
