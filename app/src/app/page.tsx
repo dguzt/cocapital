@@ -1,7 +1,8 @@
 import { Activity } from "lucide-react";
 import Link from "next/link";
 import { useCases } from "@/backend/application/container";
-import { getCurrentUser } from "@/backend/modules/accounts/current-user";
+import { getCurrentUser } from "@/backend/modules/accounts/adapters/in/next/session";
+import { toUserView } from "@/backend/modules/accounts/adapters/in/next/user-view";
 import { findGroupOf } from "@/backend/modules/groups/data";
 import { PanelContent } from "@/components/dashboard/dashboard";
 import { InviteBanner } from "@/components/dashboard/invite-banner";
@@ -44,7 +45,7 @@ export default async function HomePage({
 
   return (
     <AppShell
-      user={user}
+      user={toUserView(user)}
       group={group}
       active="panel"
       overdueCount={overdueCount}
@@ -65,7 +66,7 @@ export default async function HomePage({
         {group.members.length < 2 && <InviteBanner code={group.inviteCode} />}
         <PendingApprovals items={approvalsForMe} />
         <PanelContent
-          user={user}
+          user={toUserView(user)}
           movements={movements}
           installments={installments}
           pendingIds={pendingIds}

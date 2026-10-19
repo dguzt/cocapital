@@ -12,9 +12,8 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
-
+import { Users } from "../../../modules/accounts/adapters/out/drizzle/users.table";
 import { Groups } from "./groups";
-import { Users } from "./users";
 
 /** Fixed list (vision decision #3). lend/repay are auto-written by M4. */
 export const movementType = pgEnum("movement_type", [

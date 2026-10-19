@@ -1,4 +1,3 @@
-/** M1 · accounts. Mirror of the Clerk user; written on first authed request. */
 import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 export const Users = pgTable("users", {

@@ -2,7 +2,8 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { useCases } from "@/backend/application/container";
-import { requireUser } from "@/backend/modules/accounts/current-user";
+import { requireUser } from "@/backend/modules/accounts/adapters/in/next/session";
+import { toUserView } from "@/backend/modules/accounts/adapters/in/next/user-view";
 import { findGroupOf } from "@/backend/modules/groups/data";
 import { CollectButton } from "@/components/loans/collect-button";
 import { HighlightCuota } from "@/components/loans/highlight-cuota";
@@ -75,7 +76,7 @@ export default async function LoanDetailPage({
 
   return (
     <AppShell
-      user={user}
+      user={toUserView(user)}
       group={group}
       active="loans"
       overdueCount={overdueCount}

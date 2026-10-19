@@ -4,7 +4,10 @@ import { defineConfig } from "drizzle-kit";
 config({ path: ".env.local" });
 
 export default defineConfig({
-  schema: "./src/backend/infra/db/schema/*.ts",
+  schema: [
+    "./src/backend/infra/db/schema/*.ts",
+    "./src/backend/modules/*/adapters/out/drizzle/*.table.ts",
+  ],
   out: "./src/backend/infra/db/migrations",
   dialect: "postgresql",
   // Migrations use the direct/unpooled connection (falls back to DATABASE_URL).

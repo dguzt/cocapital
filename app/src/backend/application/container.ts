@@ -14,6 +14,9 @@ import { createInjector } from "typed-inject";
 
 import { db } from "../infra/db/client";
 import { UnitOfWork } from "../infra/db/write";
+import { ClerkIdentityProvider } from "../modules/accounts/adapters/out/clerk/clerk-identity-provider";
+import { DrizzleUserRepository } from "../modules/accounts/adapters/out/drizzle/drizzle-user-repository";
+import { EnsureUser } from "../modules/accounts/usecases/ensure-user";
 import { UndoPurchase } from "../modules/inventory/usecases/undo-purchase";
 import { UndoSale } from "../modules/inventory/usecases/undo-sale";
 import { BorrowerRepository } from "../modules/loans/repositories/borrower-repository";
@@ -49,6 +52,9 @@ const injector = createInjector()
   .provideValue("db", db)
   .provideClass("uow", UnitOfWork)
 
+  .provideClass("users", DrizzleUserRepository)
+  .provideClass("identity", ClerkIdentityProvider)
+
   .provideClass("movements", MovementRepository)
   .provideClass("changes", ChangeRepository)
   .provideClass("loans", LoanRepository)
@@ -75,6 +81,8 @@ const injector = createInjector()
   .provideClass("getLoanDetail", GetLoanDetail);
 
 export const useCases = {
+  ensureUser: injector.injectClass(EnsureUser),
+
   addMovement: injector.injectClass(AddMovement),
   proposeChange: injector.injectClass(ProposeChange),
   decideChange: injector.injectClass(DecideChange),

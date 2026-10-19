@@ -7,9 +7,8 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
-
+import { Users } from "../../../modules/accounts/adapters/out/drizzle/users.table";
 import { Groups } from "./groups";
-import { Users } from "./users";
 
 export const Memberships = pgTable(
   "memberships",

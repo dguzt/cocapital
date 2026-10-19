@@ -2,7 +2,8 @@ import { Plus } from "lucide-react";
 import Link from "next/link";
 import * as R from "remeda";
 import { useCases } from "@/backend/application/container";
-import { requireUser } from "@/backend/modules/accounts/current-user";
+import { requireUser } from "@/backend/modules/accounts/adapters/in/next/session";
+import { toUserView } from "@/backend/modules/accounts/adapters/in/next/user-view";
 import { findGroupOf } from "@/backend/modules/groups/data";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,7 @@ export default async function LoansPage() {
 
   return (
     <AppShell
-      user={user}
+      user={toUserView(user)}
       group={group}
       active="loans"
       overdueCount={overdueCount}

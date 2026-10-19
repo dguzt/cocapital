@@ -5,7 +5,7 @@
  */
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
-import type { SessionUser } from "@/backend/modules/accounts/current-user";
+import type { UserView } from "@/backend/modules/accounts/adapters/in/next/user-view";
 import type { CapitalInstallment } from "@/backend/modules/capital/domain/derive";
 import { deriveCapital } from "@/backend/modules/capital/domain/derive";
 import type { LedgerMovement } from "@/backend/modules/movements/usecases/list-movements";
@@ -22,7 +22,7 @@ export function PanelContent({
   pendingIds,
   today,
 }: {
-  user: SessionUser;
+  user: UserView;
   movements: LedgerMovement[];
   installments: CapitalInstallment[];
   pendingIds: string[];

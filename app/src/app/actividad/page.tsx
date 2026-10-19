@@ -1,5 +1,6 @@
 import { useCases } from "@/backend/application/container";
-import { requireUser } from "@/backend/modules/accounts/current-user";
+import { requireUser } from "@/backend/modules/accounts/adapters/in/next/session";
+import { toUserView } from "@/backend/modules/accounts/adapters/in/next/user-view";
 import { findGroupOf } from "@/backend/modules/groups/data";
 import { ActivityFeed } from "@/components/movements/activity-feed";
 import { ActivityTable } from "@/components/movements/activity-table";
@@ -26,7 +27,7 @@ export default async function ActivityPage() {
 
   return (
     <AppShell
-      user={user}
+      user={toUserView(user)}
       group={group}
       active="activity"
       overdueCount={overdueCount}

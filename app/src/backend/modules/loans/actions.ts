@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { todayInLima } from "@/lib/dates";
 import { useCases } from "../../application/container";
-import { requireUser } from "../accounts/current-user";
+import { requireUser } from "../accounts/adapters/in/next/session";
 import { findGroupOf } from "../groups/data";
 import type { MovementType } from "../movements/domain/movement";
 import type { NewLoan } from "./domain/loan";

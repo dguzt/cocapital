@@ -2,7 +2,7 @@
 /** M2 public API — server actions bind the auth seam to the data layer. */
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireUser } from "../accounts/current-user";
+import { requireUser } from "../accounts/adapters/in/next/session";
 import * as data from "./data";
 
 export async function createGroupAction(formData: FormData) {

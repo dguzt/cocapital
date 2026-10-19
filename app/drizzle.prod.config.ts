@@ -6,7 +6,10 @@ import { defineConfig } from "drizzle-kit";
 config({ path: ".env.prd" });
 
 export default defineConfig({
-  schema: "./src/backend/infra/db/schema/*.ts",
+  schema: [
+    "./src/backend/infra/db/schema/*.ts",
+    "./src/backend/modules/*/adapters/out/drizzle/*.table.ts",
+  ],
   out: "./src/backend/infra/db/migrations",
   dialect: "postgresql",
   dbCredentials: { url: process.env.DB_PRD ?? "" },

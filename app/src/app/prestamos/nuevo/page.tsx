@@ -1,5 +1,6 @@
 import { useCases } from "@/backend/application/container";
-import { requireUser } from "@/backend/modules/accounts/current-user";
+import { requireUser } from "@/backend/modules/accounts/adapters/in/next/session";
+import { toUserView } from "@/backend/modules/accounts/adapters/in/next/user-view";
 import { findGroupOf } from "@/backend/modules/groups/data";
 import { LoanWizard } from "@/components/loans/loan-wizard/loan-wizard";
 import { AppShell } from "@/components/shell/app-shell";
@@ -20,7 +21,7 @@ export default async function NewLoanPage() {
 
   return (
     <AppShell
-      user={user}
+      user={toUserView(user)}
       group={group}
       active="loans"
       overdueCount={overdueCount}

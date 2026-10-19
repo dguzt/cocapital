@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { requireUser } from "@/backend/modules/accounts/current-user";
+import { requireUser } from "@/backend/modules/accounts/adapters/in/next/session";
 import { joinGroup } from "@/backend/modules/groups/data";
 import { Button } from "@/components/ui/button";
 

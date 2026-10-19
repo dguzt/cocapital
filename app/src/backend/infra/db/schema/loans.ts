@@ -8,11 +8,10 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
-
+import { Users } from "../../../modules/accounts/adapters/out/drizzle/users.table";
 import { Borrowers } from "./borrowers";
 import { Groups } from "./groups";
 import { Movements } from "./movements";
-import { Users } from "./users";
 
 export const frequency = pgEnum("frequency", [
   "daily",
