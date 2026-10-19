@@ -6,11 +6,7 @@ export type EnsureUserInput = {
   authId: string;
 };
 
-/**
- * Returns the partner behind an authenticated identity, registering them the
- * first time they sign in. Input: the session's authId. Output: the partner,
- * or null if the identity provider no longer knows that authId.
- */
+/** Makes sure every signed-in identity has its partner. */
 export class EnsureUser {
   static inject = ["users", "identity"] as const;
 
@@ -19,6 +15,13 @@ export class EnsureUser {
     private readonly identity: IdentityProvider,
   ) {}
 
+  /**
+   * Finds the partner behind an identity, signing them up the first time.
+   *
+   * @param input - The identity of the current session.
+   * @returns The partner, or null when the auth provider no longer knows
+   *   that identity.
+   */
   async execute(input: EnsureUserInput): Promise<User | null> {
     const existing = await this.users.findByAuthId(input.authId);
 

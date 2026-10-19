@@ -17,6 +17,10 @@ import { UnitOfWork } from "@/backend/infra/db/write";
 import { ClerkIdentityProvider } from "@/backend/modules/accounts/adapters/out/clerk/clerk-identity-provider";
 import { DrizzleUserRepository } from "@/backend/modules/accounts/adapters/out/drizzle/drizzle-user-repository";
 import { EnsureUser } from "@/backend/modules/accounts/usecases/ensure-user";
+import { DrizzleGroupRepository } from "@/backend/modules/groups/adapters/out/drizzle/drizzle-group-repository";
+import { CreateGroup } from "@/backend/modules/groups/usecases/create-group";
+import { GetMyGroup } from "@/backend/modules/groups/usecases/get-my-group";
+import { JoinGroup } from "@/backend/modules/groups/usecases/join-group";
 import { UndoPurchase } from "@/backend/modules/inventory/usecases/undo-purchase";
 import { UndoSale } from "@/backend/modules/inventory/usecases/undo-sale";
 import { BorrowerRepository } from "@/backend/modules/loans/repositories/borrower-repository";
@@ -55,6 +59,8 @@ const injector = createInjector()
   .provideClass("users", DrizzleUserRepository)
   .provideClass("identity", ClerkIdentityProvider)
 
+  .provideClass("groups", DrizzleGroupRepository)
+
   .provideClass("movements", MovementRepository)
   .provideClass("changes", ChangeRepository)
   .provideClass("loans", LoanRepository)
@@ -82,6 +88,10 @@ const injector = createInjector()
 
 export const useCases = {
   ensureUser: injector.injectClass(EnsureUser),
+
+  getMyGroup: injector.injectClass(GetMyGroup),
+  createGroup: injector.injectClass(CreateGroup),
+  joinGroup: injector.injectClass(JoinGroup),
 
   addMovement: injector.injectClass(AddMovement),
   proposeChange: injector.injectClass(ProposeChange),

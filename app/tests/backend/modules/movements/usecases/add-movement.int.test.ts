@@ -1,11 +1,14 @@
 /** E2 integration: record movements → ledger → capital derivation. */
 
-import { addMovement, listMovements } from "@tests/support/use-cases";
+import {
+  addMovement,
+  createGroup,
+  listMovements,
+} from "@tests/support/use-cases";
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/backend/infra/db/client";
 import { Users } from "@/backend/infra/db/schema";
 import { deriveCapital } from "@/backend/modules/capital/domain/derive";
-import { createGroup } from "@/backend/modules/groups/data";
 import { validateNewMovement } from "@/backend/modules/movements/domain/validate";
 import { truncateAll } from "@/test/truncate";
 
@@ -14,7 +17,7 @@ async function seed() {
     .insert(Users)
     .values({ clerkId: "clerk_diego", name: "Diego", email: "d@test.pe" })
     .returning();
-  const created = await createGroup(diego.id, "Inversiones DR");
+  const created = await createGroup(diego, "Inversiones DR");
   if (!created.ok) throw new Error("seed failed");
   return { diego, group: created.value };
 }
@@ -72,7 +75,7 @@ describe("E2: record → ledger → capital", () => {
       .insert(Users)
       .values({ clerkId: "clerk_rosa", name: "Rosa", email: "r@test.pe" })
       .returning();
-    const other = await createGroup(rosa.id, "Otro");
+    const other = await createGroup(rosa, "Otro");
     if (!other.ok) throw new Error("seed failed");
 
     await addMovement(

@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { useCases } from "@/backend/application/container";
 import { requireUser } from "@/backend/modules/accounts/adapters/in/next/session";
-import { findGroupOf } from "@/backend/modules/groups/data";
 import type { MovementType } from "@/backend/modules/movements/domain/movement";
 import { todayInLima } from "@/lib/dates";
 import type { NewLoan } from "./domain/loan";
@@ -12,7 +11,7 @@ export type CreateLoanInput = NewLoan;
 
 export async function createLoanAction(input: CreateLoanInput) {
   const user = await requireUser();
-  const group = await findGroupOf(user.id);
+  const group = await useCases.getMyGroup.execute({ userId: user.id });
 
   if (!group) {
     return { ok: false as const, error: "NoGroup" };
@@ -39,7 +38,7 @@ export async function collectInstallmentAction(
   installmentId: string,
 ) {
   const user = await requireUser();
-  const group = await findGroupOf(user.id);
+  const group = await useCases.getMyGroup.execute({ userId: user.id });
 
   if (!group) {
     return { ok: false as const, error: "NoGroup" };
@@ -70,7 +69,7 @@ export async function collectInstallmentAction(
  */
 export async function proposeVoidLoanAction(loanId: string) {
   const user = await requireUser();
-  const group = await findGroupOf(user.id);
+  const group = await useCases.getMyGroup.execute({ userId: user.id });
 
   if (!group) {
     return { ok: false as const, error: "NoGroup" };
@@ -103,7 +102,7 @@ export async function getLoanTargetForMovementAction(
   movementType: MovementType,
 ) {
   const user = await requireUser();
-  const group = await findGroupOf(user.id);
+  const group = await useCases.getMyGroup.execute({ userId: user.id });
 
   if (!group) {
     return { ok: false as const, error: "NoGroup" };

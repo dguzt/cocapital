@@ -103,3 +103,17 @@ export const listBorrowers = (groupId: string) =>
 
 export const listGroupInstallments = (groupId: string) =>
   useCases.listGroupInstallments.execute({ groupId });
+
+type SeededUser = { id: string; name: string };
+
+export const createGroup = (creator: SeededUser, name: string) =>
+  useCases.createGroup.execute({
+    creator: { userId: creator.id, name: creator.name },
+    name,
+  });
+
+export const joinGroup = (partner: SeededUser, code: string) =>
+  useCases.joinGroup.execute({
+    partner: { userId: partner.id, name: partner.name },
+    code,
+  });

@@ -1,8 +1,9 @@
 import { eq } from "drizzle-orm";
 
 import type { Database } from "@/backend/infra/db/client";
-import { User } from "@/backend/modules/accounts/domain/user";
+import type { User } from "@/backend/modules/accounts/domain/user";
 import type { UserRepository } from "@/backend/modules/accounts/ports/user-repository";
+import { UserMapper } from "./user-mapper";
 import { Users } from "./users.table";
 
 export class DrizzleUserRepository implements UserRepository {
@@ -21,23 +22,13 @@ export class DrizzleUserRepository implements UserRepository {
       return null;
     }
 
-    return User.restore({
-      id: row.id,
-      authId: row.clerkId,
-      name: row.name,
-      email: row.email,
-    });
+    return UserMapper.toDomain(row);
   }
 
   async insertIfAbsent(user: User): Promise<boolean> {
     const inserted = await this.db
       .insert(Users)
-      .values({
-        id: user.id,
-        clerkId: user.authId,
-        name: user.name,
-        email: user.email,
-      })
+      .values(UserMapper.toRow(user))
       .onConflictDoNothing()
       .returning({ id: Users.id });
 

@@ -1,4 +1,3 @@
-/** M2 · who belongs to which group. */
 import {
   index,
   pgTable,
@@ -8,8 +7,9 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { Users } from "@/backend/modules/accounts/adapters/out/drizzle/users.table";
-import { Groups } from "./groups";
+import { Groups } from "./groups.table";
 
+/** Which partner sits in which group, and the seat they hold. */
 export const Memberships = pgTable(
   "memberships",
   {
@@ -19,7 +19,6 @@ export const Memberships = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => Users.id),
-    /** Only 'member' behaves in MVP; creator flagged for future E5 roles. */
     role: text("role", { enum: ["creator", "member"] })
       .notNull()
       .default("member"),

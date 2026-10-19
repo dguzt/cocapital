@@ -3,6 +3,7 @@
 import {
   addMovement,
   collectInstallment,
+  createGroup,
   createLoan,
   getLoanDetail,
   getLoanTargetForMovement,
@@ -15,7 +16,6 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/backend/infra/db/client";
 import { Users } from "@/backend/infra/db/schema";
 import { deriveCapital } from "@/backend/modules/capital/domain/derive";
-import { createGroup } from "@/backend/modules/groups/data";
 import { generateSchedule } from "@/backend/modules/loans/domain/schedule";
 import { validateNewMovement } from "@/backend/modules/movements/domain/validate";
 import { truncateAll } from "@/test/truncate";
@@ -27,7 +27,7 @@ async function seed() {
     .insert(Users)
     .values({ clerkId: "clerk_diego", name: "Diego", email: "d@test.pe" })
     .returning();
-  const created = await createGroup(diego.id, "Inversiones DR");
+  const created = await createGroup(diego, "Inversiones DR");
   if (!created.ok) throw new Error("seed failed");
   const contribute = validateNewMovement({
     type: "contribute",

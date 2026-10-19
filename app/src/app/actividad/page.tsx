@@ -1,7 +1,7 @@
 import { useCases } from "@/backend/application/container";
 import { requireUser } from "@/backend/modules/accounts/adapters/in/next/session";
 import { toUserView } from "@/backend/modules/accounts/adapters/in/next/user-view";
-import { findGroupOf } from "@/backend/modules/groups/data";
+import { toGroupView } from "@/backend/modules/groups/adapters/in/next/group-view";
 import { ActivityFeed } from "@/components/movements/activity-feed";
 import { ActivityTable } from "@/components/movements/activity-table";
 import { PendingApprovals } from "@/components/movements/pending-approvals";
@@ -10,7 +10,7 @@ import { isOverdue, todayInLima } from "@/lib/dates";
 
 export default async function ActivityPage() {
   const user = await requireUser();
-  const group = await findGroupOf(user.id);
+  const group = await useCases.getMyGroup.execute({ userId: user.id });
   if (!group) return null;
 
   const today = todayInLima();
@@ -28,7 +28,7 @@ export default async function ActivityPage() {
   return (
     <AppShell
       user={toUserView(user)}
-      group={group}
+      group={toGroupView(group)}
       active="activity"
       overdueCount={overdueCount}
       title="Actividad"

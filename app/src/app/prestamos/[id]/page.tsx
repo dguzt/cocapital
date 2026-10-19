@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { useCases } from "@/backend/application/container";
 import { requireUser } from "@/backend/modules/accounts/adapters/in/next/session";
 import { toUserView } from "@/backend/modules/accounts/adapters/in/next/user-view";
-import { findGroupOf } from "@/backend/modules/groups/data";
+import { toGroupView } from "@/backend/modules/groups/adapters/in/next/group-view";
 import { CollectButton } from "@/components/loans/collect-button";
 import { HighlightCuota } from "@/components/loans/highlight-cuota";
 import { UndoCollectionButton } from "@/components/loans/undo-collection-button";
@@ -28,7 +28,7 @@ export default async function LoanDetailPage({
   searchParams: Promise<{ cuota?: string }>;
 }) {
   const user = await requireUser();
-  const group = await findGroupOf(user.id);
+  const group = await useCases.getMyGroup.execute({ userId: user.id });
   if (!group) return null;
   const { id } = await params;
   const { cuota: highlightId } = await searchParams;
@@ -77,7 +77,7 @@ export default async function LoanDetailPage({
   return (
     <AppShell
       user={toUserView(user)}
-      group={group}
+      group={toGroupView(group)}
       active="loans"
       overdueCount={overdueCount}
       title={loan.value.borrowerName}

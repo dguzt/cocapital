@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { useCases } from "@/backend/application/container";
 import { requireUser } from "@/backend/modules/accounts/adapters/in/next/session";
-import { joinGroup } from "@/backend/modules/groups/data";
 import { Button } from "@/components/ui/button";
 
 const ERROR_TEXT: Record<string, { title: string; body: string }> = {
@@ -26,9 +26,13 @@ export default async function JoinPage({
 }) {
   const user = await requireUser();
   const { code } = await params;
-  // Direct data-layer call: pages render — they never go through actions
-  // (actions revalidate, and revalidation is illegal during render).
-  const result = await joinGroup(user.id, code.toUpperCase());
+  const result = await useCases.joinGroup.execute({
+    partner: {
+      userId: user.id,
+      name: user.name,
+    },
+    code,
+  });
   if (result.ok) {
     redirect("/");
   }

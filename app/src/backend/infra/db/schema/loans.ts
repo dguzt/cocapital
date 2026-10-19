@@ -9,8 +9,8 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { Users } from "@/backend/modules/accounts/adapters/out/drizzle/users.table";
+import { Groups } from "@/backend/modules/groups/adapters/out/drizzle/groups.table";
 import { Borrowers } from "./borrowers";
-import { Groups } from "./groups";
 import { Movements } from "./movements";
 
 export const frequency = pgEnum("frequency", [

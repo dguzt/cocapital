@@ -1,17 +1,32 @@
 "use server";
-/** M2 public API — server actions bind the auth seam to the data layer. */
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireUser } from "@/backend/modules/accounts/adapters/in/next/session";
-import * as data from "./data";
 
+import { useCases } from "@/backend/application/container";
+import { requireUser } from "@/backend/modules/accounts/adapters/in/next/session";
+
+/**
+ * Founds a group from the onboarding form and opens its panel.
+ *
+ * @param formData - The form, with the group name in `name`.
+ */
 export async function createGroupAction(formData: FormData) {
   const user = await requireUser();
-  const name = String(formData.get("name") ?? "");
-  const result = await data.createGroup(user.id, name);
+
+  const result = await useCases.createGroup.execute({
+    creator: {
+      userId: user.id,
+      name: user.name,
+    },
+    name: String(formData.get("name") ?? ""),
+  });
+
   if (!result.ok) {
     redirect(`/?error=${result.error.kind}`);
   }
+
   revalidatePath("/");
+
   redirect("/");
 }

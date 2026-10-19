@@ -7,7 +7,7 @@ import { SignOutButton, UserButton } from "@clerk/nextjs";
 import { Activity, LayoutGrid, LogOut, Package } from "lucide-react";
 import Link from "next/link";
 import type { UserView } from "@/backend/modules/accounts/adapters/in/next/user-view";
-import type { GroupWithMembers } from "@/backend/modules/groups/data";
+import type { GroupView } from "@/backend/modules/groups/adapters/in/next/group-view";
 import { MobileMenu } from "@/components/shell/mobile-menu";
 import { Button } from "@/components/ui/button";
 
@@ -62,7 +62,7 @@ export function AppShell({
   children,
 }: {
   user: UserView;
-  group: GroupWithMembers;
+  group: GroupView;
   active: NavKey;
   overdueCount: number;
   title: string;

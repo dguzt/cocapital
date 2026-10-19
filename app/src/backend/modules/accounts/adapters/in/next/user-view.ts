@@ -7,7 +7,12 @@ export type UserView = {
   email: string;
 };
 
-/** Turns the User entity into its plain view for the UI. */
+/**
+ * Turns the User entity into its plain view for the UI.
+ *
+ * @param user - The entity.
+ * @returns The same partner as plain data.
+ */
 export function toUserView(user: User): UserView {
   return {
     id: user.id,

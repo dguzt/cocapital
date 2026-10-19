@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useCases } from "@/backend/application/container";
 import { getCurrentUser } from "@/backend/modules/accounts/adapters/in/next/session";
 import { toUserView } from "@/backend/modules/accounts/adapters/in/next/user-view";
-import { findGroupOf } from "@/backend/modules/groups/data";
+import { toGroupView } from "@/backend/modules/groups/adapters/in/next/group-view";
 import { PanelContent } from "@/components/dashboard/dashboard";
 import { InviteBanner } from "@/components/dashboard/invite-banner";
 import { Landing } from "@/components/landing/landing";
@@ -24,7 +24,7 @@ export default async function HomePage({
   if (!user) {
     return <Landing />;
   }
-  const group = await findGroupOf(user.id);
+  const group = await useCases.getMyGroup.execute({ userId: user.id });
   const { error } = await searchParams;
 
   if (!group) {
@@ -46,7 +46,7 @@ export default async function HomePage({
   return (
     <AppShell
       user={toUserView(user)}
-      group={group}
+      group={toGroupView(group)}
       active="panel"
       overdueCount={overdueCount}
       title="Panel"
@@ -63,7 +63,7 @@ export default async function HomePage({
       }
     >
       <div className="flex flex-col gap-5">
-        {group.members.length < 2 && <InviteBanner code={group.inviteCode} />}
+        {group.hasFreeSeat() && <InviteBanner code={group.inviteCode.value} />}
         <PendingApprovals items={approvalsForMe} />
         <PanelContent
           user={toUserView(user)}

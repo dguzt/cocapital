@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { useCases } from "@/backend/application/container";
 import { requireUser } from "@/backend/modules/accounts/adapters/in/next/session";
-import { findGroupOf } from "@/backend/modules/groups/data";
 import { todayInLima } from "@/lib/dates";
 import { solesToCents } from "@/lib/money";
 import type { MovementSnapshot } from "./domain/movement";
@@ -26,7 +25,7 @@ function revalidateLedgerAndLoans() {
 
 export async function addMovementAction(input: AddMovementInput) {
   const user = await requireUser();
-  const group = await findGroupOf(user.id);
+  const group = await useCases.getMyGroup.execute({ userId: user.id });
 
   if (!group) {
     return { ok: false as const, error: "NoGroup" };
@@ -56,7 +55,7 @@ export async function proposeEditAction(
   before: MovementSnapshot,
 ) {
   const user = await requireUser();
-  const group = await findGroupOf(user.id);
+  const group = await useCases.getMyGroup.execute({ userId: user.id });
 
   if (!group) {
     return { ok: false as const, error: "NoGroup" };
@@ -106,7 +105,7 @@ export async function proposeEditAction(
  */
 export async function proposeVoidAction(movementId: string) {
   const user = await requireUser();
-  const group = await findGroupOf(user.id);
+  const group = await useCases.getMyGroup.execute({ userId: user.id });
 
   if (!group) {
     return { ok: false as const, error: "NoGroup" };
@@ -134,7 +133,7 @@ export async function decideChangeAction(
   decision: "approve" | "reject",
 ) {
   const user = await requireUser();
-  const group = await findGroupOf(user.id);
+  const group = await useCases.getMyGroup.execute({ userId: user.id });
 
   if (!group) {
     return { ok: false as const, error: "NoGroup" };
@@ -159,7 +158,7 @@ export async function decideChangeAction(
 /** UC-404: immutable history of one movement, for the detail dialog. */
 export async function getMovementHistoryAction(movementId: string) {
   const user = await requireUser();
-  const group = await findGroupOf(user.id);
+  const group = await useCases.getMyGroup.execute({ userId: user.id });
 
   if (!group) {
     return { ok: false as const, error: "NoGroup" };

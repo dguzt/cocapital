@@ -10,10 +10,10 @@
  */
 
 export * from "@/backend/modules/accounts/adapters/out/drizzle/users.table";
+export * from "@/backend/modules/groups/adapters/out/drizzle/groups.table";
+export * from "@/backend/modules/groups/adapters/out/drizzle/memberships.table";
 export * from "./borrowers";
-export * from "./groups";
 export * from "./installments";
 export * from "./loans";
-export * from "./memberships";
 export * from "./movement-changes";
 export * from "./movements";

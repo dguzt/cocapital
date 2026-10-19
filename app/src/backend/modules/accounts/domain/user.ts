@@ -1,5 +1,5 @@
 import type { IdentityProfile } from "./identity-profile";
-import type { UserData } from "./user-data";
+import type { UserSnapshot } from "./user-snapshot";
 
 /** A partner (socio) of CoCapital, bound to one identity of the auth provider. */
 export class User {
@@ -11,9 +11,12 @@ export class User {
   ) {}
 
   /**
-   * A new partner built from the identity profile.
-   * Input: authId and profile. Output: a partner with a fresh id and a
-   * display name — "First Last", else the email's local part, else "Socio".
+   * Signs up a partner from their identity profile.
+   *
+   * @param authId - The identity the auth provider gave the partner.
+   * @param profile - Names and email from the auth provider.
+   * @returns A partner with a fresh id, named "First Last", else after the
+   *   email's local part, else "Socio".
    */
   static register(authId: string, profile: IdentityProfile): User {
     return new User(
@@ -24,9 +27,19 @@ export class User {
     );
   }
 
-  /** A partner already stored, as the repository reads it back. */
-  static restore(data: UserData): User {
-    return new User(data.id, data.authId, data.name, data.email);
+  /**
+   * Rebuilds a partner who already signed up.
+   *
+   * @param snapshot - Every field of the partner, already valid.
+   * @returns The same partner.
+   */
+  static restore(snapshot: UserSnapshot): User {
+    return new User(
+      snapshot.id,
+      snapshot.authId,
+      snapshot.name,
+      snapshot.email,
+    );
   }
 
   private static displayNameFrom(profile: IdentityProfile): string {

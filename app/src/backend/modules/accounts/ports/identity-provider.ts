@@ -2,6 +2,11 @@ import type { IdentityProfile } from "@/backend/modules/accounts/domain/identity
 
 /** External source of a partner's profile (name and email). */
 export interface IdentityProvider {
-  /** The identity's profile, or null if the provider no longer knows it. */
+  /**
+   * Reads the profile behind an identity.
+   *
+   * @param authId - The identity to look up.
+   * @returns Its names and email, or null when the provider no longer knows it.
+   */
   profileOf(authId: string): Promise<IdentityProfile | null>;
 }

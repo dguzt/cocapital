@@ -10,9 +10,11 @@
 import {
   addMovement,
   collectInstallment,
+  createGroup,
   createLoan,
   decideMovementChange,
   getLoanDetail,
+  joinGroup,
   listGroupInstallments,
   listLoans,
   listMovements,
@@ -23,7 +25,6 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/backend/infra/db/client";
 import { Users } from "@/backend/infra/db/schema";
 import { deriveCapital } from "@/backend/modules/capital/domain/derive";
-import { createGroup, joinGroup } from "@/backend/modules/groups/data";
 import { generateSchedule } from "@/backend/modules/loans/domain/schedule";
 import { validateNewMovement } from "@/backend/modules/movements/domain/validate";
 import { truncateAll } from "@/test/truncate";
@@ -39,9 +40,9 @@ async function seed() {
     .insert(Users)
     .values({ clerkId: "clerk_rosa", name: "Rosa", email: "r@test.pe" })
     .returning();
-  const created = await createGroup(ana.id, "Inversiones DR");
+  const created = await createGroup(ana, "Inversiones DR");
   if (!created.ok) throw new Error("seed failed");
-  await joinGroup(rosa.id, created.value.inviteCode);
+  await joinGroup(rosa, created.value.inviteCode.value);
 
   const contribute = validateNewMovement({
     type: "contribute",

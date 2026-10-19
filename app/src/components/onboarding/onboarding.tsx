@@ -1,4 +1,4 @@
-import { createGroupAction } from "@/backend/modules/groups/actions";
+import { createGroupAction } from "@/backend/modules/groups/adapters/in/next/create-group-action";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
