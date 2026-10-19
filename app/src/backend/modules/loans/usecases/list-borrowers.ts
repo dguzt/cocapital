@@ -1,5 +1,5 @@
 /** UC-301 · The group's reusable borrowers, for select-or-create. */
-import type { BorrowerRepository } from "../repositories/borrower-repository";
+import type { BorrowerRepository } from "@/backend/modules/loans/repositories/borrower-repository";
 
 export type ListBorrowersInput = {
   groupId: string;

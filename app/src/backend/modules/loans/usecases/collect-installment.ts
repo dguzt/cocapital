@@ -18,14 +18,15 @@
  * The repay movement stores the cuota's principal in `cost`, which is how the
  * feed can show what part of the payment was interest.
  */
+
+import type { UnitOfWork } from "@/backend/infra/db/write";
+import type { LoanError } from "@/backend/modules/loans/domain/errors";
+import type { LoanDetail } from "@/backend/modules/loans/domain/loan";
+import type { InstallmentRepository } from "@/backend/modules/loans/repositories/installment-repository";
+import type { MovementRepository } from "@/backend/modules/movements/repositories/movement-repository";
 import type { ISODate } from "@/lib/dates";
 import type { Cents } from "@/lib/money";
 import { err, ok, type Result } from "@/lib/result";
-import type { UnitOfWork } from "../../../infra/db/write";
-import type { MovementRepository } from "../../movements/repositories/movement-repository";
-import type { LoanError } from "../domain/errors";
-import type { LoanDetail } from "../domain/loan";
-import type { InstallmentRepository } from "../repositories/installment-repository";
 import type { GetLoanDetail } from "./get-loan-detail";
 
 export type CollectInstallmentInput = {

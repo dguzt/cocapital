@@ -1,4 +1,4 @@
-import type { User } from "../../../domain/user";
+import type { User } from "@/backend/modules/accounts/domain/user";
 
 /** A partner as a plain object — the only shape a Client Component can receive. */
 export type UserView = {

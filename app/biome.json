@@ -27,6 +27,19 @@
       "recommended": true,
       "suspicious": {
         "noUnknownAtRules": "off"
+      },
+      "style": {
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "patterns": [
+              {
+                "group": ["../*", "../**"],
+                "message": "Import from a parent folder with the alias (@/ or @tests/); use ./ only for siblings."
+              }
+            ]
+          }
+        }
       }
     },
     "domains": {

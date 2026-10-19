@@ -6,8 +6,8 @@
  * is "you cannot un-buy goods you have already sold" — the stock would go
  * negative. Nobody outside this module needs to know that.
  */
-import type { Write } from "../../../infra/db/write";
-import type { VoidEntry } from "../../movements/usecases/void-entry";
+import type { Write } from "@/backend/infra/db/write";
+import type { VoidEntry } from "@/backend/modules/movements/usecases/void-entry";
 
 export class UndoPurchase {
   static inject = ["voidEntry"] as const;

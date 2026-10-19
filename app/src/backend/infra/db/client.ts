@@ -1,6 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import { requireEnv } from "../../config/env";
+import { requireEnv } from "@/backend/config/env";
 import * as schema from "./schema";
 
 // Talks to a Neon branch over HTTP via the edge-ready neon-http driver.

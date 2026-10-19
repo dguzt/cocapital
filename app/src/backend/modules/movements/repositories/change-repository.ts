@@ -1,11 +1,17 @@
 /** movement_changes table — the append-only trail of proposals. */
 import { and, desc, eq, inArray } from "drizzle-orm";
 
-import type { Database } from "../../../infra/db/client";
-import { MovementChanges, Movements, Users } from "../../../infra/db/schema";
-import type { Write } from "../../../infra/db/write";
-import type { MovementSnapshot, MovementType } from "../domain/movement";
-import type { ChangeKind, PendingStatus } from "../domain/pending";
+import type { Database } from "@/backend/infra/db/client";
+import { MovementChanges, Movements, Users } from "@/backend/infra/db/schema";
+import type { Write } from "@/backend/infra/db/write";
+import type {
+  MovementSnapshot,
+  MovementType,
+} from "@/backend/modules/movements/domain/movement";
+import type {
+  ChangeKind,
+  PendingStatus,
+} from "@/backend/modules/movements/domain/pending";
 
 export type PendingChangeItem = {
   id: string;

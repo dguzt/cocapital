@@ -17,10 +17,10 @@
  * ChangeApplier facade awaits it. Movement voids go through VoidEntry (a
  * movements use case), so this loans use case never writes the movements table.
  */
-import type { Write } from "../../../infra/db/write";
-import type { VoidEntry } from "../../movements/usecases/void-entry";
-import type { InstallmentRepository } from "../repositories/installment-repository";
-import type { LoanRepository } from "../repositories/loan-repository";
+import type { Write } from "@/backend/infra/db/write";
+import type { InstallmentRepository } from "@/backend/modules/loans/repositories/installment-repository";
+import type { LoanRepository } from "@/backend/modules/loans/repositories/loan-repository";
+import type { VoidEntry } from "@/backend/modules/movements/usecases/void-entry";
 
 export class VoidLoan {
   static inject = ["loans", "installments", "voidEntry"] as const;

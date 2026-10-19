@@ -1,7 +1,7 @@
 import { clerkClient } from "@clerk/nextjs/server";
 
-import type { IdentityProfile } from "../../../domain/identity-profile";
-import type { IdentityProvider } from "../../../ports/identity-provider";
+import type { IdentityProfile } from "@/backend/modules/accounts/domain/identity-profile";
+import type { IdentityProvider } from "@/backend/modules/accounts/ports/identity-provider";
 
 export class ClerkIdentityProvider implements IdentityProvider {
   async profileOf(authId: string): Promise<IdentityProfile | null> {

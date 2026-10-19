@@ -12,7 +12,7 @@ export default async function globalSetup() {
 
   process.env.DATABASE_URL = testUrl;
 
-  const { truncateAll } = await import("../../../src/test/truncate");
+  const { truncateAll } = await import("@/test/truncate");
 
   await truncateAll();
   await clerkSetup();

@@ -9,7 +9,7 @@
  * M5 (capital) owns no table at all: it is a pure reducer.
  */
 
-export * from "../../../modules/accounts/adapters/out/drizzle/users.table";
+export * from "@/backend/modules/accounts/adapters/out/drizzle/users.table";
 export * from "./borrowers";
 export * from "./groups";
 export * from "./installments";

@@ -9,9 +9,10 @@
  * Authorizes by group like the other reads: a movement of another group
  * resolves to null.
  */
-import type { MovementType } from "../../movements/domain/movement";
-import type { InstallmentRepository } from "../repositories/installment-repository";
-import type { LoanRepository } from "../repositories/loan-repository";
+
+import type { InstallmentRepository } from "@/backend/modules/loans/repositories/installment-repository";
+import type { LoanRepository } from "@/backend/modules/loans/repositories/loan-repository";
+import type { MovementType } from "@/backend/modules/movements/domain/movement";
 
 export type GetLoanTargetForMovementInput = {
   groupId: string;

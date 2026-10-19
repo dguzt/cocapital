@@ -12,14 +12,15 @@
  * already voided, and at most one undecided change exists per movement (the
  * partial unique index is the one that actually holds under a race).
  */
-import { err, ok, type Result } from "@/lib/result";
-import type { PendingChangeError } from "../domain/errors";
-import { proposeChange as decide } from "../domain/pending";
-import type { ChangeRepository } from "../repositories/change-repository";
+
+import type { PendingChangeError } from "@/backend/modules/movements/domain/errors";
+import { proposeChange as decide } from "@/backend/modules/movements/domain/pending";
+import type { ChangeRepository } from "@/backend/modules/movements/repositories/change-repository";
 import type {
   MovementRepository,
   MovementRow,
-} from "../repositories/movement-repository";
+} from "@/backend/modules/movements/repositories/movement-repository";
+import { err, ok, type Result } from "@/lib/result";
 
 export type ProposeSystemVoidInput = {
   groupId: string;

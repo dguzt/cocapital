@@ -12,16 +12,16 @@
  * compiling until you say who reverses it. The question "and who undoes this?"
  * is no longer something anyone can forget — the compiler asks it.
  */
-import type { Write } from "../infra/db/write";
-import type { UndoPurchase } from "../modules/inventory/usecases/undo-purchase";
-import type { UndoSale } from "../modules/inventory/usecases/undo-sale";
-import type { UndoCollection } from "../modules/loans/usecases/undo-collection";
-import type { VoidLoan } from "../modules/loans/usecases/void-loan";
+import type { Write } from "@/backend/infra/db/write";
+import type { UndoPurchase } from "@/backend/modules/inventory/usecases/undo-purchase";
+import type { UndoSale } from "@/backend/modules/inventory/usecases/undo-sale";
+import type { UndoCollection } from "@/backend/modules/loans/usecases/undo-collection";
+import type { VoidLoan } from "@/backend/modules/loans/usecases/void-loan";
 import type {
   ApprovedChange,
   ChangeApplier,
-} from "../modules/movements/usecases/decide-change";
-import type { VoidEntry } from "../modules/movements/usecases/void-entry";
+} from "@/backend/modules/movements/usecases/decide-change";
+import type { VoidEntry } from "@/backend/modules/movements/usecases/void-entry";
 
 export class ApplyApprovedChange implements ChangeApplier {
   static inject = [

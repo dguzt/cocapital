@@ -10,11 +10,12 @@
  * the whole pending-change machinery. This use case is the only place that maps
  * "loan" → its lend movement and refuses a loan that is already voided.
  */
+
+import type { LoanError } from "@/backend/modules/loans/domain/errors";
+import type { LoanRepository } from "@/backend/modules/loans/repositories/loan-repository";
+import type { PendingChangeError } from "@/backend/modules/movements/domain/errors";
+import type { ProposeSystemVoid } from "@/backend/modules/movements/usecases/propose-system-void";
 import { err, type Result } from "@/lib/result";
-import type { PendingChangeError } from "../../movements/domain/errors";
-import type { ProposeSystemVoid } from "../../movements/usecases/propose-system-void";
-import type { LoanError } from "../domain/errors";
-import type { LoanRepository } from "../repositories/loan-repository";
 
 export type ProposeVoidLoanInput = {
   groupId: string;

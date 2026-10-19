@@ -12,16 +12,20 @@
  * is the only place allowed to know every module. That is the rule that keeps
  * the ledger from slowly learning everyone's rules.
  */
-import { err, ok, type Result } from "@/lib/result";
-import type { UnitOfWork, Write } from "../../../infra/db/write";
-import type { PendingChangeError } from "../domain/errors";
-import type { MovementSnapshot, MovementType } from "../domain/movement";
-import type { DecisionOutcome } from "../domain/pending";
-import { decideChange as decide } from "../domain/pending";
+
+import type { UnitOfWork, Write } from "@/backend/infra/db/write";
+import type { PendingChangeError } from "@/backend/modules/movements/domain/errors";
+import type {
+  MovementSnapshot,
+  MovementType,
+} from "@/backend/modules/movements/domain/movement";
+import type { DecisionOutcome } from "@/backend/modules/movements/domain/pending";
+import { decideChange as decide } from "@/backend/modules/movements/domain/pending";
 import type {
   ChangeRepository,
   ChangeWithMovement,
-} from "../repositories/change-repository";
+} from "@/backend/modules/movements/repositories/change-repository";
+import { err, ok, type Result } from "@/lib/result";
 
 /** What an approved change asks the owner module to do. */
 export type ApprovedChange =

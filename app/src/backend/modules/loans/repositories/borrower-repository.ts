@@ -1,9 +1,9 @@
 /** Borrowers table. Drizzle lives here; rules do not. */
 import { and, asc, eq } from "drizzle-orm";
 
-import type { Database } from "../../../infra/db/client";
-import { Borrowers } from "../../../infra/db/schema";
-import type { Write } from "../../../infra/db/write";
+import type { Database } from "@/backend/infra/db/client";
+import { Borrowers } from "@/backend/infra/db/schema";
+import type { Write } from "@/backend/infra/db/write";
 
 export type NewBorrowerRow = {
   id: string;

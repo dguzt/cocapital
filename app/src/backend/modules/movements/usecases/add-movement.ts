@@ -1,9 +1,9 @@
 /** UC-201 · Append one validated movement. Creation is append-only (A-4). */
-import type { NewMovement } from "../domain/validate";
+import type { NewMovement } from "@/backend/modules/movements/domain/validate";
 import type {
   LedgerMovement,
   MovementRepository,
-} from "../repositories/movement-repository";
+} from "@/backend/modules/movements/repositories/movement-repository";
 
 export type AddMovementInput = NewMovement & {
   groupId: string;

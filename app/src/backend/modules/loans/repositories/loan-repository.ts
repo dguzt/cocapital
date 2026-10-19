@@ -1,11 +1,10 @@
 /** Loans table. Drizzle lives here; rules do not. */
 import { and, desc, eq } from "drizzle-orm";
-
+import type { Database } from "@/backend/infra/db/client";
+import { Borrowers, Installments, Loans } from "@/backend/infra/db/schema";
+import type { Write } from "@/backend/infra/db/write";
 import type { Frequency, ISODate } from "@/lib/dates";
 import type { Cents } from "@/lib/money";
-import type { Database } from "../../../infra/db/client";
-import { Borrowers, Installments, Loans } from "../../../infra/db/schema";
-import type { Write } from "../../../infra/db/write";
 
 export type NewLoanRow = {
   id: string;

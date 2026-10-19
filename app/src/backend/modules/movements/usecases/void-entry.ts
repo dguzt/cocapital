@@ -6,9 +6,9 @@
  * those belong to a loan / to inventory, and their owner module reverses them
  * (see application/apply-approved-change.ts).
  */
-import type { Write } from "../../../infra/db/write";
-import type { MovementSnapshot } from "../domain/movement";
-import type { MovementRepository } from "../repositories/movement-repository";
+import type { Write } from "@/backend/infra/db/write";
+import type { MovementSnapshot } from "@/backend/modules/movements/domain/movement";
+import type { MovementRepository } from "@/backend/modules/movements/repositories/movement-repository";
 
 export class VoidEntry {
   static inject = ["movements"] as const;

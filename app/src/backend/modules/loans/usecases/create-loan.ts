@@ -14,15 +14,16 @@
  * "Prestado" goes up, and the total is unchanged. The expected interest never
  * enters the total — it is realised cuota by cuota, as they are collected.
  */
+
+import type { UnitOfWork, Write } from "@/backend/infra/db/write";
+import type { LoanError } from "@/backend/modules/loans/domain/errors";
+import { checkSchedule } from "@/backend/modules/loans/domain/invariants";
+import type { NewLoan } from "@/backend/modules/loans/domain/loan";
+import type { BorrowerRepository } from "@/backend/modules/loans/repositories/borrower-repository";
+import type { InstallmentRepository } from "@/backend/modules/loans/repositories/installment-repository";
+import type { LoanRepository } from "@/backend/modules/loans/repositories/loan-repository";
+import type { MovementRepository } from "@/backend/modules/movements/repositories/movement-repository";
 import { err, ok, type Result } from "@/lib/result";
-import type { UnitOfWork, Write } from "../../../infra/db/write";
-import type { MovementRepository } from "../../movements/repositories/movement-repository";
-import type { LoanError } from "../domain/errors";
-import { checkSchedule } from "../domain/invariants";
-import type { NewLoan } from "../domain/loan";
-import type { BorrowerRepository } from "../repositories/borrower-repository";
-import type { InstallmentRepository } from "../repositories/installment-repository";
-import type { LoanRepository } from "../repositories/loan-repository";
 
 export type CreateLoanInput = NewLoan & {
   groupId: string;

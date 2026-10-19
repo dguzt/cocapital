@@ -1,6 +1,6 @@
-import { User } from "../domain/user";
-import type { IdentityProvider } from "../ports/identity-provider";
-import type { UserRepository } from "../ports/user-repository";
+import { User } from "@/backend/modules/accounts/domain/user";
+import type { IdentityProvider } from "@/backend/modules/accounts/ports/identity-provider";
+import type { UserRepository } from "@/backend/modules/accounts/ports/user-repository";
 
 export type EnsureUserInput = {
   authId: string;

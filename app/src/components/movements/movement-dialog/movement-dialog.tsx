@@ -17,6 +17,7 @@ import {
 } from "@/backend/modules/movements/actions";
 import type { ChangeHistoryItem } from "@/backend/modules/movements/usecases/get-movement-history";
 import type { LedgerMovement } from "@/backend/modules/movements/usecases/list-movements";
+import { MOVEMENT_META } from "@/components/movements/movement-meta";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -27,7 +28,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { formatCents } from "@/lib/money";
-import { MOVEMENT_META } from "../movement-meta";
 import { allowedActions } from "./actions-by-type";
 import { ChangeHistory } from "./change-history";
 import { type EditDraft, EditForm } from "./edit-form";

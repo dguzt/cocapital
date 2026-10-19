@@ -1,4 +1,4 @@
-import type { IdentityProfile } from "../domain/identity-profile";
+import type { IdentityProfile } from "@/backend/modules/accounts/domain/identity-profile";
 
 /** External source of a partner's profile (name and email). */
 export interface IdentityProvider {

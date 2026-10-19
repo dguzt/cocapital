@@ -6,10 +6,9 @@
  * deterministic.
  */
 import * as R from "remeda";
-
+import type { LoanListItem } from "@/backend/modules/loans/domain/loan";
+import type { LoanRepository } from "@/backend/modules/loans/repositories/loan-repository";
 import type { ISODate } from "@/lib/dates";
-import type { LoanListItem } from "../domain/loan";
-import type { LoanRepository } from "../repositories/loan-repository";
 
 export type ListLoansInput = {
   groupId: string;

@@ -1,12 +1,5 @@
 /** E3 integration: create loan → schedule persisted → collect → capital. */
-import { beforeEach, describe, expect, it } from "vitest";
-import { db } from "@/backend/infra/db/client";
-import { Users } from "@/backend/infra/db/schema";
-import { deriveCapital } from "@/backend/modules/capital/domain/derive";
-import { createGroup } from "@/backend/modules/groups/data";
-import { generateSchedule } from "@/backend/modules/loans/domain/schedule";
-import { validateNewMovement } from "@/backend/modules/movements/domain/validate";
-import { truncateAll } from "@/test/truncate";
+
 import {
   addMovement,
   collectInstallment,
@@ -17,7 +10,15 @@ import {
   listGroupInstallments,
   listLoans,
   listMovements,
-} from "../../../../support/use-cases";
+} from "@tests/support/use-cases";
+import { beforeEach, describe, expect, it } from "vitest";
+import { db } from "@/backend/infra/db/client";
+import { Users } from "@/backend/infra/db/schema";
+import { deriveCapital } from "@/backend/modules/capital/domain/derive";
+import { createGroup } from "@/backend/modules/groups/data";
+import { generateSchedule } from "@/backend/modules/loans/domain/schedule";
+import { validateNewMovement } from "@/backend/modules/movements/domain/validate";
+import { truncateAll } from "@/test/truncate";
 
 const TODAY = "2026-07-09";
 

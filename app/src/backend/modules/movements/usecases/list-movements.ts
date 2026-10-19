@@ -2,7 +2,7 @@
 import type {
   LedgerMovement,
   MovementRepository,
-} from "../repositories/movement-repository";
+} from "@/backend/modules/movements/repositories/movement-repository";
 
 export type { LedgerMovement };
 

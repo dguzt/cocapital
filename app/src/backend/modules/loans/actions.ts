@@ -1,12 +1,11 @@
 "use server";
 /** M4's edge with Next: session → use case → revalidate. No rules here. */
 import { revalidatePath } from "next/cache";
-
+import { useCases } from "@/backend/application/container";
+import { requireUser } from "@/backend/modules/accounts/adapters/in/next/session";
+import { findGroupOf } from "@/backend/modules/groups/data";
+import type { MovementType } from "@/backend/modules/movements/domain/movement";
 import { todayInLima } from "@/lib/dates";
-import { useCases } from "../../application/container";
-import { requireUser } from "../accounts/adapters/in/next/session";
-import { findGroupOf } from "../groups/data";
-import type { MovementType } from "../movements/domain/movement";
 import type { NewLoan } from "./domain/loan";
 
 export type CreateLoanInput = NewLoan;

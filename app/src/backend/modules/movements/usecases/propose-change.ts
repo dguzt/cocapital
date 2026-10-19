@@ -14,16 +14,17 @@
  * partial unique index in the schema. The index is the one that actually holds
  * under a race.
  */
-import { err, ok, type Result } from "@/lib/result";
-import type { PendingChangeError } from "../domain/errors";
-import type { MovementSnapshot } from "../domain/movement";
-import type { ChangeKind } from "../domain/pending";
-import { proposeChange as decide } from "../domain/pending";
-import type { ChangeRepository } from "../repositories/change-repository";
+
+import type { PendingChangeError } from "@/backend/modules/movements/domain/errors";
+import type { MovementSnapshot } from "@/backend/modules/movements/domain/movement";
+import type { ChangeKind } from "@/backend/modules/movements/domain/pending";
+import { proposeChange as decide } from "@/backend/modules/movements/domain/pending";
+import type { ChangeRepository } from "@/backend/modules/movements/repositories/change-repository";
 import type {
   MovementRepository,
   MovementRow,
-} from "../repositories/movement-repository";
+} from "@/backend/modules/movements/repositories/movement-repository";
+import { err, ok, type Result } from "@/lib/result";
 
 export type ProposeChangeInput = {
   groupId: string;

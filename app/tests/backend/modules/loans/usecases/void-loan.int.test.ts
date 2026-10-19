@@ -6,14 +6,7 @@
  * partner's approval is the lend + every collection reversed. The capital must
  * return to EXACTLY where it was before the loan ever existed.
  */
-import { beforeEach, describe, expect, it } from "vitest";
-import { db } from "@/backend/infra/db/client";
-import { Users } from "@/backend/infra/db/schema";
-import { deriveCapital } from "@/backend/modules/capital/domain/derive";
-import { createGroup, joinGroup } from "@/backend/modules/groups/data";
-import { generateSchedule } from "@/backend/modules/loans/domain/schedule";
-import { validateNewMovement } from "@/backend/modules/movements/domain/validate";
-import { truncateAll } from "@/test/truncate";
+
 import {
   addMovement,
   collectInstallment,
@@ -25,7 +18,15 @@ import {
   listMovements,
   listPendingChanges,
   proposeVoidLoan,
-} from "../../../../support/use-cases";
+} from "@tests/support/use-cases";
+import { beforeEach, describe, expect, it } from "vitest";
+import { db } from "@/backend/infra/db/client";
+import { Users } from "@/backend/infra/db/schema";
+import { deriveCapital } from "@/backend/modules/capital/domain/derive";
+import { createGroup, joinGroup } from "@/backend/modules/groups/data";
+import { generateSchedule } from "@/backend/modules/loans/domain/schedule";
+import { validateNewMovement } from "@/backend/modules/movements/domain/validate";
+import { truncateAll } from "@/test/truncate";
 
 const TODAY = "2026-07-09";
 

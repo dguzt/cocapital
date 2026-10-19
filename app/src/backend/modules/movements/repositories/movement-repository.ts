@@ -1,12 +1,14 @@
 /** Movements table — the shared ledger. Drizzle lives here; rules do not. */
 import { and, desc, eq } from "drizzle-orm";
-
+import type { Database } from "@/backend/infra/db/client";
+import { Movements, Users } from "@/backend/infra/db/schema";
+import type { Write } from "@/backend/infra/db/write";
+import type {
+  MovementSnapshot,
+  MovementType,
+} from "@/backend/modules/movements/domain/movement";
 import type { ISODate } from "@/lib/dates";
 import type { Cents } from "@/lib/money";
-import type { Database } from "../../../infra/db/client";
-import { Movements, Users } from "../../../infra/db/schema";
-import type { Write } from "../../../infra/db/write";
-import type { MovementSnapshot, MovementType } from "../domain/movement";
 
 export type LedgerMovement = {
   id: string;

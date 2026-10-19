@@ -3,9 +3,9 @@
  * (no auth dependency; the actions layer supplies the user).
  */
 import { count, eq } from "drizzle-orm";
+import { db } from "@/backend/infra/db/client";
+import { Groups, Memberships, Users } from "@/backend/infra/db/schema";
 import { err, ok, type Result } from "@/lib/result";
-import { db } from "../../infra/db/client";
-import { Groups, Memberships, Users } from "../../infra/db/schema";
 import type { GroupError } from "./domain/errors";
 import { decideJoin, makeInviteCode, validateGroupName } from "./domain/rules";
 

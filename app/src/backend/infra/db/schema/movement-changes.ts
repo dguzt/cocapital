@@ -15,7 +15,7 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
-import { Users } from "../../../modules/accounts/adapters/out/drizzle/users.table";
+import { Users } from "@/backend/modules/accounts/adapters/out/drizzle/users.table";
 import { Movements } from "./movements";
 
 export const changeKind = pgEnum("change_kind", ["edit", "void"]);

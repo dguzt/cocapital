@@ -2,7 +2,7 @@
 import type {
   ChangeRepository,
   PendingChangeItem,
-} from "../repositories/change-repository";
+} from "@/backend/modules/movements/repositories/change-repository";
 
 export type { PendingChangeItem };
 

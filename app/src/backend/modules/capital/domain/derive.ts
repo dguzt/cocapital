@@ -7,11 +7,11 @@
  * collectedInterest=ganancia cobrada · expectedInterest=ganancia esperada.
  */
 import * as R from "remeda";
-import type { Cents } from "@/lib/money";
 import type {
   MovementStatus,
   MovementType,
-} from "../../movements/domain/movement";
+} from "@/backend/modules/movements/domain/movement";
+import type { Cents } from "@/lib/money";
 
 export type CapitalMovement = {
   type: MovementType;

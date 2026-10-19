@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 
-import { useCases } from "../../../../../application/container";
-import type { User } from "../../../domain/user";
+import { useCases } from "@/backend/application/container";
+import type { User } from "@/backend/modules/accounts/domain/user";
 
 /** The partner of the current session, registered on first sign-in. Null when signed out. */
 export async function getCurrentUser(): Promise<User | null> {

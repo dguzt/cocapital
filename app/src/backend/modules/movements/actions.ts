@@ -1,12 +1,11 @@
 "use server";
 /** M3's edge with Next: session → use case → revalidate. No rules here. */
 import { revalidatePath } from "next/cache";
-
+import { useCases } from "@/backend/application/container";
+import { requireUser } from "@/backend/modules/accounts/adapters/in/next/session";
+import { findGroupOf } from "@/backend/modules/groups/data";
 import { todayInLima } from "@/lib/dates";
 import { solesToCents } from "@/lib/money";
-import { useCases } from "../../application/container";
-import { requireUser } from "../accounts/adapters/in/next/session";
-import { findGroupOf } from "../groups/data";
 import type { MovementSnapshot } from "./domain/movement";
 import { validateNewMovement } from "./domain/validate";
 

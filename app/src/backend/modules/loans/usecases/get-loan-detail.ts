@@ -10,12 +10,11 @@
  * tomorrow.
  */
 import * as R from "remeda";
-
+import type { LoanError } from "@/backend/modules/loans/domain/errors";
+import type { LoanDetail } from "@/backend/modules/loans/domain/loan";
+import type { InstallmentRepository } from "@/backend/modules/loans/repositories/installment-repository";
+import type { LoanRepository } from "@/backend/modules/loans/repositories/loan-repository";
 import { err, ok, type Result } from "@/lib/result";
-import type { LoanError } from "../domain/errors";
-import type { LoanDetail } from "../domain/loan";
-import type { InstallmentRepository } from "../repositories/installment-repository";
-import type { LoanRepository } from "../repositories/loan-repository";
 
 export type GetLoanDetailInput = {
   groupId: string;

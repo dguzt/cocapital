@@ -3,7 +3,7 @@
  * pending principal is what is still "Prestado", and pending interest is only
  * "ganancia esperada" — it enters the total when the cuota is collected.
  */
-import type { InstallmentRepository } from "../repositories/installment-repository";
+import type { InstallmentRepository } from "@/backend/modules/loans/repositories/installment-repository";
 
 export type ListGroupInstallmentsInput = {
   groupId: string;

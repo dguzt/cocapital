@@ -1,10 +1,10 @@
 /** Installments table. Drizzle lives here; rules do not. */
 import { and, asc, eq, isNotNull, ne } from "drizzle-orm";
 
-import type { Database } from "../../../infra/db/client";
-import { Installments, Loans } from "../../../infra/db/schema";
-import type { Write } from "../../../infra/db/write";
-import type { NewLoanInstallment } from "../domain/loan";
+import type { Database } from "@/backend/infra/db/client";
+import { Installments, Loans } from "@/backend/infra/db/schema";
+import type { Write } from "@/backend/infra/db/write";
+import type { NewLoanInstallment } from "@/backend/modules/loans/domain/loan";
 
 export class InstallmentRepository {
   static inject = ["db"] as const;

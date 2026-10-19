@@ -11,8 +11,8 @@
  * refusing to undo a sale whose goods were already sold again — belongs HERE,
  * and nothing outside this module has to change.
  */
-import type { Write } from "../../../infra/db/write";
-import type { VoidEntry } from "../../movements/usecases/void-entry";
+import type { Write } from "@/backend/infra/db/write";
+import type { VoidEntry } from "@/backend/modules/movements/usecases/void-entry";
 
 export class UndoSale {
   static inject = ["voidEntry"] as const;

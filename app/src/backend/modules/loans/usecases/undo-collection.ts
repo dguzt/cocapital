@@ -15,9 +15,9 @@
  * It returns writes instead of running them, so the caller can approve the
  * pending change and undo the collection in a single transaction.
  */
-import type { Write } from "../../../infra/db/write";
-import type { MovementRepository } from "../../movements/repositories/movement-repository";
-import type { InstallmentRepository } from "../repositories/installment-repository";
+import type { Write } from "@/backend/infra/db/write";
+import type { InstallmentRepository } from "@/backend/modules/loans/repositories/installment-repository";
+import type { MovementRepository } from "@/backend/modules/movements/repositories/movement-repository";
 
 export class UndoCollection {
   static inject = ["movements", "installments"] as const;

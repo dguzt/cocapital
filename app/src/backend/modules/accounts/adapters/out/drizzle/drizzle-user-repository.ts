@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
 
-import type { Database } from "../../../../../infra/db/client";
-import { User } from "../../../domain/user";
-import type { UserRepository } from "../../../ports/user-repository";
+import type { Database } from "@/backend/infra/db/client";
+import { User } from "@/backend/modules/accounts/domain/user";
+import type { UserRepository } from "@/backend/modules/accounts/ports/user-repository";
 import { Users } from "./users.table";
 
 export class DrizzleUserRepository implements UserRepository {

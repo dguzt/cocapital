@@ -1,4 +1,4 @@
-import type { User } from "../domain/user";
+import type { User } from "@/backend/modules/accounts/domain/user";
 
 /** Storage of partners. */
 export interface UserRepository {

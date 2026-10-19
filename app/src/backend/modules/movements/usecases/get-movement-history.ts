@@ -2,7 +2,7 @@
 import type {
   ChangeHistoryItem,
   ChangeRepository,
-} from "../repositories/change-repository";
+} from "@/backend/modules/movements/repositories/change-repository";
 
 export type { ChangeHistoryItem };
 
