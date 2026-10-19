@@ -1,6 +1,6 @@
 import type { ISODate } from "@/lib/dates";
 import type { Cents } from "@/lib/money";
-import type { InstallmentStatus } from "./loan";
+import type { InstallmentStatus } from "./installment-status";
 
 /** One cuota of a loan as it is stored. */
 export type Installment = {

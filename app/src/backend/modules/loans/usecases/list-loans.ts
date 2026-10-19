@@ -1,6 +1,6 @@
 import * as R from "remeda";
 
-import type { LoanListItem } from "@/backend/modules/loans/domain/loan";
+import type { LoanListItem } from "@/backend/modules/loans/domain/loan-list-item";
 import type { LoanRepository } from "@/backend/modules/loans/ports/loan-repository";
 import type { ISODate } from "@/lib/dates";
 

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { useCases } from "@/backend/application/container";
 import { requireMembership } from "@/backend/modules/groups/adapters/in/next/membership";
-import type { NewLoan } from "@/backend/modules/loans/domain/loan";
+import type { NewLoan } from "@/backend/modules/loans/domain/new-loan";
 import type { MovementType } from "@/backend/modules/movements/domain/movement";
 import { todayInLima } from "@/lib/dates";
 

@@ -1,7 +1,7 @@
 import * as R from "remeda";
 
 import type { LoanError } from "@/backend/modules/loans/domain/errors";
-import type { LoanDetail } from "@/backend/modules/loans/domain/loan";
+import type { LoanDetail } from "@/backend/modules/loans/domain/loan-detail";
 import type { InstallmentRepository } from "@/backend/modules/loans/ports/installment-repository";
 import type { LoanRepository } from "@/backend/modules/loans/ports/loan-repository";
 import { err, ok, type Result } from "@/lib/result";

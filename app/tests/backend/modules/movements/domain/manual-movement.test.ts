@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateNewMovement } from "@/backend/modules/movements/domain/validate";
+import { ManualMovement } from "@/backend/modules/movements/domain/manual-movement";
 
 const base = {
   type: "contribute",
@@ -7,9 +7,9 @@ const base = {
   today: "2026-07-09",
 };
 
-describe("validateNewMovement", () => {
+describe("ManualMovement.parse", () => {
   it("accepts a plain contribute", () => {
-    const r = validateNewMovement(base);
+    const r = ManualMovement.parse(base);
     expect(r.ok).toBe(true);
     if (r.ok) {
       expect(r.value).toEqual({
@@ -22,24 +22,24 @@ describe("validateNewMovement", () => {
     }
   });
   it("keeps decimal soles exact (S/36.66 → 3666)", () => {
-    const r = validateNewMovement({ ...base, amountSoles: "36.66" });
+    const r = ManualMovement.parse({ ...base, amountSoles: "36.66" });
     expect(r.ok && r.value.amount === 3666).toBe(true);
   });
   it("trims concept; empty concept becomes null (A-3 optional)", () => {
-    const r = validateNewMovement({ ...base, concept: "  feria  " });
+    const r = ManualMovement.parse({ ...base, concept: "  feria  " });
     expect(r.ok && r.value.concept === "feria").toBe(true);
-    const r2 = validateNewMovement({ ...base, concept: "   " });
+    const r2 = ManualMovement.parse({ ...base, concept: "   " });
     expect(r2.ok && r2.value.concept === null).toBe(true);
   });
   it("sell with cost keeps it; cost on other types is ignored", () => {
-    const sell = validateNewMovement({
+    const sell = ManualMovement.parse({
       ...base,
       type: "sell_inventory",
       amountSoles: "120",
       costSoles: "90",
     });
     expect(sell.ok && sell.value.cost === 9000).toBe(true);
-    const buy = validateNewMovement({
+    const buy = ManualMovement.parse({
       ...base,
       type: "buy_inventory",
       costSoles: "90",
@@ -47,7 +47,7 @@ describe("validateNewMovement", () => {
     expect(buy.ok && buy.value.cost === null).toBe(true);
   });
   it("sell with blank cost = zero-margin sell (cost null)", () => {
-    const r = validateNewMovement({
+    const r = ManualMovement.parse({
       ...base,
       type: "sell_inventory",
       costSoles: "  ",
@@ -56,16 +56,16 @@ describe("validateNewMovement", () => {
   });
   it("rejects lend/repay (loans write them) and unknown types", () => {
     for (const type of ["lend", "repay", "steal"]) {
-      const r = validateNewMovement({ ...base, type });
+      const r = ManualMovement.parse({ ...base, type });
       expect(!r.ok && r.error.kind === "InvalidType").toBe(true);
     }
   });
   it.each(["0", "-5", "abc", ""])("rejects amount %j", (amountSoles) => {
-    const r = validateNewMovement({ ...base, amountSoles });
+    const r = ManualMovement.parse({ ...base, amountSoles });
     expect(!r.ok && r.error.kind === "InvalidAmount").toBe(true);
   });
   it("rejects a garbage cost on sells", () => {
-    const r = validateNewMovement({
+    const r = ManualMovement.parse({
       ...base,
       type: "sell_inventory",
       costSoles: "abc",

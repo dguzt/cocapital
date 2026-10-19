@@ -15,9 +15,10 @@ import {
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/backend/infra/db/client";
 import { Users } from "@/backend/infra/db/schema";
-import { deriveCapital } from "@/backend/modules/capital/domain/derive";
-import { generateSchedule } from "@/backend/modules/loans/domain/schedule";
-import { validateNewMovement } from "@/backend/modules/movements/domain/validate";
+import { CapitalSummary } from "@/backend/modules/capital/domain/capital-summary";
+import { Schedule } from "@/backend/modules/loans/domain/schedule";
+import type { ScheduleInput } from "@/backend/modules/loans/domain/schedule-input";
+import { ManualMovement } from "@/backend/modules/movements/domain/manual-movement";
 import { truncateAll } from "@/test/truncate";
 
 const TODAY = "2026-07-09";
@@ -29,7 +30,7 @@ async function seed() {
     .returning();
   const created = await createGroup(diego, "Inversiones DR");
   if (!created.ok) throw new Error("seed failed");
-  const contribute = validateNewMovement({
+  const contribute = ManualMovement.parse({
     type: "contribute",
     amountSoles: "500",
     today: TODAY,
@@ -39,8 +40,8 @@ async function seed() {
   return { diego, group: created.value };
 }
 
-function schedule(input: Partial<Parameters<typeof generateSchedule>[0]> = {}) {
-  const r = generateSchedule({
+function schedule(input: Partial<ScheduleInput> = {}) {
+  const r = Schedule.generate({
     capital: 30000,
     ratePercent: 10,
     installmentCount: 4,
@@ -79,7 +80,7 @@ describe("lending lifecycle", () => {
 
     // Capital: cash 200, lent 300, total unchanged at 500
     const terms1 = await listGroupInstallments(group.id);
-    const cap1 = deriveCapital(ledger, terms1);
+    const cap1 = CapitalSummary.derive(ledger, terms1);
     expect(cap1.cash).toBe(20000);
     expect(cap1.lent).toBe(30000);
     expect(cap1.total).toBe(50000);
@@ -117,7 +118,10 @@ describe("lending lifecycle", () => {
     });
 
     // Capital realized the interest: total 500 + 7.50
-    const cap2 = deriveCapital(ledger2, await listGroupInstallments(group.id));
+    const cap2 = CapitalSummary.derive(
+      ledger2,
+      await listGroupInstallments(group.id),
+    );
     expect(cap2.cash).toBe(28250);
     expect(cap2.lent).toBe(22500);
     expect(cap2.collectedInterest).toBe(750);

@@ -1,10 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { ChangeProposal } from "@/backend/modules/movements/domain/change-proposal";
 import type { MovementSnapshot } from "@/backend/modules/movements/domain/movement";
-import {
-  type DecideInput,
-  decideChange,
-  proposeChange,
-} from "@/backend/modules/movements/domain/pending";
+import { PendingChange } from "@/backend/modules/movements/domain/pending-change";
+import type { PendingChangeSnapshot } from "@/backend/modules/movements/domain/pending-change-snapshot";
 
 const snapshot: MovementSnapshot = {
   type: "contribute",
@@ -17,9 +15,9 @@ const edited: MovementSnapshot = { ...snapshot, amount: 4500 }; // S/45
 
 const movement = { id: "mov-1", status: "active" as const, snapshot };
 
-describe("proposeChange", () => {
+describe("ChangeProposal.propose", () => {
   it("edit: captures before/after, applies nothing", () => {
-    const r = proposeChange({
+    const r = ChangeProposal.propose({
       movement,
       hasPendingChange: false,
       kind: "edit",
@@ -34,7 +32,7 @@ describe("proposeChange", () => {
     }
   });
   it("void: after is null (status change, never a delete)", () => {
-    const r = proposeChange({
+    const r = ChangeProposal.propose({
       movement,
       hasPendingChange: false,
       kind: "void",
@@ -43,7 +41,7 @@ describe("proposeChange", () => {
     expect(r.ok && r.value.after === null).toBe(true);
   });
   it("rejects a second change while one is pending", () => {
-    const r = proposeChange({
+    const r = ChangeProposal.propose({
       movement,
       hasPendingChange: true,
       kind: "edit",
@@ -53,7 +51,7 @@ describe("proposeChange", () => {
     expect(!r.ok && r.error.kind === "ChangeAlreadyPending").toBe(true);
   });
   it("rejects changes to a voided movement", () => {
-    const r = proposeChange({
+    const r = ChangeProposal.propose({
       movement: { ...movement, status: "voided" },
       hasPendingChange: false,
       kind: "void",
@@ -62,7 +60,7 @@ describe("proposeChange", () => {
     expect(!r.ok && r.error.kind === "MovementVoided").toBe(true);
   });
   it("rejects an edit without new values", () => {
-    const r = proposeChange({
+    const r = ChangeProposal.propose({
       movement,
       hasPendingChange: false,
       kind: "edit",
@@ -72,8 +70,8 @@ describe("proposeChange", () => {
   });
 });
 
-describe("decideChange", () => {
-  const pendingEdit: DecideInput["pending"] = {
+describe("PendingChange.decide", () => {
+  const pendingEdit: PendingChangeSnapshot = {
     id: "pc-1",
     status: "pending",
     proposedBy: "ana",
@@ -82,11 +80,7 @@ describe("decideChange", () => {
   };
 
   it("partner approves an edit → apply new snapshot", () => {
-    const r = decideChange({
-      pending: pendingEdit,
-      decision: "approve",
-      actorId: "rosa",
-    });
+    const r = PendingChange.restore(pendingEdit).decide("approve", "rosa");
     expect(r.ok).toBe(true);
     if (r.ok && r.value.apply && r.value.action.kind === "edit") {
       expect(r.value.action.newSnapshot.amount).toBe(4500);
@@ -96,45 +90,32 @@ describe("decideChange", () => {
     }
   });
   it("partner rejects → nothing applies, original stands", () => {
-    const r = decideChange({
-      pending: pendingEdit,
-      decision: "reject",
-      actorId: "rosa",
-    });
+    const r = PendingChange.restore(pendingEdit).decide("reject", "rosa");
     expect(r.ok && !r.value.apply && r.value.pendingStatus === "rejected").toBe(
       true,
     );
   });
   it("THE trust rule: proposer cannot approve their own change", () => {
-    const r = decideChange({
-      pending: pendingEdit,
-      decision: "approve",
-      actorId: "ana",
-    });
+    const r = PendingChange.restore(pendingEdit).decide("approve", "ana");
     expect(!r.ok && r.error.kind === "SelfApproval").toBe(true);
   });
   it("proposer cannot self-reject either (same rule)", () => {
-    const r = decideChange({
-      pending: pendingEdit,
-      decision: "reject",
-      actorId: "ana",
-    });
+    const r = PendingChange.restore(pendingEdit).decide("reject", "ana");
     expect(!r.ok && r.error.kind === "SelfApproval").toBe(true);
   });
   it("deciding an already-decided change fails (idempotency guard)", () => {
-    const r = decideChange({
-      pending: { ...pendingEdit, status: "approved" },
-      decision: "approve",
-      actorId: "rosa",
-    });
+    const r = PendingChange.restore({
+      ...pendingEdit,
+      status: "approved",
+    }).decide("approve", "rosa");
     expect(!r.ok && r.error.kind === "AlreadyDecided").toBe(true);
   });
   it("approving a void → void action", () => {
-    const r = decideChange({
-      pending: { ...pendingEdit, kind: "void", after: null },
-      decision: "approve",
-      actorId: "rosa",
-    });
+    const r = PendingChange.restore({
+      ...pendingEdit,
+      kind: "void",
+      after: null,
+    }).decide("approve", "rosa");
     expect(r.ok && r.value.apply && r.value.action.kind === "void").toBe(true);
   });
 });

@@ -1,7 +1,7 @@
+import type { ChangeKind } from "@/backend/modules/movements/domain/change-kind";
+import { ChangeProposal } from "@/backend/modules/movements/domain/change-proposal";
 import type { PendingChangeError } from "@/backend/modules/movements/domain/errors";
 import type { MovementSnapshot } from "@/backend/modules/movements/domain/movement";
-import type { ChangeKind } from "@/backend/modules/movements/domain/pending";
-import { proposeChange as propose } from "@/backend/modules/movements/domain/pending";
 import type { StoredMovement } from "@/backend/modules/movements/domain/stored-movement";
 import type { ChangeRepository } from "@/backend/modules/movements/ports/change-repository";
 import type { MovementRepository } from "@/backend/modules/movements/ports/movement-repository";
@@ -59,7 +59,7 @@ export class ProposeChange {
       });
     }
 
-    const proposal = propose({
+    const proposal = ChangeProposal.propose({
       movement: {
         id: movement.id,
         status: movement.status,

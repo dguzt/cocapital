@@ -8,8 +8,8 @@ import {
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/backend/infra/db/client";
 import { Users } from "@/backend/infra/db/schema";
-import { deriveCapital } from "@/backend/modules/capital/domain/derive";
-import { validateNewMovement } from "@/backend/modules/movements/domain/validate";
+import { CapitalSummary } from "@/backend/modules/capital/domain/capital-summary";
+import { ManualMovement } from "@/backend/modules/movements/domain/manual-movement";
 import { truncateAll } from "@/test/truncate";
 
 async function seed() {
@@ -22,8 +22,8 @@ async function seed() {
   return { diego, group: created.value };
 }
 
-function valid(input: Parameters<typeof validateNewMovement>[0]) {
-  const r = validateNewMovement(input);
+function valid(input: Parameters<typeof ManualMovement.parse>[0]) {
+  const r = ManualMovement.parse(input);
   if (!r.ok) throw new Error(`invalid test input: ${r.error.kind}`);
   return r.value;
 }
@@ -62,7 +62,7 @@ describe("record → ledger → capital", () => {
     expect(ledger[0].concept).toBe("3 perfumes · feria"); // newest first
     expect(ledger[0].authorName).toBe("Diego");
 
-    const capital = deriveCapital(ledger, []);
+    const capital = CapitalSummary.derive(ledger, []);
     expect(capital.cash).toBe(32000); // 500 − 300 + 120
     expect(capital.inventory).toBe(21000); // 300 − 90 cost
     expect(capital.salesProfit).toBe(3000);

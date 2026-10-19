@@ -6,7 +6,7 @@
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import type { UserView } from "@/backend/modules/accounts/adapters/in/next/user-view";
-import type { CapitalSummary } from "@/backend/modules/capital/domain/derive";
+import type { CapitalSummary } from "@/backend/modules/capital/domain/capital-summary";
 import type { LedgerMovement } from "@/backend/modules/movements/domain/ledger-movement";
 import { ActivityFeed } from "@/components/movements/activity-feed";
 import { ActivityTable } from "@/components/movements/activity-table";

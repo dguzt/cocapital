@@ -4,9 +4,9 @@ import type { Database } from "@/backend/infra/db/client";
 import { Users } from "@/backend/modules/accounts/adapters/out/drizzle/users.table";
 import type { ChangeDecision } from "@/backend/modules/movements/domain/change-decision";
 import type { ChangeHistoryItem } from "@/backend/modules/movements/domain/change-history-item";
+import type { ChangeProposal } from "@/backend/modules/movements/domain/change-proposal";
 import type { ChangeUnderDecision } from "@/backend/modules/movements/domain/change-under-decision";
 import type { MovementSnapshot } from "@/backend/modules/movements/domain/movement";
-import type { ProposedChange } from "@/backend/modules/movements/domain/pending";
 import type { PendingChangeItem } from "@/backend/modules/movements/domain/pending-change-item";
 import type { ChangeRepository } from "@/backend/modules/movements/ports/change-repository";
 import { MovementChanges } from "./movement-changes.table";
@@ -32,7 +32,7 @@ export class DrizzleChangeRepository implements ChangeRepository {
     return row !== undefined;
   }
 
-  async propose(change: ProposedChange): Promise<{ id: string }> {
+  async propose(change: ChangeProposal): Promise<{ id: string }> {
     const [inserted] = await this.db
       .insert(MovementChanges)
       .values(change)

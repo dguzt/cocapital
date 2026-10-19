@@ -3,7 +3,7 @@ import { and, asc, eq, isNotNull, ne } from "drizzle-orm";
 import type { Database } from "@/backend/infra/db/client";
 import type { Installment } from "@/backend/modules/loans/domain/installment";
 import type { InstallmentTerm } from "@/backend/modules/loans/domain/installment-term";
-import type { NewLoanInstallment } from "@/backend/modules/loans/domain/loan";
+import type { Schedule } from "@/backend/modules/loans/domain/schedule";
 import type { InstallmentRepository } from "@/backend/modules/loans/ports/installment-repository";
 import { Installments } from "./installments.table";
 import { Loans } from "./loans.table";
@@ -66,12 +66,9 @@ export class DrizzleInstallmentRepository implements InstallmentRepository {
     return row ?? null;
   }
 
-  async schedule(
-    loanId: string,
-    installments: NewLoanInstallment[],
-  ): Promise<void> {
+  async schedule(loanId: string, schedule: Schedule): Promise<void> {
     await this.db.insert(Installments).values(
-      installments.map((installment) => ({
+      schedule.installments.map((installment) => ({
         loanId,
         number: installment.number,
         dueDate: installment.dueDate,

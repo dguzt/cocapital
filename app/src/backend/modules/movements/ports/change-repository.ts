@@ -1,7 +1,7 @@
 import type { ChangeDecision } from "@/backend/modules/movements/domain/change-decision";
 import type { ChangeHistoryItem } from "@/backend/modules/movements/domain/change-history-item";
+import type { ChangeProposal } from "@/backend/modules/movements/domain/change-proposal";
 import type { ChangeUnderDecision } from "@/backend/modules/movements/domain/change-under-decision";
-import type { ProposedChange } from "@/backend/modules/movements/domain/pending";
 import type { PendingChangeItem } from "@/backend/modules/movements/domain/pending-change-item";
 
 /** Storage of proposed changes and their decisions. */
@@ -20,7 +20,7 @@ export interface ChangeRepository {
    * @param change - The proposal.
    * @returns The id of the stored change.
    */
-  propose(change: ProposedChange): Promise<{ id: string }>;
+  propose(change: ChangeProposal): Promise<{ id: string }>;
 
   /**
    * Finds a change together with the movement it targets.

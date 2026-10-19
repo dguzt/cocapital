@@ -1,12 +1,12 @@
 /** The real use cases, called with the positional arguments the integration tests use. */
 import { useCases } from "@/backend/application/container";
-import type { NewLoan } from "@/backend/modules/loans/domain/loan";
+import type { NewLoan } from "@/backend/modules/loans/domain/new-loan";
+import type { ChangeKind } from "@/backend/modules/movements/domain/change-kind";
 import type {
   MovementSnapshot,
   MovementType,
 } from "@/backend/modules/movements/domain/movement";
-import type { ChangeKind } from "@/backend/modules/movements/domain/pending";
-import type { NewMovement } from "@/backend/modules/movements/domain/validate";
+import type { NewMovement } from "@/backend/modules/movements/domain/new-movement";
 import type { ISODate } from "@/lib/dates";
 
 export const addMovement = (

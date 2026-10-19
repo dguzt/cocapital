@@ -1,5 +1,5 @@
 import type { LoanError } from "@/backend/modules/loans/domain/errors";
-import type { LoanDetail } from "@/backend/modules/loans/domain/loan";
+import type { LoanDetail } from "@/backend/modules/loans/domain/loan-detail";
 import type { InstallmentRepository } from "@/backend/modules/loans/ports/installment-repository";
 import type { AddMovement } from "@/backend/modules/movements/usecases/add-movement";
 import type { UnitOfWork } from "@/backend/shared/ports/unit-of-work";

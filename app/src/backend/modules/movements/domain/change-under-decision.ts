@@ -1,5 +1,6 @@
+import type { ChangeKind } from "./change-kind";
 import type { MovementSnapshot, MovementType } from "./movement";
-import type { ChangeKind, PendingStatus } from "./pending";
+import type { PendingStatus } from "./pending-status";
 
 /** A change plus the type and group of the movement it targets. */
 export type ChangeUnderDecision = {

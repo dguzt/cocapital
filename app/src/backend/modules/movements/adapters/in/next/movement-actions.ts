@@ -4,8 +4,8 @@ import { revalidatePath } from "next/cache";
 
 import { useCases } from "@/backend/application/container";
 import { requireMembership } from "@/backend/modules/groups/adapters/in/next/membership";
+import { ManualMovement } from "@/backend/modules/movements/domain/manual-movement";
 import type { MovementSnapshot } from "@/backend/modules/movements/domain/movement";
-import { validateNewMovement } from "@/backend/modules/movements/domain/validate";
 import { todayInLima } from "@/lib/dates";
 import { solesToCents } from "@/lib/money";
 
@@ -32,7 +32,7 @@ function revalidateLedgerAndLoans() {
 export async function addMovementAction(input: AddMovementForm) {
   const { user, group } = await requireMembership();
 
-  const validated = validateNewMovement({ ...input, today: todayInLima() });
+  const validated = ManualMovement.parse({ ...input, today: todayInLima() });
 
   if (!validated.ok) {
     return { ok: false as const, error: validated.error.kind };

@@ -6,7 +6,7 @@
  * Nothing is committed yet: this only exists before the loan is created.
  */
 import { useState } from "react";
-import type { ScheduledInstallment } from "@/backend/modules/loans/domain/schedule";
+import type { ScheduledInstallment } from "@/backend/modules/loans/domain/scheduled-installment";
 import { Input } from "@/components/ui/input";
 import type { ISODate } from "@/lib/dates";
 import { formatDayMonth } from "@/lib/dates";

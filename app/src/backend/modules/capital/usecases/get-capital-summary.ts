@@ -1,7 +1,4 @@
-import {
-  type CapitalSummary,
-  deriveCapital,
-} from "@/backend/modules/capital/domain/derive";
+import { CapitalSummary } from "@/backend/modules/capital/domain/capital-summary";
 import type { ListGroupInstallments } from "@/backend/modules/loans/usecases/list-group-installments";
 import type { ListMovements } from "@/backend/modules/movements/usecases/list-movements";
 
@@ -31,6 +28,6 @@ export class GetCapitalSummary {
       this.listGroupInstallments.execute(input),
     ]);
 
-    return deriveCapital(movements, installments);
+    return CapitalSummary.derive(movements, installments);
   }
 }

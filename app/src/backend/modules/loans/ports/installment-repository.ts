@@ -1,6 +1,6 @@
 import type { Installment } from "@/backend/modules/loans/domain/installment";
 import type { InstallmentTerm } from "@/backend/modules/loans/domain/installment-term";
-import type { NewLoanInstallment } from "@/backend/modules/loans/domain/loan";
+import type { Schedule } from "@/backend/modules/loans/domain/schedule";
 
 /** Storage of the cuotas of every loan. */
 export interface InstallmentRepository {
@@ -44,9 +44,9 @@ export interface InstallmentRepository {
    * Stores a loan's schedule.
    *
    * @param loanId - The loan.
-   * @param installments - Its cuotas.
+   * @param schedule - Its cuotas.
    */
-  schedule(loanId: string, installments: NewLoanInstallment[]): Promise<void>;
+  schedule(loanId: string, schedule: Schedule): Promise<void>;
 
   /**
    * Marks a cuota collected, only if it is still pending.

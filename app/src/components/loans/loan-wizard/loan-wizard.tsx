@@ -9,10 +9,8 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { createLoanAction } from "@/backend/modules/loans/adapters/in/next/loan-actions";
-import {
-  generateSchedule,
-  type ScheduledInstallment,
-} from "@/backend/modules/loans/domain/schedule";
+import { Schedule } from "@/backend/modules/loans/domain/schedule";
+import type { ScheduledInstallment } from "@/backend/modules/loans/domain/scheduled-installment";
 import { Button } from "@/components/ui/button";
 import { PERIOD_DAYS, todayInLima } from "@/lib/dates";
 import { solesToCents } from "@/lib/money";
@@ -42,7 +40,7 @@ export function LoanWizard({ borrowers }: { borrowers: Borrower[] }) {
   const borrowerLabel = selected?.name ?? (newName || null);
 
   const base = useMemo(() => {
-    const r = generateSchedule({
+    const r = Schedule.generate({
       capital,
       ratePercent: Number.isFinite(rate) ? rate : -1,
       installmentCount: Number(terms.count),

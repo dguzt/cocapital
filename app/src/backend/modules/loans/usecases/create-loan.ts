@@ -1,6 +1,6 @@
 import type { LoanError } from "@/backend/modules/loans/domain/errors";
-import { checkSchedule } from "@/backend/modules/loans/domain/invariants";
-import type { NewLoan } from "@/backend/modules/loans/domain/loan";
+import type { NewLoan } from "@/backend/modules/loans/domain/new-loan";
+import { Schedule } from "@/backend/modules/loans/domain/schedule";
 import type { BorrowerRepository } from "@/backend/modules/loans/ports/borrower-repository";
 import type { InstallmentRepository } from "@/backend/modules/loans/ports/installment-repository";
 import type { LoanRepository } from "@/backend/modules/loans/ports/loan-repository";
@@ -50,7 +50,7 @@ export class CreateLoan {
   async execute(
     input: CreateLoanInput,
   ): Promise<Result<{ loanId: string }, LoanError>> {
-    const schedule = checkSchedule(input.installments, input.capital);
+    const schedule = Schedule.of(input.installments, input.capital);
 
     if (!schedule.ok) {
       return schedule;
@@ -90,7 +90,7 @@ export class CreateLoan {
         lendMovementId: lend.id,
       });
 
-      await this.installments.schedule(loanId, input.installments);
+      await this.installments.schedule(loanId, schedule.value);
 
       return ok({ loanId });
     });

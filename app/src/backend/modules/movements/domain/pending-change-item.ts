@@ -1,5 +1,5 @@
+import type { ChangeKind } from "./change-kind";
 import type { MovementSnapshot } from "./movement";
-import type { ChangeKind } from "./pending";
 
 /** A change waiting for a partner's OK, as the approvals inbox shows it. */
 export type PendingChangeItem = {

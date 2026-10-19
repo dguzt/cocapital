@@ -1,8 +1,8 @@
 import type { ApprovedChange } from "@/backend/modules/movements/domain/approved-change";
 import type { ChangeUnderDecision } from "@/backend/modules/movements/domain/change-under-decision";
+import type { DecisionOutcome } from "@/backend/modules/movements/domain/decision-outcome";
 import type { PendingChangeError } from "@/backend/modules/movements/domain/errors";
-import type { DecisionOutcome } from "@/backend/modules/movements/domain/pending";
-import { decideChange as decide } from "@/backend/modules/movements/domain/pending";
+import { PendingChange } from "@/backend/modules/movements/domain/pending-change";
 import type { ChangeApplier } from "@/backend/modules/movements/ports/change-applier";
 import type { ChangeRepository } from "@/backend/modules/movements/ports/change-repository";
 import type { UnitOfWork } from "@/backend/shared/ports/unit-of-work";
@@ -49,17 +49,10 @@ export class DecideChange {
       });
     }
 
-    const outcome = decide({
-      pending: {
-        id: change.id,
-        status: change.status,
-        proposedBy: change.proposedBy,
-        kind: change.kind,
-        after: change.after,
-      },
-      decision: input.decision,
-      actorId: input.actorId,
-    });
+    const outcome = PendingChange.restore(change).decide(
+      input.decision,
+      input.actorId,
+    );
 
     if (!outcome.ok) {
       return outcome;
