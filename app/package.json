@@ -11,8 +11,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:int": "vitest run --config vitest.integration.config.ts",
+    "test:e2e": "playwright test",
     "check": "biome check && tsc --noEmit && vitest run",
-    "check:full": "npm run check && npm run test:int",
+    "check:full": "npm run check && npm run test:int && npm run test:e2e",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio"
@@ -43,6 +44,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.0",
+    "@clerk/testing": "^2.2.47",
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
