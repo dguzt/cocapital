@@ -87,8 +87,8 @@ export const getLoanDetail = (groupId: string, loanId: string) =>
 export const listLoans = (groupId: string, today: ISODate) =>
   useCases.listLoans.execute({ groupId, today });
 
-export const listBorrowers = (groupId: string) =>
-  useCases.listBorrowers.execute({ groupId });
+export const listContacts = (groupId: string) =>
+  useCases.listContacts.execute({ groupId });
 
 export const listGroupInstallments = (groupId: string) =>
   useCases.listGroupInstallments.execute({ groupId });

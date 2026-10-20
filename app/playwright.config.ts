@@ -5,6 +5,10 @@ config({ path: ".env.local" });
 
 const PORT = 3210;
 
+const server = process.env.E2E_PRODUCTION_BUILD
+  ? `next build && next start --port ${PORT}`
+  : `next dev --port ${PORT}`;
+
 export default defineConfig({
   testDir: "tests/e2e",
   globalSetup: "tests/e2e/support/global-setup.ts",
@@ -22,10 +26,10 @@ export default defineConfig({
   },
 
   webServer: {
-    command: `next dev --port ${PORT}`,
+    command: server,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: false,
-    timeout: 120_000,
+    timeout: 300_000,
     env: {
       DATABASE_URL: process.env.DATABASE_URL_TEST ?? "",
     },

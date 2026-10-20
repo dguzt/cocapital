@@ -7,7 +7,7 @@ import {
   createLoan,
   getLoanDetail,
   getLoanTargetForMovement,
-  listBorrowers,
+  listContacts,
   listGroupInstallments,
   listLoans,
   listMovements,
@@ -262,7 +262,7 @@ describe("lending lifecycle", () => {
     ).toBeNull();
   });
 
-  it("existing borrower is reused, not duplicated", async () => {
+  it("existing contact is reused, not duplicated", async () => {
     const { diego, group } = await seed();
     const karina = karinaLoan();
     const first = await createLoan(group.id, diego.id, {
@@ -275,7 +275,7 @@ describe("lending lifecycle", () => {
     });
     expect(first.ok).toBe(true);
 
-    const list1 = await listBorrowers(group.id);
+    const list1 = await listContacts(group.id);
     expect(list1).toHaveLength(1);
 
     const second = await createLoan(group.id, diego.id, {
@@ -291,7 +291,7 @@ describe("lending lifecycle", () => {
       }).installments,
     });
     expect(second.ok).toBe(true);
-    expect(await listBorrowers(group.id)).toHaveLength(1); // still one Karina
+    expect(await listContacts(group.id)).toHaveLength(1); // still one Karina
     expect(await listLoans(group.id, TODAY)).toHaveLength(2);
   });
 });

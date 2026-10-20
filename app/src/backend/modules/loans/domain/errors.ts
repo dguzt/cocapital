@@ -7,8 +7,6 @@ export type ScheduleError =
   | AppError<"InvalidStartDate", { startDate: string }>;
 
 export type LoanError =
-  | AppError<"BorrowerNameRequired">
-  | AppError<"BorrowerNotFound", { borrowerId: string }>
   | AppError<"LoanNotFound", { loanId: string }>
   | AppError<"LoanAlreadyVoided", { loanId: string }>
   | AppError<"InvalidInstallments", { reason: string }>

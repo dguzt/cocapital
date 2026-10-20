@@ -1,11 +1,11 @@
 import { and, desc, eq } from "drizzle-orm";
 
 import type { Database } from "@/backend/infra/db/client";
+import { Contacts } from "@/backend/modules/contacts/adapters/out/drizzle/contacts.table";
 import type { LoanEntry } from "@/backend/modules/loans/domain/loan-entry";
 import type { LoanHeader } from "@/backend/modules/loans/domain/loan-header";
 import type { LoanScheduleRow } from "@/backend/modules/loans/domain/loan-schedule-row";
 import type { LoanRepository } from "@/backend/modules/loans/ports/loan-repository";
-import { Borrowers } from "./borrowers.table";
 import { Installments } from "./installments.table";
 import { Loans } from "./loans.table";
 
@@ -27,10 +27,10 @@ export class DrizzleLoanRepository implements LoanRepository {
         status: Loans.status,
         startDate: Loans.startDate,
         lendMovementId: Loans.lendMovementId,
-        borrowerName: Borrowers.name,
+        borrowerName: Contacts.name,
       })
       .from(Loans)
-      .innerJoin(Borrowers, eq(Borrowers.id, Loans.borrowerId))
+      .innerJoin(Contacts, eq(Contacts.id, Loans.borrowerId))
       .where(and(eq(Loans.id, loanId), eq(Loans.groupId, groupId)));
 
     return row ?? null;
@@ -59,13 +59,13 @@ export class DrizzleLoanRepository implements LoanRepository {
         id: Loans.id,
         capital: Loans.capital,
         status: Loans.status,
-        borrowerName: Borrowers.name,
+        borrowerName: Contacts.name,
         instStatus: Installments.status,
         instAmount: Installments.amount,
         instDue: Installments.dueDate,
       })
       .from(Loans)
-      .innerJoin(Borrowers, eq(Borrowers.id, Loans.borrowerId))
+      .innerJoin(Contacts, eq(Contacts.id, Loans.borrowerId))
       .innerJoin(Installments, eq(Installments.loanId, Loans.id))
       .where(eq(Loans.groupId, groupId))
       .orderBy(desc(Loans.createdAt));

@@ -2,7 +2,7 @@
 
 - **ID:** M4
 - **WHERE:** The lending engine. First-class loans + generated schedules. CoCapital's core value.
-- **Depends on:** M1, M2, M3 (writes lend/repay movements into the ledger).
+- **Depends on:** M1, M2, M3 (writes lend/repay movements into the ledger), M6 (the borrower is a contact).
 - **Spec source:** decisions.md **D2 + D3** (locked).
 
 ## Purpose
@@ -13,7 +13,6 @@ Turn "I lent S/300 at 10% over 4 cuotas" into a computed, editable repayment sch
 |--------|--------|-------|
 | **Loan** | id, group_id, user_id, borrower_id, capital, rate, n_cuotas, frequency, start_date, created_at | Created once via the wizard. |
 | **Installment** | id, loan_id, number, due_date, amount, principal_share, interest_share, status | System-generated; `status`: `pendiente \| cobrada`. **Vencida is DERIVED** (`due_date < today && pendiente`), never stored (D3 #10). |
-| **Borrower** | id, group_id, name, phone? | Minimal entity, select-or-create, reusable (D3 #8). No profile screen in MVP. |
 
 ## Calc method (LOCKED — D3 #2, confirmed D4)
 `total = capital × (1 + rate)` · each `cuota = total / N` · `principal_share = capital/N` · `interest_share = interest/N`.

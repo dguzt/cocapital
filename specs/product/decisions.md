@@ -4,6 +4,28 @@
 
 ---
 
+## D6 — Venta en cuotas (credit sales) + contacts
+
+**Date:** 2026-10-20
+**Status:** ✅ Locked (grilling session). Requested by Ricardo. UI mock: https://claude.ai/artifact/NUVhwsDu5UbxUJby2zVYdg
+
+1. **Cash-basis, like loan interest.** The margin enters the capital only as cuotas are collected. No accrual.
+2. **Bucket `receivable` = "Cuentas por cobrar", valued at cost.** `total = cash + inventory + lent + receivable`; selling on credit never lowers the total. Pending margin is shown apart and never counts; collected margin adds to "Por ventas". Derived **only from the ledger**.
+3. **Proportional split per cobro.** Each cobro splits `cost/price`: part recovers cost, the rest is margin. Computed once at collection, stored on the movement (`cost`). The cuota that settles the sale takes the remaining cost, so recovered cost sums exactly. Cost is optional (as today): no cost ⇒ no margin.
+4. **Ledger:** `sell_on_credit` (amount = price, cost = cost; inventory −cost, receivable +cost) and `collect_sale` (amount = cobro, cost = cost share; cash +amount, receivable −share, salesProfit +rest).
+5. **Module `inventory`, entity `CreditSale`** with stored cuotas (due date + amount), editable at creation exactly like the loan wizard. No interest.
+6. **Pago inicial** optional = a cuota "Inicial" collected in the same transaction.
+7. **Cobro per cuota, like loans.** Adelantar = collect a later cuota early. **"Cambiar plan"** rewrites the uncollected cuotas (stretch, or split a cuota for a partial payment): no OK, shown in the activity.
+8. **The schedule must add up.** Σ cuotas = price (at creation) and Σ uncollected = pending (at re-plan), or Confirmar stays disabled. A price change = void + recreate.
+9. **Void cascades** over the sale's cobros (like `VoidLoan`), one double-confirmation, dialog says how many cobros. Undo of one cobro reopens its cuota. Owners declared in `apply-approved-change.ts`.
+10. **Buyer = contact.** New module `contacts` replaces loans' `borrowers` (one person can borrow and buy).
+11. **UI:** one "Vender" tile → `/ventas/nueva` with tabs **Al contado | En cuotas**; `/ventas` and `/ventas/[id]` mirror the loan pages.
+12. **Two PRs.** PR A = contacts refactor, migration 0003 renames `borrowers`→`contacts` and leaves a bridge view `borrowers` so prod code keeps working between migrate and deploy. PR B = the feature; its migration drops the bridge view. Prod is migrated before each deploy.
+
+**Accepted risks:** re-planning needs no OK (visible in activity) · no direct partial payment (split via Cambiar plan) · no edit of a created sale · cost typed by hand (a product catalog is a future epic).
+
+---
+
 ## D5 — Ship-day decisions (money, domain, E4, auth) + assumptions
 
 **Date:** 2026-07-09
