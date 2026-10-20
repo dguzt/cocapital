@@ -13,8 +13,20 @@ import { DrizzleGroupRepository } from "@/backend/modules/groups/adapters/out/dr
 import { CreateGroup } from "@/backend/modules/groups/usecases/create-group";
 import { GetMyGroup } from "@/backend/modules/groups/usecases/get-my-group";
 import { JoinGroup } from "@/backend/modules/groups/usecases/join-group";
+import { DrizzleCreditSaleRepository } from "@/backend/modules/inventory/adapters/out/drizzle/drizzle-credit-sale-repository";
+import { DrizzlePlanChangeRepository } from "@/backend/modules/inventory/adapters/out/drizzle/drizzle-plan-change-repository";
+import { CollectSaleInstallment } from "@/backend/modules/inventory/usecases/collect-sale-installment";
+import { CreateCreditSale } from "@/backend/modules/inventory/usecases/create-credit-sale";
+import { GetCreditSale } from "@/backend/modules/inventory/usecases/get-credit-sale";
+import { GetSaleTargetForMovement } from "@/backend/modules/inventory/usecases/get-sale-target-for-movement";
+import { ListCreditSales } from "@/backend/modules/inventory/usecases/list-credit-sales";
+import { ListPlanChanges } from "@/backend/modules/inventory/usecases/list-plan-changes";
+import { ProposeVoidCreditSale } from "@/backend/modules/inventory/usecases/propose-void-credit-sale";
+import { ReplanCreditSale } from "@/backend/modules/inventory/usecases/replan-credit-sale";
 import { UndoPurchase } from "@/backend/modules/inventory/usecases/undo-purchase";
 import { UndoSale } from "@/backend/modules/inventory/usecases/undo-sale";
+import { UndoSaleCollection } from "@/backend/modules/inventory/usecases/undo-sale-collection";
+import { VoidCreditSale } from "@/backend/modules/inventory/usecases/void-credit-sale";
 import { DrizzleInstallmentRepository } from "@/backend/modules/loans/adapters/out/drizzle/drizzle-installment-repository";
 import { DrizzleLoanRepository } from "@/backend/modules/loans/adapters/out/drizzle/drizzle-loan-repository";
 import { CollectInstallment } from "@/backend/modules/loans/usecases/collect-installment";
@@ -56,6 +68,8 @@ const injector = createInjector()
   .provideClass("loans", DrizzleLoanRepository)
   .provideClass("installments", DrizzleInstallmentRepository)
   .provideClass("contacts", DrizzleContactRepository)
+  .provideClass("creditSales", DrizzleCreditSaleRepository)
+  .provideClass("planChanges", DrizzlePlanChangeRepository)
 
   .provideClass("resolveContact", ResolveContact)
   .provideClass("addMovement", AddMovement)
@@ -65,11 +79,14 @@ const injector = createInjector()
   .provideClass("getLoanDetail", GetLoanDetail)
   .provideClass("listMovements", ListMovements)
   .provideClass("listGroupInstallments", ListGroupInstallments)
+  .provideClass("collectSaleInstallment", CollectSaleInstallment)
 
   .provideClass("undoCollection", UndoCollection)
   .provideClass("undoSale", UndoSale)
   .provideClass("undoPurchase", UndoPurchase)
   .provideClass("voidLoan", VoidLoan)
+  .provideClass("undoSaleCollection", UndoSaleCollection)
+  .provideClass("voidCreditSale", VoidCreditSale)
   .provideClass("applier", ApplyApprovedChange);
 
 export const useCases = {
@@ -95,6 +112,15 @@ export const useCases = {
   listGroupInstallments: injector.resolve("listGroupInstallments"),
 
   listContacts: injector.injectClass(ListContacts),
+
+  createCreditSale: injector.injectClass(CreateCreditSale),
+  collectSaleInstallment: injector.resolve("collectSaleInstallment"),
+  replanCreditSale: injector.injectClass(ReplanCreditSale),
+  proposeVoidCreditSale: injector.injectClass(ProposeVoidCreditSale),
+  getCreditSale: injector.injectClass(GetCreditSale),
+  listCreditSales: injector.injectClass(ListCreditSales),
+  listPlanChanges: injector.injectClass(ListPlanChanges),
+  getSaleTargetForMovement: injector.injectClass(GetSaleTargetForMovement),
 
   getCapitalSummary: injector.injectClass(GetCapitalSummary),
 } as const;

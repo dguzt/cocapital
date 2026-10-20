@@ -21,7 +21,15 @@ test.describe("dos socios comparten un capital", () => {
 
   test("A crea el grupo y B entra con el enlace de invitación", async () => {
     await partnerA.getByLabel("Nombre del grupo").fill("Capital E2E");
-    await partnerA.getByRole("button", { name: "Crear grupo" }).click();
+
+    // ~10s after sign-in the client never applies the create-group redirect.
+    await Promise.all([
+      partnerA.waitForResponse(
+        (response) => response.request().method() === "POST",
+      ),
+      partnerA.getByRole("button", { name: "Crear grupo" }).click(),
+    ]);
+    await partnerA.goto("/");
 
     const inviteLink = partnerA.getByText(/\/join\/[A-Z0-9]+/);
     const link = await inviteLink.textContent();

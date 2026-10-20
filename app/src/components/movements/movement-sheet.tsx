@@ -1,6 +1,5 @@
 "use client";
-/** UC-201: the "+" flow — type grid → amount → (cost) → concept → save.
- *  Target: ~10 seconds on a phone. lend/repay route to E3's flows. */
+/** The "+" flow — type grid → amount → concept → save, ~10 seconds on a phone. */
 
 import {
   ArrowDownToLine,
@@ -35,19 +34,20 @@ const ICONS: Record<MovementType, React.ReactNode> = {
   sell_inventory: <PackageMinus className="size-4" />,
   lend: <ArrowUpFromLine className="size-4" />,
   repay: <ArrowDownToLine className="size-4" />,
+  sell_on_credit: <PackageMinus className="size-4" />,
+  collect_sale: <ArrowDownToLine className="size-4" />,
 };
 
 const ERROR_TEXT: Record<string, string> = {
   InvalidAmount: "Ingresa un monto válido en soles.",
-  InvalidCost: "El costo debe ser un número válido.",
   InvalidType: "Elige un tipo de movimiento.",
 };
 
-/** Manual types record here; lend/repay open their own flows (D3 #7). */
+/** Manual types record here; selling, lending and collecting open their own pages. */
 const SHEET_TYPES: { type: MovementType; href?: string }[] = [
   { type: "contribute" },
   { type: "buy_inventory" },
-  { type: "sell_inventory" },
+  { type: "sell_inventory", href: "/ventas/nueva" },
   { type: "expense" },
   { type: "lend", href: "/prestamos/nuevo" },
   { type: "repay", href: "/prestamos" },
@@ -58,24 +58,19 @@ export function MovementSheet() {
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<MovementType>("contribute");
   const [amount, setAmount] = useState("");
-  const [cost, setCost] = useState("");
   const [concept, setConcept] = useState("");
   const [pending, startTransition] = useTransition();
-
-  const needsCost = type === "sell_inventory";
 
   function save() {
     startTransition(async () => {
       const result = await addMovementAction({
         type,
         amountSoles: amount,
-        costSoles: needsCost ? cost : undefined,
         concept,
       });
       if (result.ok) {
         setOpen(false);
         setAmount("");
-        setCost("");
         setConcept("");
         toast.success("Movimiento registrado");
         router.refresh();
@@ -153,24 +148,6 @@ export function MovementSheet() {
                 className="h-14 font-mono text-2xl font-semibold tabular-nums"
               />
             </div>
-            {needsCost && (
-              <div className="space-y-2">
-                <Label htmlFor="cost">
-                  Costo de lo vendido (S/) · opcional
-                </Label>
-                <Input
-                  id="cost"
-                  inputMode="decimal"
-                  placeholder="0.00"
-                  value={cost}
-                  onChange={(e) => setCost(sanitizeMoneyInput(e.target.value))}
-                  className="h-12 font-mono text-base tabular-nums"
-                />
-                <p className="text-[11px] text-muted-foreground">
-                  Con el costo, la ganancia de la venta entra al capital.
-                </p>
-              </div>
-            )}
             <div className="space-y-2">
               <Label htmlFor="concept">Concepto · opcional</Label>
               <Input

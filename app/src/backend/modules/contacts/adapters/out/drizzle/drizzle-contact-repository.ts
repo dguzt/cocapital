@@ -21,14 +21,17 @@ export class DrizzleContactRepository implements ContactRepository {
     return rows.map(ContactMapper.toDomain);
   }
 
-  async existsInGroup(groupId: string, contactId: string): Promise<boolean> {
+  async findInGroup(
+    groupId: string,
+    contactId: string,
+  ): Promise<Contact | null> {
     const [row] = await this.db
-      .select({ id: Contacts.id })
+      .select()
       .from(Contacts)
       .where(and(eq(Contacts.id, contactId), eq(Contacts.groupId, groupId)))
       .limit(1);
 
-    return row !== undefined;
+    return row ? ContactMapper.toDomain(row) : null;
   }
 
   async add(contact: Contact): Promise<void> {

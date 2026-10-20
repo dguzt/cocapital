@@ -27,10 +27,10 @@ export async function openSessionAs(
   return page;
 }
 
-/** Cifra del panel por su test id: `cash`, `lent`, `inventory` o `total`. */
+/** Cifra del panel por su test id: `cash`, `lent`, `inventory`, `receivable` o `total`. */
 export function capital(
   page: Page,
-  bucket: "cash" | "lent" | "inventory" | "total",
+  bucket: "cash" | "lent" | "inventory" | "receivable" | "total",
 ): Locator {
   return page.getByTestId(`capital-${bucket}`);
 }

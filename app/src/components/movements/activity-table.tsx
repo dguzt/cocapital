@@ -1,22 +1,27 @@
 "use client";
 /** Desktop activity table; each row opens the movement dialog (E4). */
+import Link from "next/link";
+import type { PlanChange } from "@/backend/modules/inventory/domain/plan-change";
 import type { LedgerMovement } from "@/backend/modules/movements/domain/ledger-movement";
 import type { ISODate } from "@/lib/dates";
+import { activityEntries, presentPlanChange } from "./activity-entries";
 import { MovementDialog } from "./movement-dialog/movement-dialog";
 import { presentMovement } from "./present";
 
 export function ActivityTable({
   movements,
+  planChanges = [],
   today,
   pendingIds = [],
   limit,
 }: {
   movements: LedgerMovement[];
+  planChanges?: PlanChange[];
   today: ISODate;
   pendingIds?: string[];
   limit?: number;
 }) {
-  const items = limit ? movements.slice(0, limit) : movements;
+  const entries = activityEntries(movements, planChanges, limit);
 
   return (
     <table className="w-full border-collapse">
@@ -36,7 +41,47 @@ export function ActivityTable({
         </tr>
       </thead>
       <tbody>
-        {items.map((m) => {
+        {entries.map((entry) => {
+          if (entry.kind === "plan") {
+            const plan = presentPlanChange(entry.change, today);
+            return (
+              <tr
+                key={entry.change.id}
+                className="border-b border-border last:border-0 hover:bg-white/[0.02]"
+              >
+                <td className="py-3 pr-3">
+                  <Link href={plan.href} className="flex items-center gap-3">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-secondary text-sm font-semibold text-muted-foreground">
+                      P
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold">
+                        {plan.title}
+                      </span>
+                      <span className="block max-w-64 truncate text-[13px] text-muted-foreground">
+                        {plan.concept}
+                      </span>
+                    </span>
+                  </Link>
+                </td>
+                <td className="py-3 pr-3">
+                  <span className="inline-flex items-center gap-2 whitespace-nowrap text-[13px] text-muted-foreground">
+                    <span className="flex size-[22px] items-center justify-center rounded-full bg-secondary text-[11px] font-semibold">
+                      {plan.authorInitial}
+                    </span>
+                    {plan.author}
+                  </span>
+                </td>
+                <td className="whitespace-nowrap py-3 pr-3 text-[13px] text-muted-foreground">
+                  {plan.day}
+                </td>
+                <td className="whitespace-nowrap py-3 text-right font-mono text-[13px] tabular-nums text-muted-foreground">
+                  {plan.counts}
+                </td>
+              </tr>
+            );
+          }
+          const m = entry.movement;
           const it = presentMovement(m, today);
           const hasPending = pendingIds.includes(m.id);
           return (

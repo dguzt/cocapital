@@ -1,6 +1,9 @@
 import { db } from "@/backend/infra/db/client";
 import {
   Contacts,
+  CreditSaleInstallments,
+  CreditSalePlanChanges,
+  CreditSales,
   Groups,
   Installments,
   Loans,
@@ -12,6 +15,9 @@ import {
 
 /** Empties every table, children before parents, before each integration test. */
 export async function truncateAll() {
+  await db.delete(CreditSalePlanChanges);
+  await db.delete(CreditSaleInstallments);
+  await db.delete(CreditSales);
   await db.delete(Installments);
   await db.delete(Loans);
   await db.delete(Contacts);

@@ -1,5 +1,7 @@
 /** The real use cases, called with the positional arguments the integration tests use. */
 import { useCases } from "@/backend/application/container";
+import type { NewCreditSale } from "@/backend/modules/inventory/domain/new-credit-sale";
+import type { PlannedInstallment } from "@/backend/modules/inventory/domain/planned-installment";
 import type { NewLoan } from "@/backend/modules/loans/domain/new-loan";
 import type { ChangeKind } from "@/backend/modules/movements/domain/change-kind";
 import type {
@@ -105,4 +107,59 @@ export const joinGroup = (partner: SeededUser, code: string) =>
   useCases.joinGroup.execute({
     partner: { userId: partner.id, name: partner.name },
     code,
+  });
+
+export const createCreditSale = (
+  groupId: string,
+  userId: string,
+  input: NewCreditSale,
+) => useCases.createCreditSale.execute({ ...input, groupId, userId });
+
+export const collectSaleInstallment = (
+  groupId: string,
+  userId: string,
+  saleId: string,
+  installmentId: string,
+  today: ISODate,
+) =>
+  useCases.collectSaleInstallment.execute({
+    groupId,
+    userId,
+    saleId,
+    installmentId,
+    today,
+  });
+
+export const replanCreditSale = (
+  groupId: string,
+  userId: string,
+  saleId: string,
+  installments: PlannedInstallment[],
+) =>
+  useCases.replanCreditSale.execute({ groupId, userId, saleId, installments });
+
+export const proposeVoidCreditSale = (
+  groupId: string,
+  actorId: string,
+  saleId: string,
+) => useCases.proposeVoidCreditSale.execute({ groupId, actorId, saleId });
+
+export const getCreditSale = (groupId: string, saleId: string) =>
+  useCases.getCreditSale.execute({ groupId, saleId });
+
+export const listCreditSales = (groupId: string) =>
+  useCases.listCreditSales.execute({ groupId });
+
+export const listPlanChanges = (groupId: string) =>
+  useCases.listPlanChanges.execute({ groupId });
+
+export const getSaleTargetForMovement = (
+  groupId: string,
+  movementId: string,
+  movementType: MovementType,
+) =>
+  useCases.getSaleTargetForMovement.execute({
+    groupId,
+    movementId,
+    movementType,
   });

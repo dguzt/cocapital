@@ -11,13 +11,13 @@ export interface ContactRepository {
   listByGroup(groupId: string): Promise<Contact[]>;
 
   /**
-   * Tells whether a contact belongs to the group.
+   * Finds a contact, only if it belongs to the group.
    *
    * @param groupId - The group asking.
    * @param contactId - The contact.
-   * @returns True when the contact is the group's.
+   * @returns The contact, or null.
    */
-  existsInGroup(groupId: string, contactId: string): Promise<boolean>;
+  findInGroup(groupId: string, contactId: string): Promise<Contact | null>;
 
   /**
    * Stores a new contact.

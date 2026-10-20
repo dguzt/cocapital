@@ -5,7 +5,7 @@
 - **Priority:** P0
 - **Hat:** Builder
 - **Modules touched:** M6 Contacts, M7 Inventory, M3 Movements, M5 Capital
-- **Status:** In progress
+- **Status:** In review (PR A #8, PR B)
 - **GitHub issue:** #—
 - **Spec source:** decisions.md **D6** (locked).
 
@@ -48,13 +48,13 @@ VOID:     Anular venta → partner OK → sale + every cobro voided → capital 
 
 **UC-601 · Vender abre su página**
 1. Agregar movimiento → the grid still has 6 tiles; "Vender" says "abre página".
-2. Tap it → `/ventas/nueva`, tab **Al contado** selected → register a sale of S/ 100 with cost 60 → Efectivo +100, Inventario −60, Por ventas +40.
+2. Tap it → `/ventas/nueva`, tab **Al contado** selected → Precio 100, Costo base 60 → Registrar venta → back on the panel: Efectivo +100, Inventario −60, Por ventas +40.
 
 **UC-602 · Crear venta en cuotas — el cronograma tiene que cuadrar**
-1. Vender → En cuotas · price 100 · inicial 20 · 3 cuotas → cuotas 26.67 · 26.67 · 26.66 · footer "coincide ✓".
-2. Change cuota 2 to 30 → amber "difiere +S/ 3.33" · Confirmar disabled.
-3. Change cuota 3 to 23.33 → "coincide ✓" · Confirmar enabled.
-4. Confirm with cost 60 → lands on the sale page · panel: Cuentas por cobrar S/ 48, margen por cobrar S/ 32, Efectivo +20.
+1. Vender → En cuotas · price 100 · cost 60 · inicial 20 · 3 cuotas → cuotas 26.66 · 26.66 · 26.68 (the last one takes the cents) · footer "coincide ✓".
+2. Change cuota 2 to 30 → amber "difiere +S/ 3.34" · Confirmar venta disabled.
+3. Change cuota 3 to 23.34 → "coincide ✓" · Confirmar venta enabled.
+4. Confirm → lands on the sale page · panel: Cuentas por cobrar S/ 48, margen por cobrar S/ 32, Efectivo +20.
 
 **UC-603 · Lista y detalle**
 1. `/ventas` → the sale shows buyer, item, "1/4 cobradas" and the pending amount.
@@ -66,9 +66,9 @@ VOID:     Anular venta → partner OK → sale + every cobro voided → capital 
 3. ↶ on a collected cuota → "falta el OK" · partner approves → cuota back to Pendiente, capital as before the cobro.
 
 **UC-605 · Cambiar plan**
-1. On a sale with cuota 1 collected: Cambiar plan → from 2 to 4 remaining cuotas → 53.33 split 13.33 · 13.33 · 13.33 · 13.34 · "coincide ✓".
+1. On the sale above with cuota 1 collected (pending 30 + 23.34): Cambiar plan → 4 cuotas → 53.34 split 13.33 · 13.33 · 13.33 · 13.35 · "coincide ✓".
 2. Raise one cuota by 5 → "difiere +S/ 5" · Guardar disabled.
-3. Fix it and save → activity shows "Plan cambiado 2 → 4" · capital unchanged.
+3. Fix it and Guardar plan → toast "Plan cambiado · 2 → 4 cuotas" · activity shows "Plan cambiado · <buyer> · <item>" · capital unchanged.
 
 **UC-606 · Anular venta**
 1. Anular venta on a sale with 2 cobros → the dialog says it also voids 2 cobros and their total.

@@ -19,20 +19,18 @@ export class ResolveContact {
    * Checks a picked contact belongs to the group, or adds a new one.
    *
    * @param input - The group and the person picked or typed.
-   * @returns The contact's id, or `ContactNotFound` or `ContactNameRequired`.
+   * @returns The contact's id and name, or `ContactNotFound` or
+   *   `ContactNameRequired`.
    */
   async execute(
     input: ResolveContactInput,
-  ): Promise<Result<{ contactId: string }, ContactError>> {
+  ): Promise<Result<{ contactId: string; name: string }, ContactError>> {
     const { choice } = input;
 
     if ("id" in choice) {
-      const exists = await this.contacts.existsInGroup(
-        input.groupId,
-        choice.id,
-      );
+      const found = await this.contacts.findInGroup(input.groupId, choice.id);
 
-      if (!exists) {
+      if (!found) {
         return err({
           kind: "ContactNotFound",
           message: "contact does not exist in this group",
@@ -40,7 +38,7 @@ export class ResolveContact {
         });
       }
 
-      return ok({ contactId: choice.id });
+      return ok({ contactId: found.id, name: found.name });
     }
 
     const contact = Contact.create({
@@ -55,6 +53,6 @@ export class ResolveContact {
 
     await this.contacts.add(contact.value);
 
-    return ok({ contactId: contact.value.id });
+    return ok({ contactId: contact.value.id, name: contact.value.name });
   }
 }
