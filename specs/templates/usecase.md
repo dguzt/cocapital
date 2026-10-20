@@ -17,5 +17,9 @@ As a **<user>**, I want **<capability>** so that **<benefit>**.
 - GIVEN <context> WHEN <action> THEN <result>
 - GIVEN ... WHEN ... THEN ...
 
+## Prueba manual
+1. <step the founder runs locally> → <what they should see>
+2. ...
+
 ## Notes for supervised dev
 <What the user should watch/learn while we build this. Key decisions to review together.>
