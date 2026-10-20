@@ -13,10 +13,13 @@ import { createLoanAction } from "@/backend/modules/loans/adapters/in/next/loan-
 import { Schedule } from "@/backend/modules/loans/domain/schedule";
 import type { ScheduledInstallment } from "@/backend/modules/loans/domain/scheduled-installment";
 import { ContactPicker } from "@/components/contacts/contact-picker";
+import {
+  type Edit,
+  ScheduleEditor,
+} from "@/components/schedule/schedule-editor";
 import { Button } from "@/components/ui/button";
 import { PERIOD_DAYS, todayInLima } from "@/lib/dates";
 import { solesToCents } from "@/lib/money";
-import { type Edit, ScheduleEditor } from "./schedule-editor";
 import { SummaryCard } from "./summary-card";
 import { type LoanTerms, TermsStep } from "./terms-step";
 
@@ -124,7 +127,8 @@ export function LoanWizard({ contacts }: { contacts: ContactView[] }) {
         <ScheduleEditor
           rows={rows}
           edits={edits}
-          loanTotal={base.total}
+          total={base.total}
+          totalLabel="Préstamo"
           onEdit={(number, patch) =>
             setEdits((prev) => ({
               ...prev,

@@ -8,8 +8,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { getSaleTargetForMovementAction } from "@/backend/modules/inventory/adapters/in/next/credit-sale-actions";
 import { getLoanTargetForMovementAction } from "@/backend/modules/loans/adapters/in/next/loan-actions";
-import type { LoanTarget } from "@/backend/modules/loans/domain/loan-target";
 import {
   getMovementHistoryAction,
   proposeEditAction,
@@ -35,7 +35,7 @@ import { type EditDraft, EditForm } from "./edit-form";
 const ERROR_TEXT: Record<string, string> = {
   ChangeAlreadyPending: "Ya hay un cambio esperando el OK de tu socio.",
   SystemMovement:
-    "Este movimiento pertenece a un préstamo — corrígelo desde el préstamo.",
+    "Este movimiento pertenece a un préstamo o a una venta en cuotas — corrígelo desde ahí.",
   MovementVoided: "Este movimiento ya fue anulado.",
   InvalidAmount: "Ingresa un monto válido.",
   InvalidCost: "El costo no es válido.",
@@ -43,11 +43,58 @@ const ERROR_TEXT: Record<string, string> = {
 
 const emptyDraft: EditDraft = { amount: "", concept: "", cost: "" };
 
-/** The loan page a ledger row links to — a `repay` also points at its cuota. */
-function loanHref(target: LoanTarget): string {
-  return target.installmentId
-    ? `/prestamos/${target.loanId}?cuota=${target.installmentId}`
-    : `/prestamos/${target.loanId}`;
+type Owner = "loan" | "sale" | null;
+
+const OWNER_OF: Partial<Record<LedgerMovement["type"], Owner>> = {
+  lend: "loan",
+  repay: "loan",
+  sell_on_credit: "sale",
+  collect_sale: "sale",
+};
+
+const OWNER_TEXT = {
+  loan: {
+    button: "Ir al préstamo",
+    collection:
+      "Este cobro pertenece a un préstamo. Para anularlo, ve al préstamo.",
+    entry:
+      "Este movimiento pertenece a un préstamo. Para editarlo o anularlo, ve al préstamo.",
+  },
+  sale: {
+    button: "Ir a la venta",
+    collection:
+      "Este cobro pertenece a una venta en cuotas. Para anularlo, ve a la venta.",
+    entry:
+      "Este movimiento pertenece a una venta en cuotas. Para anularla, ve a la venta.",
+  },
+} as const;
+
+/** The page a ledger row of a loan or a credit sale links to, at its cuota. */
+async function ownerHref(
+  owner: "loan" | "sale",
+  movement: LedgerMovement,
+): Promise<string | null> {
+  if (owner === "loan") {
+    const { target } = await getLoanTargetForMovementAction(
+      movement.id,
+      movement.type,
+    );
+
+    if (!target) {
+      return null;
+    }
+
+    return target.installmentId
+      ? `/prestamos/${target.loanId}?cuota=${target.installmentId}`
+      : `/prestamos/${target.loanId}`;
+  }
+
+  const { target } = await getSaleTargetForMovementAction(
+    movement.id,
+    movement.type,
+  );
+
+  return target ? `/ventas/${target.saleId}` : null;
 }
 
 export function MovementDialog({
@@ -64,7 +111,7 @@ export function MovementDialog({
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [draft, setDraft] = useState<EditDraft>(emptyDraft);
   const [history, setHistory] = useState<ChangeHistoryItem[] | null>(null);
-  const [target, setTarget] = useState<LoanTarget | null>(null);
+  const [target, setTarget] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const meta = MOVEMENT_META[movement.type];
@@ -73,9 +120,7 @@ export function MovementDialog({
     movement.status,
     hasPending,
   );
-  // A loan's entries (lend/repay) are corrected from the loan, not here — the
-  // dialog derives the user there instead of offering Editar/Anular.
-  const belongsToLoan = movement.type === "lend" || movement.type === "repay";
+  const owner = OWNER_OF[movement.type] ?? null;
 
   useEffect(() => {
     if (open) {
@@ -90,13 +135,11 @@ export function MovementDialog({
         if (r.ok) setHistory(r.history);
       });
       setTarget(null);
-      if (belongsToLoan) {
-        getLoanTargetForMovementAction(movement.id, movement.type).then((r) => {
-          if (r.ok) setTarget(r.target);
-        });
+      if (owner) {
+        ownerHref(owner, movement).then(setTarget);
       }
     }
-  }, [open, movement, belongsToLoan]);
+  }, [open, movement, owner]);
 
   function submitEdit() {
     startTransition(async () => {
@@ -171,12 +214,12 @@ export function MovementDialog({
             onCancel={() => setMode("view")}
             onSubmit={submitEdit}
           />
-        ) : belongsToLoan ? (
+        ) : owner ? (
           <div className="rounded-lg border border-border bg-secondary/50 px-3 py-3">
             <p className="text-[13px] text-muted-foreground">
-              {movement.type === "repay"
-                ? "Este cobro pertenece a un préstamo. Para anularlo, ve al préstamo."
-                : "Este movimiento pertenece a un préstamo. Para editarlo o anularlo, ve al préstamo."}
+              {movement.type === "repay" || movement.type === "collect_sale"
+                ? OWNER_TEXT[owner].collection
+                : OWNER_TEXT[owner].entry}
             </p>
             <Button
               className="mt-2.5 w-full"
@@ -185,12 +228,13 @@ export function MovementDialog({
               onClick={() => setOpen(false)}
             >
               {target ? (
-                <Link href={loanHref(target)}>
-                  <ArrowRight className="size-4" /> Ir al préstamo
+                <Link href={target}>
+                  <ArrowRight className="size-4" /> {OWNER_TEXT[owner].button}
                 </Link>
               ) : (
                 <>
-                  <Loader2 className="size-4 animate-spin" /> Ir al préstamo
+                  <Loader2 className="size-4 animate-spin" />{" "}
+                  {OWNER_TEXT[owner].button}
                 </>
               )}
             </Button>
@@ -217,7 +261,7 @@ export function MovementDialog({
           </div>
         )}
 
-        {mode === "view" && !belongsToLoan && note && (
+        {mode === "view" && !owner && note && (
           <p className="text-[12px] text-muted-foreground">{note}</p>
         )}
 

@@ -17,8 +17,9 @@ export type ProposeChangeInput = {
 
 /**
  * Proposes an edit or a void of a movement from the ledger. Nothing changes
- * until another partner approves it. A loan's own movements are corrected
- * from the loan: a lend accepts nothing here, a repay accepts only a void.
+ * until another partner approves it. Movements written by a loan or a credit
+ * sale are corrected from there: a lend or sell_on_credit accepts nothing
+ * here, a repay or collect_sale accepts only a void.
  */
 export class ProposeChange {
   static inject = ["movements", "changes"] as const;
@@ -51,10 +52,11 @@ export class ProposeChange {
       });
     }
 
-    if (this.isOwnedByALoan(movement, input.kind)) {
+    if (this.isWrittenByAnotherModule(movement, input.kind)) {
       return err({
         kind: "SystemMovement",
-        message: "loan movements are system-written; correct them via the loan",
+        message:
+          "this movement is written by a loan or a credit sale; correct it from there",
         movementId: input.movementId,
       });
     }
@@ -80,10 +82,20 @@ export class ProposeChange {
     return ok({ pendingId: stored.id });
   }
 
-  private isOwnedByALoan(movement: StoredMovement, kind: ChangeKind): boolean {
-    return (
-      movement.type === "lend" || (movement.type === "repay" && kind === "edit")
-    );
+  private isWrittenByAnotherModule(
+    movement: StoredMovement,
+    kind: ChangeKind,
+  ): boolean {
+    switch (movement.type) {
+      case "lend":
+      case "sell_on_credit":
+        return true;
+      case "repay":
+      case "collect_sale":
+        return kind === "edit";
+      default:
+        return false;
+    }
   }
 
   private snapshotOf(movement: StoredMovement): MovementSnapshot {

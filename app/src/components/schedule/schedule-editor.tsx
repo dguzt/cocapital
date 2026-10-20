@@ -1,18 +1,14 @@
 "use client";
-/**
- * "Cronograma · edítalo si quieres" (D3 #3: free edit, the total floats).
- * Editing a cuota does NOT redistribute the others — instead the drift footer
- * shows honestly whether what's scheduled still adds up to the loan.
- * Nothing is committed yet: this only exists before the loan is created.
- */
 import { useState } from "react";
-import type { ScheduledInstallment } from "@/backend/modules/loans/domain/scheduled-installment";
 import { Input } from "@/components/ui/input";
 import type { ISODate } from "@/lib/dates";
 import { formatDayMonth } from "@/lib/dates";
 import { formatCents, sanitizeMoneyInput } from "@/lib/money";
 
 export type Edit = { amountSoles?: string; dueDate?: ISODate };
+
+/** One editable row of a schedule. */
+export type ScheduleRow = { number: number; dueDate: ISODate; amount: number };
 
 /** Quiet text; tap to edit. */
 function TappableDate({
@@ -49,19 +45,25 @@ function TappableDate({
   );
 }
 
+/**
+ * "Cronograma · edítalo si quieres": each cuota's date and amount can be
+ * changed; the footer tells whether what is scheduled still adds up.
+ */
 export function ScheduleEditor({
   rows,
   edits,
-  loanTotal,
+  total,
+  totalLabel,
   onEdit,
 }: {
-  rows: ScheduledInstallment[];
+  rows: readonly ScheduleRow[];
   edits: Record<number, Edit>;
-  loanTotal: number;
+  total: number;
+  totalLabel: string;
   onEdit: (number: number, patch: Edit) => void;
 }) {
   const scheduled = rows.reduce((a, r) => a + r.amount, 0);
-  const drift = scheduled - loanTotal;
+  const drift = scheduled - total;
 
   return (
     <div>
@@ -100,7 +102,7 @@ export function ScheduleEditor({
           drift === 0 ? "text-muted-foreground" : "text-amber-400"
         }`}
       >
-        Programado {formatCents(scheduled)} · Préstamo {formatCents(loanTotal)}{" "}
+        Programado {formatCents(scheduled)} · {totalLabel} {formatCents(total)}{" "}
         ·{" "}
         {drift === 0 ? (
           <span className="text-emerald-400">coincide ✓</span>

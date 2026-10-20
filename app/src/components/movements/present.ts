@@ -20,7 +20,8 @@ export type PresentedMovement = {
   voided: boolean;
 };
 
-function dayLabel(date: ISODate, today: ISODate): string {
+/** "Hoy", "Ayer" or "8 ago" for a day. */
+export function dayLabel(date: ISODate, today: ISODate): string {
   if (date === today) return "Hoy";
   const [y, m, d] = today.split("-").map(Number);
   const yesterday = new Date(Date.UTC(y, m - 1, d - 1))
@@ -49,11 +50,15 @@ export function presentMovement(
       ? `Ganancia ${formatCents(m.amount - m.cost)}`
       : m.type === "repay" && m.cost !== null
         ? `Interés ${formatCents(m.amount - m.cost)}`
-        : m.type === "buy_inventory"
-          ? "→ Inventario"
-          : m.type === "lend"
-            ? "→ Prestado"
-            : null;
+        : m.type === "collect_sale" && m.cost !== null && m.cost < m.amount
+          ? `Ganancia ${formatCents(m.amount - m.cost)}`
+          : m.type === "sell_on_credit"
+            ? "→ Por cobrar"
+            : m.type === "buy_inventory"
+              ? "→ Inventario"
+              : m.type === "lend"
+                ? "→ Prestado"
+                : null;
 
   // "Cuándo" = registry time (createdAt), exact: "Hoy · 14:32", "8 ago · 09:15".
   const registeredDay = dayLabel(limaDateOf(m.createdAt), today);

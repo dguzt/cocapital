@@ -29,6 +29,13 @@
       "when": 1792482251165,
       "tag": "0003_contacts",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792483580783,
+      "tag": "0004_credit_sales",
+      "breakpoints": true
     }
   ]
 }

@@ -21,6 +21,8 @@ function revalidateLedgerAndLoans() {
   revalidatePath("/actividad");
   revalidatePath("/prestamos");
   revalidatePath("/prestamos/[id]", "page");
+  revalidatePath("/ventas");
+  revalidatePath("/ventas/[id]", "page");
 }
 
 /**

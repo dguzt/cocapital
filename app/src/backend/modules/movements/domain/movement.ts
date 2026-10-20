@@ -9,10 +9,12 @@ export const MOVEMENT_TYPES = [
   "lend",
   "repay",
   "expense",
+  "sell_on_credit",
+  "collect_sale",
 ] as const;
 export type MovementType = (typeof MOVEMENT_TYPES)[number];
 
-/** The kinds a partner can type by hand; loans write lend and repay. */
+/** The kinds a partner can type by hand; loans and credit sales write the rest. */
 export const MANUAL_MOVEMENT_TYPES = [
   "contribute",
   "buy_inventory",

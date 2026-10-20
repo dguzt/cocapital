@@ -30,7 +30,8 @@ export function PanelContent({
   const positive =
     Math.max(capital.cash, 0) +
     Math.max(capital.inventory, 0) +
-    Math.max(capital.lent, 0);
+    Math.max(capital.lent, 0) +
+    Math.max(capital.receivable, 0);
   const pct = (v: number) =>
     positive > 0 ? `${((Math.max(v, 0) / positive) * 100).toFixed(1)}%` : "0%";
 
@@ -52,10 +53,18 @@ export function PanelContent({
       full: "Prestado",
       value: capital.lent,
       swatch: "bg-zinc-700",
+      href: "/prestamos",
+    },
+    {
+      label: "Por cobrar",
+      full: "Cuentas por cobrar",
+      value: capital.receivable,
+      swatch: "bg-zinc-800",
+      href: "/ventas",
     },
   ];
-  // What the group has but can't spend today: inventory + outstanding loans.
-  const immobilized = capital.inventory + capital.lent;
+  // What the group has but can't spend today: inventory, loans and credit sales.
+  const immobilized = capital.inventory + capital.lent + capital.receivable;
   const immobilizedRows = [
     {
       label: "Inventario",
@@ -68,6 +77,12 @@ export function PanelContent({
       value: capital.lent,
       swatch: "bg-zinc-700",
       testId: "capital-lent",
+    },
+    {
+      label: "Cuentas por cobrar",
+      value: capital.receivable,
+      swatch: "bg-zinc-800",
+      testId: "capital-receivable",
     },
   ];
   const totalProfit = capital.salesProfit + capital.collectedInterest;
@@ -100,7 +115,7 @@ export function PanelContent({
             <span>Inmovilizado · {pct(immobilized)}</span>
           </div>
           <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3.5">
-            {/* inmovilizado — the total, then its two pieces */}
+            {/* inmovilizado — the total, then its pieces */}
             <div className="rounded-xl border border-border bg-sidebar p-3.5 sm:p-4">
               <div className="flex items-center gap-2">
                 <span className="size-2.5 shrink-0 rounded-sm bg-zinc-600" />
@@ -211,7 +226,7 @@ export function PanelContent({
                   <span className={`size-2.5 rounded-sm ${b.swatch}`} />
                   <span className="flex-1 text-left text-sm font-semibold">
                     {b.full}
-                    {b.label === "Prestado" && (
+                    {"href" in b && (
                       <ChevronRight className="ml-0.5 inline size-3.5 text-muted-foreground" />
                     )}
                   </span>
@@ -221,8 +236,8 @@ export function PanelContent({
                 </>
               );
               const cls = `flex w-full items-center gap-3 py-3 ${i < buckets.length - 1 ? "border-b border-border" : ""}`;
-              return b.label === "Prestado" ? (
-                <Link key={b.label} href="/prestamos" className={cls}>
+              return "href" in b && b.href ? (
+                <Link key={b.label} href={b.href} className={cls}>
                   {row}
                 </Link>
               ) : (
@@ -257,6 +272,18 @@ export function PanelContent({
           <p className="mt-3.5 inline-flex rounded-full border border-border bg-secondary px-3 py-1.5 text-xs font-medium text-muted-foreground">
             Ganancia total del grupo · {formatCents(totalProfit)}
           </p>
+          {capital.expectedSalesMargin > 0 && (
+            <p
+              data-testid="capital-expected-sales-margin"
+              className="mt-2 text-xs text-muted-foreground"
+            >
+              Margen por cobrar en ventas ·{" "}
+              <span className="font-mono tabular-nums">
+                {formatCents(capital.expectedSalesMargin)}
+              </span>{" "}
+              · no suma al total hasta cobrarse
+            </p>
+          )}
         </section>
       </div>
 

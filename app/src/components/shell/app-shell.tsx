@@ -4,14 +4,20 @@
  * page title/actions. On mobile the sidebar collapses to a compact header.
  */
 import { SignOutButton, UserButton } from "@clerk/nextjs";
-import { Activity, LayoutGrid, LogOut, Package } from "lucide-react";
+import {
+  Activity,
+  LayoutGrid,
+  LogOut,
+  Package,
+  ShoppingBag,
+} from "lucide-react";
 import Link from "next/link";
 import type { UserView } from "@/backend/modules/accounts/adapters/in/next/user-view";
 import type { GroupView } from "@/backend/modules/groups/adapters/in/next/group-view";
 import { MobileMenu } from "@/components/shell/mobile-menu";
 import { Button } from "@/components/ui/button";
 
-export type NavKey = "panel" | "loans" | "activity";
+export type NavKey = "panel" | "loans" | "sales" | "activity";
 
 const NAV: {
   key: NavKey;
@@ -30,6 +36,12 @@ const NAV: {
     href: "/prestamos",
     label: "Préstamos",
     icon: <Package className="size-[18px]" />,
+  },
+  {
+    key: "sales",
+    href: "/ventas",
+    label: "Ventas",
+    icon: <ShoppingBag className="size-[18px]" />,
   },
   {
     key: "activity",

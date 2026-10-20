@@ -27,6 +27,10 @@ export const ACTIONS_BY_TYPE: Record<MovementType, Allowed> = {
   // acting here (the warning + "Ir al préstamo" replace these buttons/notes).
   repay: { edit: false, void: false },
   lend: { edit: false, void: false },
+
+  // the same for a credit sale and its cobros: the dialog sends you to the sale.
+  sell_on_credit: { edit: false, void: false },
+  collect_sale: { edit: false, void: false },
 };
 
 /** What the movement is open to right now: the rules, plus its live state. */

@@ -1,7 +1,14 @@
 "use client";
 /** The mobile hamburger (D3 #7): full nav + user card in a bottom drawer. */
 import { SignOutButton, UserButton } from "@clerk/nextjs";
-import { Activity, LayoutGrid, LogOut, Menu, Package } from "lucide-react";
+import {
+  Activity,
+  LayoutGrid,
+  LogOut,
+  Menu,
+  Package,
+  ShoppingBag,
+} from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -16,6 +23,7 @@ import {
 const ICONS = {
   panel: <LayoutGrid className="size-5" />,
   loans: <Package className="size-5" />,
+  sales: <ShoppingBag className="size-5" />,
   activity: <Activity className="size-5" />,
 } as const;
 

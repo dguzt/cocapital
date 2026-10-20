@@ -1,16 +1,10 @@
 "use client";
 /** The loan's terms: capital · interés · # de cuotas · frecuencia · inicio. */
+import { FrequencyPicker } from "@/components/schedule/frequency-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Frequency, ISODate } from "@/lib/dates";
 import { sanitizeIntInput, sanitizeMoneyInput } from "@/lib/money";
-
-const FREQUENCIES: { value: Frequency; label: string }[] = [
-  { value: "daily", label: "Diario" },
-  { value: "weekly", label: "Semanal" },
-  { value: "biweekly", label: "Quincenal" },
-  { value: "monthly", label: "Mensual" },
-];
 
 export type LoanTerms = {
   capitalSoles: string;
@@ -72,25 +66,10 @@ export function TermsStep({
         />
       </div>
 
-      <div className="space-y-2">
-        <Label>Frecuencia</Label>
-        <div className="flex flex-wrap gap-2">
-          {FREQUENCIES.map((f) => (
-            <button
-              key={f.value}
-              type="button"
-              onClick={() => onChange({ frequency: f.value })}
-              className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                terms.frequency === f.value
-                  ? "border-emerald-400 bg-emerald-400/10 text-foreground"
-                  : "border-border bg-secondary text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <FrequencyPicker
+        value={terms.frequency}
+        onChange={(frequency) => onChange({ frequency })}
+      />
 
       <div className="space-y-2">
         <Label htmlFor="start">Fecha de inicio</Label>

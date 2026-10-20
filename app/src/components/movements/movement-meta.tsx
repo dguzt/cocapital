@@ -31,7 +31,7 @@ export const MOVEMENT_META: Record<
   },
   sell_inventory: {
     label: "Venta",
-    hint: "Inventario → efectivo",
+    hint: "Al contado o en cuotas",
     dir: "in",
     amountPlaceholder: "210.00",
     conceptPlaceholder: "Ej. 3 perfumes · feria",
@@ -49,6 +49,20 @@ export const MOVEMENT_META: Record<
     dir: "in",
     amountPlaceholder: "82.50",
     conceptPlaceholder: "Ej. Karina · cuota 1",
+  },
+  sell_on_credit: {
+    label: "Venta en cuotas",
+    hint: "Cronograma",
+    dir: "move",
+    amountPlaceholder: "100.00",
+    conceptPlaceholder: "Ej. Juan · Licuadora",
+  },
+  collect_sale: {
+    label: "Cobro de venta",
+    hint: "Cobrar cuota",
+    dir: "in",
+    amountPlaceholder: "20.00",
+    conceptPlaceholder: "Ej. Juan · Licuadora · cuota 1",
   },
   expense: {
     label: "Gasto",

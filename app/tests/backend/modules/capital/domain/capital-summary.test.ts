@@ -29,9 +29,11 @@ describe("CapitalSummary.derive — movement effects", () => {
       cash: 0,
       inventory: 0,
       lent: 0,
+      receivable: 0,
       salesProfit: 0,
       collectedInterest: 0,
       expectedInterest: 0,
+      expectedSalesMargin: 0,
     });
   });
   it("salesProfit accumulates margin only from costed sells", () => {
@@ -156,5 +158,67 @@ describe("CapitalSummary.derive — lending (interest counts only once collected
     const a = CapitalSummary.derive(lentLedger, freshLoan);
     const b = CapitalSummary.derive([...lentLedger], [...freshLoan]);
     expect(a).toEqual(b);
+  });
+});
+
+describe("CapitalSummary.derive — credit sales", () => {
+  const sold = [
+    mv("contribute", 50000),
+    mv("buy_inventory", 6000),
+    mv("sell_on_credit", 10000, { cost: 6000 }),
+  ];
+
+  it("selling on credit moves cost from inventory to receivable; the total holds", () => {
+    const s = CapitalSummary.derive(sold, []);
+
+    expect(s.inventory).toBe(0);
+    expect(s.receivable).toBe(6000);
+    expect(s.total).toBe(50000);
+    expect(s.expectedSalesMargin).toBe(4000);
+    expect(s.salesProfit).toBe(0);
+  });
+
+  it("each cobro brings cash, recovers its cost share and earns the rest", () => {
+    const s = CapitalSummary.derive(
+      [...sold, mv("collect_sale", 2000, { cost: 1200 })],
+      [],
+    );
+
+    expect(s.cash).toBe(46000);
+    expect(s.receivable).toBe(4800);
+    expect(s.salesProfit).toBe(800);
+    expect(s.expectedSalesMargin).toBe(3200);
+    expect(s.total).toBe(50800);
+  });
+
+  it("a voided sale and its cobros count for nothing", () => {
+    const s = CapitalSummary.derive(
+      [
+        mv("contribute", 50000),
+        mv("buy_inventory", 6000),
+        mv("sell_on_credit", 10000, { cost: 6000, status: "voided" }),
+        mv("collect_sale", 2000, { cost: 1200, status: "voided" }),
+      ],
+      [],
+    );
+
+    expect(s).toMatchObject({
+      inventory: 6000,
+      receivable: 0,
+      salesProfit: 0,
+      expectedSalesMargin: 0,
+      total: 50000,
+    });
+  });
+
+  it("without a cost the receivable is the price and nothing is margin", () => {
+    const s = CapitalSummary.derive(
+      [mv("sell_on_credit", 10000), mv("collect_sale", 2000, { cost: 2000 })],
+      [],
+    );
+
+    expect(s.receivable).toBe(8000);
+    expect(s.salesProfit).toBe(0);
+    expect(s.expectedSalesMargin).toBe(0);
   });
 });

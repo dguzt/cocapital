@@ -18,6 +18,8 @@ export const movementType = pgEnum("movement_type", [
   "lend",
   "repay",
   "expense",
+  "sell_on_credit",
+  "collect_sale",
 ]);
 
 export const movementStatus = pgEnum("movement_status", ["active", "voided"]);
@@ -36,7 +38,7 @@ export const Movements = pgTable(
     type: movementType("type").notNull(),
     /** Cents, never negative. */
     amount: integer("amount").notNull(),
-    /** Cost of goods in cents for a sale, or the principal of a repay. */
+    /** Cost of goods in cents for a sale, the principal of a repay, or the cost recovered by a cobro of a credit sale. */
     cost: integer("cost"),
     concept: text("concept"),
     /** Calendar day of the event, in Lima. */

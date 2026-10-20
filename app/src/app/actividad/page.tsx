@@ -12,11 +12,13 @@ export default async function ActivityPage() {
   const { user, group } = await requireMembership();
 
   const today = todayInLima();
-  const [movements, installments, pendingChanges] = await Promise.all([
-    useCases.listMovements.execute({ groupId: group.id }),
-    useCases.listGroupInstallments.execute({ groupId: group.id }),
-    useCases.listPendingChanges.execute({ groupId: group.id }),
-  ]);
+  const [movements, installments, pendingChanges, planChanges] =
+    await Promise.all([
+      useCases.listMovements.execute({ groupId: group.id }),
+      useCases.listGroupInstallments.execute({ groupId: group.id }),
+      useCases.listPendingChanges.execute({ groupId: group.id }),
+      useCases.listPlanChanges.execute({ groupId: group.id }),
+    ]);
   const overdueCount = installments.filter(
     (i) => i.status === "pending" && isOverdue(i.dueDate, today),
   ).length;
@@ -44,6 +46,7 @@ export default async function ActivityPage() {
               <div className="hidden overflow-x-auto md:block">
                 <ActivityTable
                   movements={movements}
+                  planChanges={planChanges}
                   today={today}
                   pendingIds={pendingIds}
                 />
@@ -51,6 +54,7 @@ export default async function ActivityPage() {
               <div className="md:hidden">
                 <ActivityFeed
                   movements={movements}
+                  planChanges={planChanges}
                   today={today}
                   pendingIds={pendingIds}
                 />
