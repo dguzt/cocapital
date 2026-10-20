@@ -1,5 +1,6 @@
 import { useCases } from "@/backend/application/container";
 import { toUserView } from "@/backend/modules/accounts/adapters/in/next/user-view";
+import { toContactView } from "@/backend/modules/contacts/adapters/in/next/contact-view";
 import { toGroupView } from "@/backend/modules/groups/adapters/in/next/group-view";
 import { requireMembership } from "@/backend/modules/groups/adapters/in/next/membership";
 import { LoanWizard } from "@/components/loans/loan-wizard/loan-wizard";
@@ -9,8 +10,8 @@ import { isOverdue, todayInLima } from "@/lib/dates";
 export default async function NewLoanPage() {
   const { user, group } = await requireMembership();
   const today = todayInLima();
-  const [borrowers, installments] = await Promise.all([
-    useCases.listBorrowers.execute({ groupId: group.id }),
+  const [contacts, installments] = await Promise.all([
+    useCases.listContacts.execute({ groupId: group.id }),
     useCases.listGroupInstallments.execute({ groupId: group.id }),
   ]);
   const overdueCount = installments.filter(
@@ -27,7 +28,7 @@ export default async function NewLoanPage() {
       subtitle="El cronograma se calcula solo — tú solo confirmas"
     >
       <div className="max-w-2xl">
-        <LoanWizard borrowers={borrowers} />
+        <LoanWizard contacts={contacts.map(toContactView)} />
       </div>
     </AppShell>
   );

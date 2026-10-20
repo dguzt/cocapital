@@ -8,9 +8,9 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { Users } from "@/backend/modules/accounts/adapters/out/drizzle/users.table";
+import { Contacts } from "@/backend/modules/contacts/adapters/out/drizzle/contacts.table";
 import { Groups } from "@/backend/modules/groups/adapters/out/drizzle/groups.table";
 import { Movements } from "@/backend/modules/movements/adapters/out/drizzle/movements.table";
-import { Borrowers } from "./borrowers.table";
 
 export const frequency = pgEnum("frequency", [
   "daily",
@@ -34,7 +34,7 @@ export const Loans = pgTable(
       .references(() => Users.id),
     borrowerId: uuid("borrower_id")
       .notNull()
-      .references(() => Borrowers.id),
+      .references(() => Contacts.id),
     /** Principal in cents. */
     capital: integer("capital").notNull(),
     /** Flat rate in basis points over the whole loan: 10.5% = 1050. */

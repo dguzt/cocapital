@@ -1,6 +1,6 @@
 import { db } from "@/backend/infra/db/client";
 import {
-  Borrowers,
+  Contacts,
   Groups,
   Installments,
   Loans,
@@ -14,7 +14,7 @@ import {
 export async function truncateAll() {
   await db.delete(Installments);
   await db.delete(Loans);
-  await db.delete(Borrowers);
+  await db.delete(Contacts);
   await db.delete(MovementChanges);
   await db.delete(Movements);
   await db.delete(Memberships);

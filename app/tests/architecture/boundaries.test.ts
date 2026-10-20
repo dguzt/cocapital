@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 const MODULES = [
   "accounts",
   "capital",
+  "contacts",
   "groups",
   "inventory",
   "loans",

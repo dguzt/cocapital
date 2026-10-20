@@ -8,23 +8,24 @@ import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
+import type { ContactView } from "@/backend/modules/contacts/adapters/in/next/contact-view";
 import { createLoanAction } from "@/backend/modules/loans/adapters/in/next/loan-actions";
 import { Schedule } from "@/backend/modules/loans/domain/schedule";
 import type { ScheduledInstallment } from "@/backend/modules/loans/domain/scheduled-installment";
+import { ContactPicker } from "@/components/contacts/contact-picker";
 import { Button } from "@/components/ui/button";
 import { PERIOD_DAYS, todayInLima } from "@/lib/dates";
 import { solesToCents } from "@/lib/money";
-import { type Borrower, BorrowerPicker } from "./borrower-picker";
 import { type Edit, ScheduleEditor } from "./schedule-editor";
 import { SummaryCard } from "./summary-card";
 import { type LoanTerms, TermsStep } from "./terms-step";
 
-export function LoanWizard({ borrowers }: { borrowers: Borrower[] }) {
+export function LoanWizard({ contacts }: { contacts: ContactView[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState<Borrower | null>(null);
+  const [selected, setSelected] = useState<ContactView | null>(null);
   const [terms, setTerms] = useState<LoanTerms>({
     capitalSoles: "",
     ratePercent: "",
@@ -97,8 +98,10 @@ export function LoanWizard({ borrowers }: { borrowers: Borrower[] }) {
 
   return (
     <div className="space-y-5">
-      <BorrowerPicker
-        borrowers={borrowers}
+      <ContactPicker
+        label="Prestatario"
+        placeholder="Elegir o crear prestatario"
+        contacts={contacts}
         query={query}
         selected={selected}
         onQueryChange={setQuery}

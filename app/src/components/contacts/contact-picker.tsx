@@ -1,45 +1,48 @@
 "use client";
-/** UC-301: search-or-create. Typing a name that doesn't exist creates it. */
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
+import type { ContactView } from "@/backend/modules/contacts/adapters/in/next/contact-view";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export type Borrower = { id: string; name: string };
-
-export function BorrowerPicker({
-  borrowers,
+/** Picks a contact of the group, or creates one by typing a new name. */
+export function ContactPicker({
+  label,
+  placeholder,
+  contacts,
   query,
   selected,
   onQueryChange,
   onSelect,
 }: {
-  borrowers: Borrower[];
+  label: string;
+  placeholder: string;
+  contacts: ContactView[];
   query: string;
-  selected: Borrower | null;
+  selected: ContactView | null;
   onQueryChange: (q: string) => void;
-  onSelect: (b: Borrower | null) => void;
+  onSelect: (b: ContactView | null) => void;
 }) {
   const [open, setOpen] = useState(false);
 
   const newName = query.trim();
-  const filtered = borrowers.filter((b) =>
+  const filtered = contacts.filter((b) =>
     b.name.toLowerCase().includes(newName.toLowerCase()),
   );
-  const label = selected?.name ?? (newName || null);
+  const name = selected?.name ?? (newName || null);
   const isNew =
     newName &&
     !filtered.some((b) => b.name.toLowerCase() === newName.toLowerCase());
 
   return (
     <div className="space-y-2">
-      <Label>Prestatario</Label>
+      <Label>{label}</Label>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className={`flex h-12 w-full items-center justify-between rounded-xl border border-input bg-card px-4 text-base ${label ? "" : "text-muted-foreground"}`}
+        className={`flex h-12 w-full items-center justify-between rounded-xl border border-input bg-card px-4 text-base ${name ? "" : "text-muted-foreground"}`}
       >
-        {label ?? "Elegir o crear prestatario"}
+        {name ?? placeholder}
         <ChevronDown className="size-4 text-muted-foreground" />
       </button>
 

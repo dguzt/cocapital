@@ -6,20 +6,21 @@ import { ClerkIdentityProvider } from "@/backend/modules/accounts/adapters/out/c
 import { DrizzleUserRepository } from "@/backend/modules/accounts/adapters/out/drizzle/drizzle-user-repository";
 import { EnsureUser } from "@/backend/modules/accounts/usecases/ensure-user";
 import { GetCapitalSummary } from "@/backend/modules/capital/usecases/get-capital-summary";
+import { DrizzleContactRepository } from "@/backend/modules/contacts/adapters/out/drizzle/drizzle-contact-repository";
+import { ListContacts } from "@/backend/modules/contacts/usecases/list-contacts";
+import { ResolveContact } from "@/backend/modules/contacts/usecases/resolve-contact";
 import { DrizzleGroupRepository } from "@/backend/modules/groups/adapters/out/drizzle/drizzle-group-repository";
 import { CreateGroup } from "@/backend/modules/groups/usecases/create-group";
 import { GetMyGroup } from "@/backend/modules/groups/usecases/get-my-group";
 import { JoinGroup } from "@/backend/modules/groups/usecases/join-group";
 import { UndoPurchase } from "@/backend/modules/inventory/usecases/undo-purchase";
 import { UndoSale } from "@/backend/modules/inventory/usecases/undo-sale";
-import { DrizzleBorrowerRepository } from "@/backend/modules/loans/adapters/out/drizzle/drizzle-borrower-repository";
 import { DrizzleInstallmentRepository } from "@/backend/modules/loans/adapters/out/drizzle/drizzle-installment-repository";
 import { DrizzleLoanRepository } from "@/backend/modules/loans/adapters/out/drizzle/drizzle-loan-repository";
 import { CollectInstallment } from "@/backend/modules/loans/usecases/collect-installment";
 import { CreateLoan } from "@/backend/modules/loans/usecases/create-loan";
 import { GetLoanDetail } from "@/backend/modules/loans/usecases/get-loan-detail";
 import { GetLoanTargetForMovement } from "@/backend/modules/loans/usecases/get-loan-target-for-movement";
-import { ListBorrowers } from "@/backend/modules/loans/usecases/list-borrowers";
 import { ListGroupInstallments } from "@/backend/modules/loans/usecases/list-group-installments";
 import { ListLoans } from "@/backend/modules/loans/usecases/list-loans";
 import { ProposeVoidLoan } from "@/backend/modules/loans/usecases/propose-void-loan";
@@ -54,8 +55,9 @@ const injector = createInjector()
   .provideClass("changes", DrizzleChangeRepository)
   .provideClass("loans", DrizzleLoanRepository)
   .provideClass("installments", DrizzleInstallmentRepository)
-  .provideClass("borrowers", DrizzleBorrowerRepository)
+  .provideClass("contacts", DrizzleContactRepository)
 
+  .provideClass("resolveContact", ResolveContact)
   .provideClass("addMovement", AddMovement)
   .provideClass("voidEntry", VoidEntry)
   .provideClass("editEntry", EditEntry)
@@ -90,8 +92,9 @@ export const useCases = {
   getLoanTargetForMovement: injector.injectClass(GetLoanTargetForMovement),
   getLoanDetail: injector.resolve("getLoanDetail"),
   listLoans: injector.injectClass(ListLoans),
-  listBorrowers: injector.injectClass(ListBorrowers),
   listGroupInstallments: injector.resolve("listGroupInstallments"),
+
+  listContacts: injector.injectClass(ListContacts),
 
   getCapitalSummary: injector.injectClass(GetCapitalSummary),
 } as const;
