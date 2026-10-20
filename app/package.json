@@ -16,7 +16,8 @@
     "check:full": "npm run check && npm run test:int && npm run test:e2e",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "test:e2e:build": "E2E_PRODUCTION_BUILD=1 playwright test"
   },
   "dependencies": {
     "@clerk/localizations": "^4.13.1",
