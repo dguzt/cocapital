@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { collectSaleInstallmentAction } from "@/backend/modules/inventory/adapters/in/next/credit-sale-actions";
+import { useGroup } from "@/components/groups/group-context";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,13 +31,18 @@ export function CollectSaleButton({
   amountCents: number;
   buyerName: string;
 }) {
+  const { groupId } = useGroup();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 
   function collect() {
     startTransition(async () => {
-      const result = await collectSaleInstallmentAction(saleId, installmentId);
+      const result = await collectSaleInstallmentAction(
+        groupId,
+        saleId,
+        installmentId,
+      );
       if (result.ok) {
         setOpen(false);
         toast.success(`Cobro registrado · ${formatCents(result.amount)}`);

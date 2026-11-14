@@ -8,10 +8,16 @@ import { requireMembership } from "@/backend/modules/groups/adapters/in/next/mem
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
 import { todayInLima } from "@/lib/dates";
+import { groupPath } from "@/lib/group-path";
 import { formatCents } from "@/lib/money";
 
-export default async function LoansPage() {
-  const { user, group } = await requireMembership();
+export default async function LoansPage({
+  params,
+}: {
+  params: Promise<{ groupId: string }>;
+}) {
+  const { groupId } = await params;
+  const { user, group } = await requireMembership(groupId);
   const loans = await useCases.listLoans.execute({
     groupId: group.id,
     today: todayInLima(),
@@ -28,7 +34,7 @@ export default async function LoansPage() {
       subtitle="Capital prestado y cronogramas"
       actions={
         <Button asChild>
-          <Link href="/prestamos/nuevo">
+          <Link href={groupPath(group.id, "/prestamos/nuevo")}>
             <Plus className="size-4" /> Nuevo préstamo
           </Link>
         </Button>
@@ -44,7 +50,9 @@ export default async function LoansPage() {
             Crea el primero: el cronograma de cuotas se genera solo.
           </p>
           <Button asChild className="mt-4">
-            <Link href="/prestamos/nuevo">Crear préstamo</Link>
+            <Link href={groupPath(group.id, "/prestamos/nuevo")}>
+              Crear préstamo
+            </Link>
           </Button>
         </section>
       ) : (
@@ -54,7 +62,7 @@ export default async function LoansPage() {
             return (
               <li key={loan.id}>
                 <Link
-                  href={`/prestamos/${loan.id}`}
+                  href={groupPath(group.id, `/prestamos/${loan.id}`)}
                   className={`flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:border-input ${voided ? "opacity-60" : ""}`}
                 >
                   <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary font-bold">
@@ -100,7 +108,7 @@ export default async function LoansPage() {
           size="lg"
           className="fixed inset-x-4 bottom-4 z-40 h-13 shadow-lg shadow-emerald-400/20"
         >
-          <Link href="/prestamos/nuevo">
+          <Link href={groupPath(group.id, "/prestamos/nuevo")}>
             <Plus className="size-5" /> Nuevo préstamo
           </Link>
         </Button>

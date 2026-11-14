@@ -6,11 +6,21 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { decideChangeAction } from "@/backend/modules/movements/adapters/in/next/movement-actions";
 import type { PendingChangeItem } from "@/backend/modules/movements/domain/pending-change-item";
+import { useGroup } from "@/components/groups/group-context";
 import { Button } from "@/components/ui/button";
 import { formatCents } from "@/lib/money";
 import { MOVEMENT_META } from "./movement-meta";
 
+function whoProposes(items: PendingChangeItem[]): string {
+  const names = [...new Set(items.map((item) => item.proposerName))];
+
+  return names.length === 1
+    ? `${names[0]} propone`
+    : `${names.length} socios proponen`;
+}
+
 export function PendingApprovals({ items }: { items: PendingChangeItem[] }) {
+  const { groupId } = useGroup();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [actingOn, setActingOn] = useState<string | null>(null);
@@ -20,7 +30,7 @@ export function PendingApprovals({ items }: { items: PendingChangeItem[] }) {
   function decide(id: string, decision: "approve" | "reject") {
     setActingOn(id);
     startTransition(async () => {
-      const result = await decideChangeAction(id, decision);
+      const result = await decideChangeAction(groupId, id, decision);
       if (result.ok) {
         toast.success(
           decision === "approve" ? "Cambio aprobado" : "Cambio rechazado",
@@ -37,8 +47,8 @@ export function PendingApprovals({ items }: { items: PendingChangeItem[] }) {
   return (
     <section className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4">
       <p className="text-sm font-semibold">
-        Tu socio propone {items.length} cambio{items.length > 1 ? "s" : ""} —
-        falta tu OK
+        {whoProposes(items)} {items.length} cambio{items.length > 1 ? "s" : ""}{" "}
+        — falta tu OK
       </p>
       <ul className="mt-3 space-y-2.5">
         {items.map((item) => {

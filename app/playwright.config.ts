@@ -25,6 +25,15 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
 
+  projects: [
+    { name: "historia", testMatch: /(partners|ventas)\.spec\.ts/ },
+    {
+      name: "grupos",
+      testMatch: /grupos\.spec\.ts/,
+      dependencies: ["historia"],
+    },
+  ],
+
   webServer: {
     command: server,
     url: `http://localhost:${PORT}`,

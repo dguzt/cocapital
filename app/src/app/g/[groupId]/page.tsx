@@ -1,0 +1,70 @@
+import { Activity } from "lucide-react";
+import Link from "next/link";
+import { useCases } from "@/backend/application/container";
+import { toUserView } from "@/backend/modules/accounts/adapters/in/next/user-view";
+import { toGroupView } from "@/backend/modules/groups/adapters/in/next/group-view";
+import { requireMembership } from "@/backend/modules/groups/adapters/in/next/membership";
+import { PanelContent } from "@/components/dashboard/dashboard";
+import { InviteBanner } from "@/components/dashboard/invite-banner";
+import { MovementSheet } from "@/components/movements/movement-sheet";
+import { PendingApprovals } from "@/components/movements/pending-approvals";
+import { AppShell } from "@/components/shell/app-shell";
+import { Button } from "@/components/ui/button";
+import { isOverdue, todayInLima } from "@/lib/dates";
+import { groupPath } from "@/lib/group-path";
+
+export default async function PanelPage({
+  params,
+}: {
+  params: Promise<{ groupId: string }>;
+}) {
+  const { groupId } = await params;
+  const { user, group } = await requireMembership(groupId);
+
+  const today = todayInLima();
+  const [movements, installments, pendingChanges, capital] = await Promise.all([
+    useCases.listMovements.execute({ groupId: group.id }),
+    useCases.listGroupInstallments.execute({ groupId: group.id }),
+    useCases.listPendingChanges.execute({ groupId: group.id }),
+    useCases.getCapitalSummary.execute({ groupId: group.id }),
+  ]);
+  const overdueCount = installments.filter(
+    (i) => i.status === "pending" && isOverdue(i.dueDate, today),
+  ).length;
+  const approvalsForMe = pendingChanges.filter((c) => c.proposedBy !== user.id);
+  const pendingIds = pendingChanges.map((c) => c.movementId);
+
+  return (
+    <AppShell
+      user={toUserView(user)}
+      group={toGroupView(group)}
+      active="panel"
+      overdueCount={overdueCount}
+      title="Panel"
+      subtitle="Resumen del capital compartido"
+      actions={
+        <>
+          <Button asChild variant="outline">
+            <Link href={groupPath(group.id, "/actividad")}>
+              <Activity className="size-4" /> Actividad
+            </Link>
+          </Button>
+          <MovementSheet />
+        </>
+      }
+    >
+      <div className="flex flex-col gap-5">
+        {group.isAlone() && <InviteBanner code={group.inviteCode.value} />}
+        <PendingApprovals items={approvalsForMe} />
+        <PanelContent
+          groupId={group.id}
+          user={toUserView(user)}
+          movements={movements}
+          capital={capital}
+          pendingIds={pendingIds}
+          today={today}
+        />
+      </div>
+    </AppShell>
+  );
+}

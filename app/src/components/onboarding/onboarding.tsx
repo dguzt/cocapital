@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createGroupAction } from "@/backend/modules/groups/adapters/in/next/create-group-action";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,15 +7,16 @@ import { SubmitButton } from "@/components/ui/submit-button";
 
 const ERROR_TEXT: Record<string, string> = {
   InvalidGroupName: "El nombre debe tener entre 1 y 40 caracteres.",
-  AlreadyInGroup: "Ya perteneces a un grupo.",
 };
 
 export function Onboarding({
   userName,
   error,
+  hasGroups = false,
 }: {
   userName: string;
   error?: string;
+  hasGroups?: boolean;
 }) {
   return (
     <main className="flex min-h-screen items-center justify-center p-4">
@@ -24,11 +26,11 @@ export function Onboarding({
             S/
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">
-            Hola, {userName}
+            {hasGroups ? "Nuevo grupo" : `Hola, ${userName}`}
           </h1>
           <p className="text-muted-foreground text-sm">
-            Crea el grupo que compartirás con tu socio, o abre el enlace de
-            invitación que te enviaron.
+            Puedes usarlo solo o invitar hasta 9 socios. Si te invitaron, abre
+            el enlace que te enviaron.
           </p>
         </div>
 
@@ -61,10 +63,13 @@ export function Onboarding({
           </CardContent>
         </Card>
 
-        <p className="text-center text-muted-foreground text-xs">
-          ¿Te invitaron? Abre el enlace que te compartió tu socio — se une
-          automáticamente a su grupo.
-        </p>
+        {hasGroups && (
+          <p className="text-center text-sm">
+            <Link href="/" className="text-muted-foreground underline">
+              Volver a mis grupos
+            </Link>
+          </p>
+        )}
       </div>
     </main>
   );

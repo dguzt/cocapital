@@ -13,6 +13,10 @@ export class InMemoryGroups implements GroupRepository {
     return this.stored.filter((group) => group.hasMember(userId));
   }
 
+  async findById(groupId: string) {
+    return this.stored.find((group) => group.id === groupId) ?? null;
+  }
+
   async findByInviteCode(code: InviteCode) {
     return (
       this.stored.find((group) => group.inviteCode.value === code.value) ?? null

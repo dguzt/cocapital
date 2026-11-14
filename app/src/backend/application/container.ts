@@ -11,8 +11,9 @@ import { ListContacts } from "@/backend/modules/contacts/usecases/list-contacts"
 import { ResolveContact } from "@/backend/modules/contacts/usecases/resolve-contact";
 import { DrizzleGroupRepository } from "@/backend/modules/groups/adapters/out/drizzle/drizzle-group-repository";
 import { CreateGroup } from "@/backend/modules/groups/usecases/create-group";
-import { GetMyGroup } from "@/backend/modules/groups/usecases/get-my-group";
+import { GetGroupOf } from "@/backend/modules/groups/usecases/get-group-of";
 import { JoinGroup } from "@/backend/modules/groups/usecases/join-group";
+import { ListMyGroups } from "@/backend/modules/groups/usecases/list-my-groups";
 import { DrizzleCreditSaleRepository } from "@/backend/modules/inventory/adapters/out/drizzle/drizzle-credit-sale-repository";
 import { DrizzlePlanChangeRepository } from "@/backend/modules/inventory/adapters/out/drizzle/drizzle-plan-change-repository";
 import { CollectSaleInstallment } from "@/backend/modules/inventory/usecases/collect-sale-installment";
@@ -48,6 +49,7 @@ import { ListMovements } from "@/backend/modules/movements/usecases/list-movemen
 import { ListPendingChanges } from "@/backend/modules/movements/usecases/list-pending-changes";
 import { ProposeChange } from "@/backend/modules/movements/usecases/propose-change";
 import { ProposeSystemVoid } from "@/backend/modules/movements/usecases/propose-system-void";
+import { SubmitChange } from "@/backend/modules/movements/usecases/submit-change";
 import { VoidEntry } from "@/backend/modules/movements/usecases/void-entry";
 import { ApplyApprovedChange } from "./apply-approved-change";
 
@@ -75,7 +77,6 @@ const injector = createInjector()
   .provideClass("addMovement", AddMovement)
   .provideClass("voidEntry", VoidEntry)
   .provideClass("editEntry", EditEntry)
-  .provideClass("proposeSystemVoid", ProposeSystemVoid)
   .provideClass("getLoanDetail", GetLoanDetail)
   .provideClass("listMovements", ListMovements)
   .provideClass("listGroupInstallments", ListGroupInstallments)
@@ -87,12 +88,15 @@ const injector = createInjector()
   .provideClass("voidLoan", VoidLoan)
   .provideClass("undoSaleCollection", UndoSaleCollection)
   .provideClass("voidCreditSale", VoidCreditSale)
-  .provideClass("applier", ApplyApprovedChange);
+  .provideClass("applier", ApplyApprovedChange)
+  .provideClass("submitChange", SubmitChange)
+  .provideClass("proposeSystemVoid", ProposeSystemVoid);
 
 export const useCases = {
   ensureUser: injector.injectClass(EnsureUser),
 
-  getMyGroup: injector.injectClass(GetMyGroup),
+  listMyGroups: injector.injectClass(ListMyGroups),
+  getGroupOf: injector.injectClass(GetGroupOf),
   createGroup: injector.injectClass(CreateGroup),
   joinGroup: injector.injectClass(JoinGroup),
 

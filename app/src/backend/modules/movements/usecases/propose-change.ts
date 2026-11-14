@@ -5,40 +5,49 @@ import type { MovementSnapshot } from "@/backend/modules/movements/domain/moveme
 import type { StoredMovement } from "@/backend/modules/movements/domain/stored-movement";
 import type { ChangeRepository } from "@/backend/modules/movements/ports/change-repository";
 import type { MovementRepository } from "@/backend/modules/movements/ports/movement-repository";
-import { err, ok, type Result } from "@/lib/result";
+import type {
+  SubmitChange,
+  SubmittedChange,
+} from "@/backend/modules/movements/usecases/submit-change";
+import { err, type Result } from "@/lib/result";
 
 export type ProposeChangeInput = {
   groupId: string;
   actorId: string;
   movementId: string;
+  alone: boolean;
   kind: ChangeKind;
   after?: MovementSnapshot;
 };
 
 /**
  * Proposes an edit or a void of a movement from the ledger. Nothing changes
- * until another partner approves it. Movements written by a loan or a credit
- * sale are corrected from there: a lend or sell_on_credit accepts nothing
- * here, a repay or collect_sale accepts only a void.
+ * until another partner approves it, unless the partner is alone. Movements
+ * written by a loan or a credit sale are corrected from there: a lend or
+ * sell_on_credit accepts nothing here, a repay or collect_sale accepts only a
+ * void.
  */
 export class ProposeChange {
-  static inject = ["movements", "changes"] as const;
+  static inject = ["movements", "changes", "submitChange"] as const;
 
   constructor(
     private readonly movements: MovementRepository,
     private readonly changes: ChangeRepository,
+    private readonly submitChange: SubmitChange,
   ) {}
 
   /**
    * Opens a pending change on the movement.
    *
    * @param input - The group, the proposing partner, the movement, the kind of
-   *   change and, for an edit, the proposed values.
-   * @returns The pending change's id, or why it cannot be proposed.
+   *   change, for an edit the proposed values, and whether the partner is
+   *   alone in the group.
+   * @returns The change's id and whether it was applied at once, or why
+   *   it cannot be proposed.
    */
   async execute(
     input: ProposeChangeInput,
-  ): Promise<Result<{ pendingId: string }, PendingChangeError>> {
+  ): Promise<Result<SubmittedChange, PendingChangeError>> {
     const movement = await this.movements.findInGroup(
       input.groupId,
       input.movementId,
@@ -77,9 +86,11 @@ export class ProposeChange {
       return proposal;
     }
 
-    const stored = await this.changes.propose(proposal.value);
-
-    return ok({ pendingId: stored.id });
+    return this.submitChange.execute({
+      proposal: proposal.value,
+      movementType: movement.type,
+      alone: input.alone,
+    });
   }
 
   private isWrittenByAnotherModule(

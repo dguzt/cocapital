@@ -8,10 +8,16 @@ import { toCreditSaleView } from "@/backend/modules/inventory/adapters/in/next/c
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
 import { isOverdue, todayInLima } from "@/lib/dates";
+import { groupPath } from "@/lib/group-path";
 import { formatCents } from "@/lib/money";
 
-export default async function SalesPage() {
-  const { user, group } = await requireMembership();
+export default async function SalesPage({
+  params,
+}: {
+  params: Promise<{ groupId: string }>;
+}) {
+  const { groupId } = await params;
+  const { user, group } = await requireMembership(groupId);
   const today = todayInLima();
   const [sales, installments] = await Promise.all([
     useCases.listCreditSales.execute({ groupId: group.id }),
@@ -32,7 +38,7 @@ export default async function SalesPage() {
       subtitle="Lo que te deben por ventas"
       actions={
         <Button asChild>
-          <Link href="/ventas/nueva">
+          <Link href={groupPath(group.id, "/ventas/nueva")}>
             <Plus className="size-4" /> Nueva venta
           </Link>
         </Button>
@@ -48,7 +54,9 @@ export default async function SalesPage() {
             Registra la primera: las cuotas se calculan solas.
           </p>
           <Button asChild className="mt-4">
-            <Link href="/ventas/nueva">Vender en cuotas</Link>
+            <Link href={groupPath(group.id, "/ventas/nueva")}>
+              Vender en cuotas
+            </Link>
           </Button>
         </section>
       ) : (
@@ -58,7 +66,7 @@ export default async function SalesPage() {
             return (
               <li key={sale.id}>
                 <Link
-                  href={`/ventas/${sale.id}`}
+                  href={groupPath(group.id, `/ventas/${sale.id}`)}
                   className={`flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:border-input ${voided || sale.settled ? "opacity-60" : ""}`}
                 >
                   <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary font-bold">
@@ -109,7 +117,7 @@ export default async function SalesPage() {
           size="lg"
           className="fixed inset-x-4 bottom-4 z-40 h-13 shadow-lg shadow-emerald-400/20"
         >
-          <Link href="/ventas/nueva">
+          <Link href={groupPath(group.id, "/ventas/nueva")}>
             <Plus className="size-5" /> Nueva venta
           </Link>
         </Button>

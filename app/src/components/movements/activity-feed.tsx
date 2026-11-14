@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { PlanChange } from "@/backend/modules/inventory/domain/plan-change";
 import type { LedgerMovement } from "@/backend/modules/movements/domain/ledger-movement";
+import { useGroup } from "@/components/groups/group-context";
 import type { ISODate } from "@/lib/dates";
 import { activityEntries, presentPlanChange } from "./activity-entries";
 import { MovementDialog } from "./movement-dialog/movement-dialog";
@@ -21,6 +22,7 @@ export function ActivityFeed({
   pendingIds?: string[];
   limit?: number;
 }) {
+  const { href } = useGroup();
   const entries = activityEntries(movements, planChanges, limit);
   if (entries.length === 0) return null;
 
@@ -31,7 +33,10 @@ export function ActivityFeed({
           const it = presentPlanChange(entry.change, today);
           return (
             <li key={entry.change.id}>
-              <Link href={it.href} className="flex items-center gap-3 py-3.5">
+              <Link
+                href={href(it.path)}
+                className="flex items-center gap-3 py-3.5"
+              >
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-sm font-semibold text-muted-foreground">
                   P
                 </span>

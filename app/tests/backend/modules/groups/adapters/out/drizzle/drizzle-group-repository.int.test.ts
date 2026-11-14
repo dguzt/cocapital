@@ -75,4 +75,35 @@ describe("DrizzleGroupRepository", () => {
       null,
     );
   });
+
+  it("finds a group by id and answers null for an unknown or malformed id", async () => {
+    const diego = await seedPartner("Diego");
+
+    const group = founded("Inversiones DR", diego);
+
+    await repository.create(group);
+
+    expect(await repository.findById(group.id)).toEqual(group);
+    expect(await repository.findById(crypto.randomUUID())).toBeNull();
+    expect(await repository.findById("not-a-uuid")).toBeNull();
+  });
+
+  it("keeps a partner in several groups", async () => {
+    const diego = await seedPartner("Diego");
+
+    const first = founded("Inversiones DR", diego);
+
+    const second = founded("Mi tienda", diego);
+
+    await repository.create(first);
+
+    await repository.create(second);
+
+    const groups = await repository.groupsOf(diego.userId);
+
+    expect(groups.map((group) => group.name)).toEqual([
+      "Inversiones DR",
+      "Mi tienda",
+    ]);
+  });
 });

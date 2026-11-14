@@ -1,10 +1,11 @@
-import type { Group } from "@/backend/modules/groups/domain/group";
+import { Group } from "@/backend/modules/groups/domain/group";
 
 /** A group as a plain object — the only shape a Client Component can receive. */
 export type GroupView = {
   id: string;
   name: string;
   inviteCode: string;
+  capacity: number;
   members: {
     id: string;
     name: string;
@@ -23,6 +24,7 @@ export function toGroupView(group: Group): GroupView {
     id: group.id,
     name: group.name,
     inviteCode: group.inviteCode.value,
+    capacity: Group.CAPACITY,
     members: group.members.map((member) => ({
       id: member.userId,
       name: member.name,

@@ -58,7 +58,7 @@ describe("JoinGroup", () => {
     expect(groups.addedSeats).toHaveLength(0);
   });
 
-  it("refuses a partner who already belongs to another group", async () => {
+  it("seats a partner who already belongs to another group", async () => {
     const other = Group.create("Otro", ROSA);
 
     if (!other.ok) {
@@ -72,18 +72,23 @@ describe("JoinGroup", () => {
       code: group.inviteCode.value,
     });
 
-    expect(!result.ok && result.error.kind).toBe("AlreadyInGroup");
-    expect(groups.addedSeats).toHaveLength(0);
+    expect(result.ok).toBe(true);
+    expect(groups.addedSeats).toHaveLength(1);
   });
 
   it("refuses a partner when the group is full", async () => {
-    const full = group.admit(ROSA);
+    groups.stored[0] = Array.from({ length: 9 }, (_, i) => ({
+      userId: `u-${i}`,
+      name: `Socio ${i}`,
+    })).reduce((seated, partner) => {
+      const admitted = seated.admit(partner);
 
-    if (!full.ok) {
-      throw new Error("seed failed");
-    }
+      if (!admitted.ok) {
+        throw new Error("seed failed");
+      }
 
-    groups.stored[0] = full.value;
+      return admitted.value;
+    }, group);
 
     const result = await joinGroup.execute({
       partner: { userId: "u-x", name: "X" },

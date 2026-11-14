@@ -34,7 +34,8 @@ export function activityEntries(
  *
  * @param change - The rewrite.
  * @param today - Today's date in Lima.
- * @returns The title, subtitle, counts and time of the row.
+ * @returns The title, subtitle, counts, time and the sale's page within the
+ *   group.
  */
 export function presentPlanChange(change: PlanChange, today: ISODate) {
   return {
@@ -44,7 +45,7 @@ export function presentPlanChange(change: PlanChange, today: ISODate) {
     author: change.authorName,
     authorInitial: change.authorName[0]?.toUpperCase() ?? "?",
     day: `${dayLabel(limaDateOf(change.createdAt), today)} · ${limaTimeOf(change.createdAt)}`,
-    href: `/ventas/${change.saleId}`,
+    path: `/ventas/${change.saleId}`,
   };
 }
 

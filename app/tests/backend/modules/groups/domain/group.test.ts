@@ -16,6 +16,21 @@ function founded(): Group {
   return result.value;
 }
 
+function withMembers(count: number): Group {
+  return Array.from({ length: count - 1 }, (_, i) => ({
+    userId: `u-${i}`,
+    name: `Socio ${i}`,
+  })).reduce((group, partner) => {
+    const admitted = group.admit(partner);
+
+    if (!admitted.ok) {
+      throw new Error("seed failed");
+    }
+
+    return admitted.value;
+  }, founded());
+}
+
 describe("Group.create", () => {
   it("trims the name and seats the creator", () => {
     const result = Group.create("  Inversiones DR  ", DIEGO);
@@ -51,14 +66,12 @@ describe("Group.admit", () => {
     expect(group.members).toHaveLength(1);
   });
 
-  it("refuses a partner once every seat is taken", () => {
-    const full = founded().admit(ROSA);
+  it("seats up to ten partners and refuses the eleventh", () => {
+    const full = withMembers(10);
 
-    if (!full.ok) {
-      throw new Error("seed failed");
-    }
+    expect(full.members).toHaveLength(10);
 
-    const result = full.value.admit({ userId: "u-x", name: "X" });
+    const result = full.admit({ userId: "u-x", name: "X" });
 
     expect(!result.ok && result.error.kind).toBe("GroupFull");
   });
@@ -66,12 +79,14 @@ describe("Group.admit", () => {
 
 describe("Group.hasFreeSeat", () => {
   it("is true until the group reaches its capacity", () => {
-    const group = founded();
+    expect(withMembers(9).hasFreeSeat()).toBe(true);
+    expect(withMembers(10).hasFreeSeat()).toBe(false);
+  });
+});
 
-    expect(group.hasFreeSeat()).toBe(true);
-
-    const full = group.admit(ROSA);
-
-    expect(full.ok && full.value.hasFreeSeat()).toBe(false);
+describe("Group.isAlone", () => {
+  it("is true only while the creator is the single member", () => {
+    expect(founded().isAlone()).toBe(true);
+    expect(withMembers(2).isAlone()).toBe(false);
   });
 });

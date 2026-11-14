@@ -17,6 +17,7 @@ import {
 } from "@/backend/modules/movements/adapters/in/next/movement-actions";
 import type { ChangeHistoryItem } from "@/backend/modules/movements/domain/change-history-item";
 import type { LedgerMovement } from "@/backend/modules/movements/domain/ledger-movement";
+import { useGroup } from "@/components/groups/group-context";
 import { MOVEMENT_META } from "@/components/movements/movement-meta";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,13 +28,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { groupPath } from "@/lib/group-path";
 import { formatCents } from "@/lib/money";
 import { allowedActions } from "./actions-by-type";
 import { ChangeHistory } from "./change-history";
 import { type EditDraft, EditForm } from "./edit-form";
 
 const ERROR_TEXT: Record<string, string> = {
-  ChangeAlreadyPending: "Ya hay un cambio esperando el OK de tu socio.",
+  ChangeAlreadyPending: "Ya hay un cambio esperando el OK de otro socio.",
   SystemMovement:
     "Este movimiento pertenece a un préstamo o a una venta en cuotas — corrígelo desde ahí.",
   MovementVoided: "Este movimiento ya fue anulado.",
@@ -71,11 +73,13 @@ const OWNER_TEXT = {
 
 /** The page a ledger row of a loan or a credit sale links to, at its cuota. */
 async function ownerHref(
+  groupId: string,
   owner: "loan" | "sale",
   movement: LedgerMovement,
 ): Promise<string | null> {
   if (owner === "loan") {
     const { target } = await getLoanTargetForMovementAction(
+      groupId,
       movement.id,
       movement.type,
     );
@@ -85,16 +89,20 @@ async function ownerHref(
     }
 
     return target.installmentId
-      ? `/prestamos/${target.loanId}?cuota=${target.installmentId}`
-      : `/prestamos/${target.loanId}`;
+      ? groupPath(
+          groupId,
+          `/prestamos/${target.loanId}?cuota=${target.installmentId}`,
+        )
+      : groupPath(groupId, `/prestamos/${target.loanId}`);
   }
 
   const { target } = await getSaleTargetForMovementAction(
+    groupId,
     movement.id,
     movement.type,
   );
 
-  return target ? `/ventas/${target.saleId}` : null;
+  return target ? groupPath(groupId, `/ventas/${target.saleId}`) : null;
 }
 
 export function MovementDialog({
@@ -106,6 +114,7 @@ export function MovementDialog({
   hasPending: boolean;
   children: React.ReactNode;
 }) {
+  const { groupId, alone } = useGroup();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"view" | "edit">("view");
@@ -131,19 +140,20 @@ export function MovementDialog({
         cost: movement.cost !== null ? (movement.cost / 100).toFixed(2) : "",
       });
       setHistory(null);
-      getMovementHistoryAction(movement.id).then((r) => {
+      getMovementHistoryAction(groupId, movement.id).then((r) => {
         if (r.ok) setHistory(r.history);
       });
       setTarget(null);
       if (owner) {
-        ownerHref(owner, movement).then(setTarget);
+        ownerHref(groupId, owner, movement).then(setTarget);
       }
     }
-  }, [open, movement, owner]);
+  }, [open, movement, owner, groupId]);
 
   function submitEdit() {
     startTransition(async () => {
       const result = await proposeEditAction(
+        groupId,
         movement.id,
         {
           amountSoles: draft.amount,
@@ -160,7 +170,11 @@ export function MovementDialog({
       );
       if (result.ok) {
         setOpen(false);
-        toast.success("Cambio enviado — falta el OK de tu socio");
+        toast.success(
+          result.applied
+            ? "Cambio aplicado"
+            : "Cambio enviado — falta el OK de otro socio",
+        );
         router.refresh();
       } else {
         toast.error(ERROR_TEXT[result.error] ?? "Algo salió mal.");
@@ -170,10 +184,14 @@ export function MovementDialog({
 
   function submitVoid() {
     startTransition(async () => {
-      const result = await proposeVoidAction(movement.id);
+      const result = await proposeVoidAction(groupId, movement.id);
       if (result.ok) {
         setOpen(false);
-        toast.success("Anulación enviada — falta el OK de tu socio");
+        toast.success(
+          result.applied
+            ? "Movimiento anulado"
+            : "Anulación enviada — falta el OK de otro socio",
+        );
         router.refresh();
       } else {
         toast.error(ERROR_TEXT[result.error] ?? "Algo salió mal.");
@@ -201,12 +219,13 @@ export function MovementDialog({
 
         {hasPending && (
           <p className="rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-[13px] text-amber-400">
-            Hay un cambio esperando el OK del otro socio.
+            Hay un cambio esperando el OK de otro socio.
           </p>
         )}
 
         {mode === "edit" ? (
           <EditForm
+            alone={alone}
             movement={movement}
             draft={draft}
             pending={pending}
@@ -259,6 +278,13 @@ export function MovementDialog({
               Anular
             </Button>
           </div>
+        )}
+
+        {mode === "view" && !owner && alone && (canEdit || canVoid) && (
+          <p className="text-[12px] text-muted-foreground">
+            Eres el único socio: editar o anular se aplica al instante y queda
+            en la actividad.
+          </p>
         )}
 
         {mode === "view" && !owner && note && (

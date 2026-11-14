@@ -13,6 +13,14 @@ export interface GroupRepository {
   groupsOf(userId: string): Promise<Group[]>;
 
   /**
+   * Finds a group by its id.
+   *
+   * @param groupId - The group, as it comes in a URL.
+   * @returns The group, or null when there is none with that id.
+   */
+  findById(groupId: string): Promise<Group | null>;
+
+  /**
    * Finds the group behind an invite code.
    *
    * @param code - The invite code, already normalized.

@@ -32,11 +32,13 @@ export const proposeMovementChange = (
   movementId: string,
   kind: ChangeKind,
   after?: MovementSnapshot,
+  alone = false,
 ) =>
   useCases.proposeChange.execute({
     groupId,
     actorId,
     movementId,
+    alone,
     kind,
     after,
   });
@@ -70,7 +72,8 @@ export const proposeVoidLoan = (
   groupId: string,
   actorId: string,
   loanId: string,
-) => useCases.proposeVoidLoan.execute({ groupId, actorId, loanId });
+  alone = false,
+) => useCases.proposeVoidLoan.execute({ groupId, actorId, alone, loanId });
 
 export const getLoanTargetForMovement = (
   groupId: string,
@@ -142,7 +145,9 @@ export const proposeVoidCreditSale = (
   groupId: string,
   actorId: string,
   saleId: string,
-) => useCases.proposeVoidCreditSale.execute({ groupId, actorId, saleId });
+  alone = false,
+) =>
+  useCases.proposeVoidCreditSale.execute({ groupId, actorId, alone, saleId });
 
 export const getCreditSale = (groupId: string, saleId: string) =>
   useCases.getCreditSale.execute({ groupId, saleId });

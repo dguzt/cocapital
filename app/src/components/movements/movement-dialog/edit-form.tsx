@@ -1,5 +1,4 @@
 "use client";
-/** UC-401 · The edit form. Submitting only PROPOSES — the partner applies it. */
 import { Loader2 } from "lucide-react";
 import type { LedgerMovement } from "@/backend/modules/movements/domain/ledger-movement";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { sanitizeMoneyInput } from "@/lib/money";
 export type EditDraft = { amount: string; concept: string; cost: string };
 
 export function EditForm({
+  alone,
   movement,
   draft,
   pending,
@@ -17,6 +17,7 @@ export function EditForm({
   onCancel,
   onSubmit,
 }: {
+  alone: boolean;
   movement: LedgerMovement;
   draft: EditDraft;
   pending: boolean;
@@ -76,12 +77,14 @@ export function EditForm({
         </Button>
         <Button className="flex-1" onClick={onSubmit} disabled={pending}>
           {pending && <Loader2 className="size-4 animate-spin" />}
-          {pending ? "Enviando…" : "Proponer cambio"}
+          {pending ? "Enviando…" : alone ? "Guardar cambio" : "Proponer cambio"}
         </Button>
       </div>
 
       <p className="text-center text-[11.5px] text-muted-foreground">
-        El cambio se aplica cuando tu socio lo apruebe (doble confirmación).
+        {alone
+          ? "Eres el único socio: se aplica al instante y queda en la actividad."
+          : "Se aplica cuando otro socio lo apruebe."}
       </p>
     </div>
   );

@@ -27,6 +27,29 @@ export async function openSessionAs(
   return page;
 }
 
+/** Abre una página del grupo en el que el socio está trabajando, p. ej. `/prestamos`. */
+export async function openInGroup(page: Page, path = "") {
+  const current = page.url().match(/\/g\/[0-9a-f-]+/)?.[0];
+
+  if (current) {
+    await page.goto(`${current}${path}`);
+
+    return;
+  }
+
+  await page.goto("/");
+
+  await expect(page).toHaveURL(IN_GROUP);
+
+  await openInGroup(page, path);
+}
+
+/** Cualquier página dentro de un grupo. */
+export const IN_GROUP = /\/g\/[0-9a-f-]+/;
+
+/** El panel de un grupo. */
+export const GROUP_PANEL = /\/g\/[0-9a-f-]+$/;
+
 /** Cifra del panel por su test id: `cash`, `lent`, `inventory`, `receivable` o `total`. */
 export function capital(
   page: Page,
