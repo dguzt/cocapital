@@ -3,19 +3,16 @@ import { redirect } from "next/navigation";
 import { useCases } from "@/backend/application/container";
 import { requireUser } from "@/backend/modules/accounts/adapters/in/next/session";
 import { Button } from "@/components/ui/button";
+import { groupPath } from "@/lib/group-path";
 
 const ERROR_TEXT: Record<string, { title: string; body: string }> = {
   InviteNotFound: {
     title: "Enlace no válido",
-    body: "Este enlace de invitación no existe o fue escrito mal. Pide a tu socio que te lo reenvíe.",
+    body: "Este enlace de invitación no existe o fue escrito mal. Pide que te lo reenvíen.",
   },
   GroupFull: {
     title: "Este grupo está lleno",
-    body: "Ya hay 2 socios en este grupo (2/2). Si crees que es un error, habla con quien te invitó.",
-  },
-  AlreadyInGroup: {
-    title: "Ya tienes un grupo",
-    body: "Tu cuenta ya pertenece a otro grupo. Por ahora cada cuenta puede estar en un solo grupo.",
+    body: "Ya hay 10 socios en este grupo (10/10). Habla con quien te invitó.",
   },
 };
 
@@ -34,7 +31,7 @@ export default async function JoinPage({
     code,
   });
   if (result.ok) {
-    redirect("/");
+    redirect(groupPath(result.value.id));
   }
   const err = ERROR_TEXT[result.error.kind] ?? ERROR_TEXT.InviteNotFound;
 

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { proposeVoidAction } from "@/backend/modules/movements/adapters/in/next/movement-actions";
+import { useGroup } from "@/components/groups/group-context";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,7 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { formatCents } from "@/lib/money";
 
-/** Proposes undoing one cobro of a credit sale; applied on the partner's OK. */
+/** Proposes undoing one cobro of a credit sale; applied on another partner's OK. */
 export function UndoSaleCollectionButton({
   collectMovementId,
   label,
@@ -28,16 +29,21 @@ export function UndoSaleCollectionButton({
   amountCents: number;
   buyerName: string;
 }) {
+  const { groupId, alone } = useGroup();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 
   function undo() {
     startTransition(async () => {
-      const result = await proposeVoidAction(collectMovementId);
+      const result = await proposeVoidAction(groupId, collectMovementId);
       if (result.ok) {
         setOpen(false);
-        toast.success("Deshacer cobro enviado — falta el OK de tu socio");
+        toast.success(
+          result.applied
+            ? "Cobro deshecho"
+            : "Deshacer cobro enviado — falta el OK de otro socio",
+        );
         router.refresh();
       } else {
         toast.error(
@@ -69,7 +75,9 @@ export function UndoSaleCollectionButton({
           </DialogDescription>
         </DialogHeader>
         <p className="text-center text-[11.5px] text-muted-foreground">
-          Se aplica cuando tu socio lo apruebe (doble confirmación).
+          {alone
+            ? "Eres el único socio: se aplica al instante y queda en la actividad."
+            : "Se aplica cuando otro socio lo apruebe."}
         </p>
         <DialogFooter className="gap-2">
           <Button
@@ -85,7 +93,11 @@ export function UndoSaleCollectionButton({
             ) : (
               <Ban className="size-4" />
             )}
-            {pending ? "Enviando…" : "Enviar anulación"}
+            {pending
+              ? "Enviando…"
+              : alone
+                ? "Anular ahora"
+                : "Enviar anulación"}
           </Button>
         </DialogFooter>
       </DialogContent>

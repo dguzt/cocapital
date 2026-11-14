@@ -12,15 +12,18 @@ import { ActivityFeed } from "@/components/movements/activity-feed";
 import { ActivityTable } from "@/components/movements/activity-table";
 import { MovementSheet } from "@/components/movements/movement-sheet";
 import type { ISODate } from "@/lib/dates";
+import { groupPath } from "@/lib/group-path";
 import { formatCents } from "@/lib/money";
 
 export function PanelContent({
+  groupId,
   user,
   movements,
   capital,
   pendingIds,
   today,
 }: {
+  groupId: string;
   user: UserView;
   movements: LedgerMovement[];
   capital: CapitalSummary;
@@ -53,14 +56,14 @@ export function PanelContent({
       full: "Prestado",
       value: capital.lent,
       swatch: "bg-zinc-700",
-      href: "/prestamos",
+      href: groupPath(groupId, "/prestamos"),
     },
     {
       label: "Por cobrar",
       full: "Cuentas por cobrar",
       value: capital.receivable,
       swatch: "bg-zinc-800",
-      href: "/ventas",
+      href: groupPath(groupId, "/ventas"),
     },
   ];
   // What the group has but can't spend today: inventory, loans and credit sales.
@@ -172,7 +175,7 @@ export function PanelContent({
           <div className="flex items-baseline justify-between">
             <h2 className="font-bold">Actividad reciente</h2>
             <Link
-              href="/actividad"
+              href={groupPath(groupId, "/actividad")}
               className="text-[13px] font-semibold text-emerald-400 hover:text-emerald-300"
             >
               Ver todo →

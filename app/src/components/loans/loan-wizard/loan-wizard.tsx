@@ -13,6 +13,7 @@ import { createLoanAction } from "@/backend/modules/loans/adapters/in/next/loan-
 import { Schedule } from "@/backend/modules/loans/domain/schedule";
 import type { ScheduledInstallment } from "@/backend/modules/loans/domain/scheduled-installment";
 import { ContactPicker } from "@/components/contacts/contact-picker";
+import { useGroup } from "@/components/groups/group-context";
 import {
   type Edit,
   ScheduleEditor,
@@ -24,6 +25,7 @@ import { SummaryCard } from "./summary-card";
 import { type LoanTerms, TermsStep } from "./terms-step";
 
 export function LoanWizard({ contacts }: { contacts: ContactView[] }) {
+  const { groupId, href } = useGroup();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
@@ -82,7 +84,7 @@ export function LoanWizard({ contacts }: { contacts: ContactView[] }) {
   function confirm() {
     if (!base || !borrowerLabel) return;
     startTransition(async () => {
-      const result = await createLoanAction({
+      const result = await createLoanAction(groupId, {
         borrower: selected ? { id: selected.id } : { name: newName },
         capital: base.capital,
         rateBps: Math.round(rate * 100),
@@ -92,7 +94,7 @@ export function LoanWizard({ contacts }: { contacts: ContactView[] }) {
       });
       if (result.ok) {
         toast.success("Préstamo creado");
-        router.push(`/prestamos/${result.loanId}`);
+        router.push(href(`/prestamos/${result.loanId}`));
       } else {
         toast.error("No se pudo crear el préstamo. Revisa los datos.");
       }

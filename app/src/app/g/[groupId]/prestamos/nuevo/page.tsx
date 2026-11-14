@@ -3,12 +3,17 @@ import { toUserView } from "@/backend/modules/accounts/adapters/in/next/user-vie
 import { toContactView } from "@/backend/modules/contacts/adapters/in/next/contact-view";
 import { toGroupView } from "@/backend/modules/groups/adapters/in/next/group-view";
 import { requireMembership } from "@/backend/modules/groups/adapters/in/next/membership";
-import { NewSale } from "@/components/sales/new-sale";
+import { LoanWizard } from "@/components/loans/loan-wizard/loan-wizard";
 import { AppShell } from "@/components/shell/app-shell";
 import { isOverdue, todayInLima } from "@/lib/dates";
 
-export default async function NewSalePage() {
-  const { user, group } = await requireMembership();
+export default async function NewLoanPage({
+  params,
+}: {
+  params: Promise<{ groupId: string }>;
+}) {
+  const { groupId } = await params;
+  const { user, group } = await requireMembership(groupId);
   const today = todayInLima();
   const [contacts, installments] = await Promise.all([
     useCases.listContacts.execute({ groupId: group.id }),
@@ -22,13 +27,13 @@ export default async function NewSalePage() {
     <AppShell
       user={toUserView(user)}
       group={toGroupView(group)}
-      active="sales"
+      active="loans"
       overdueCount={overdueCount}
-      title="Nueva venta"
-      subtitle="Al contado o en cuotas"
+      title="Nuevo préstamo"
+      subtitle="El cronograma se calcula solo — tú solo confirmas"
     >
       <div className="max-w-2xl">
-        <NewSale contacts={contacts.map(toContactView)} />
+        <LoanWizard contacts={contacts.map(toContactView)} />
       </div>
     </AppShell>
   );

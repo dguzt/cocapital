@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { proposeVoidLoanAction } from "@/backend/modules/loans/adapters/in/next/loan-actions";
+import { useGroup } from "@/components/groups/group-context";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -33,16 +34,21 @@ export function VoidLoanButton({
   className?: string;
   label?: string;
 }) {
+  const { groupId, alone } = useGroup();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 
   function propose() {
     startTransition(async () => {
-      const result = await proposeVoidLoanAction(loanId);
+      const result = await proposeVoidLoanAction(groupId, loanId);
       if (result.ok) {
         setOpen(false);
-        toast.success("Anulación enviada — falta el OK de tu socio");
+        toast.success(
+          result.applied
+            ? "Préstamo anulado"
+            : "Anulación enviada — falta el OK de otro socio",
+        );
         router.refresh();
       } else {
         toast.error(
@@ -84,7 +90,9 @@ export function VoidLoanButton({
           </DialogDescription>
         </DialogHeader>
         <p className="text-center text-[11.5px] text-muted-foreground">
-          Se aplica cuando tu socio lo apruebe (doble confirmación).
+          {alone
+            ? "Eres el único socio: se aplica al instante y queda en la actividad."
+            : "Se aplica cuando otro socio lo apruebe."}
         </p>
         <DialogFooter className="gap-2">
           <Button
@@ -100,7 +108,11 @@ export function VoidLoanButton({
             ) : (
               <Ban className="size-4" />
             )}
-            {pending ? "Enviando…" : "Enviar anulación"}
+            {pending
+              ? "Enviando…"
+              : alone
+                ? "Anular ahora"
+                : "Enviar anulación"}
           </Button>
         </DialogFooter>
       </DialogContent>

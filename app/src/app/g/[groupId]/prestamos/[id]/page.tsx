@@ -12,6 +12,7 @@ import { VoidLoanButton } from "@/components/loans/void-loan-button";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
 import { isOverdue, todayInLima } from "@/lib/dates";
+import { groupPath } from "@/lib/group-path";
 import { formatCents } from "@/lib/money";
 
 const MONTHS = "ene feb mar abr may jun jul ago sep oct nov dic".split(" ");
@@ -24,11 +25,11 @@ export default async function LoanDetailPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ groupId: string; id: string }>;
   searchParams: Promise<{ cuota?: string }>;
 }) {
-  const { user, group } = await requireMembership();
-  const { id } = await params;
+  const { groupId, id } = await params;
+  const { user, group } = await requireMembership(groupId);
   const { cuota: highlightId } = await searchParams;
   const loan = await useCases.getLoanDetail.execute({
     groupId: group.id,
@@ -83,7 +84,7 @@ export default async function LoanDetailPage({
       actions={
         <div className="flex gap-2">
           <Button asChild variant="outline">
-            <Link href="/prestamos">
+            <Link href={groupPath(group.id, "/prestamos")}>
               <ArrowLeft className="size-4" /> Préstamos
             </Link>
           </Button>
@@ -111,10 +112,10 @@ export default async function LoanDetailPage({
         {!isVoided && voidPending && (
           <section className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4">
             <p className="text-sm font-semibold text-amber-400">
-              Anulación pendiente — falta el OK de tu socio
+              Anulación pendiente — falta el OK de otro socio
             </p>
             <p className="mt-1 text-[13px] text-muted-foreground">
-              Se revierte el préstamo completo cuando tu socio lo apruebe.
+              Se revierte el préstamo completo cuando otro socio lo apruebe.
             </p>
           </section>
         )}

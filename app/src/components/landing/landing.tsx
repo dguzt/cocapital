@@ -23,7 +23,7 @@ const FEATURES = [
   {
     icon: <ShieldCheck className="size-5" />,
     title: "Confianza entre socios",
-    body: "Toda corrección necesita el OK del otro socio, y el historial nunca se borra.",
+    body: "Toda corrección necesita el OK de otro socio, y el historial nunca se borra.",
   },
 ];
 

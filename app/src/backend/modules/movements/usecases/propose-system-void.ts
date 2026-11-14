@@ -4,12 +4,17 @@ import type { MovementSnapshot } from "@/backend/modules/movements/domain/moveme
 import type { StoredMovement } from "@/backend/modules/movements/domain/stored-movement";
 import type { ChangeRepository } from "@/backend/modules/movements/ports/change-repository";
 import type { MovementRepository } from "@/backend/modules/movements/ports/movement-repository";
-import { err, ok, type Result } from "@/lib/result";
+import type {
+  SubmitChange,
+  SubmittedChange,
+} from "@/backend/modules/movements/usecases/submit-change";
+import { err, type Result } from "@/lib/result";
 
 export type ProposeSystemVoidInput = {
   groupId: string;
   actorId: string;
   movementId: string;
+  alone: boolean;
 };
 
 /**
@@ -17,22 +22,25 @@ export type ProposeSystemVoidInput = {
  * lend. It goes through the same approvals inbox as any other change.
  */
 export class ProposeSystemVoid {
-  static inject = ["movements", "changes"] as const;
+  static inject = ["movements", "changes", "submitChange"] as const;
 
   constructor(
     private readonly movements: MovementRepository,
     private readonly changes: ChangeRepository,
+    private readonly submitChange: SubmitChange,
   ) {}
 
   /**
    * Opens a pending void on the movement.
    *
-   * @param input - The group, the proposing partner and the movement.
-   * @returns The pending change's id, or why it cannot be proposed.
+   * @param input - The group, the proposing partner, the movement and whether
+   *   the partner is alone in the group.
+   * @returns The change's id and whether it was applied at once, or why
+   *   it cannot be proposed.
    */
   async execute(
     input: ProposeSystemVoidInput,
-  ): Promise<Result<{ pendingId: string }, PendingChangeError>> {
+  ): Promise<Result<SubmittedChange, PendingChangeError>> {
     const movement = await this.movements.findInGroup(
       input.groupId,
       input.movementId,
@@ -61,9 +69,11 @@ export class ProposeSystemVoid {
       return proposal;
     }
 
-    const stored = await this.changes.propose(proposal.value);
-
-    return ok({ pendingId: stored.id });
+    return this.submitChange.execute({
+      proposal: proposal.value,
+      movementType: movement.type,
+      alone: input.alone,
+    });
   }
 
   private snapshotOf(movement: StoredMovement): MovementSnapshot {

@@ -7,7 +7,7 @@ import type { Partner } from "./partner";
 
 /** A shared capital pot and the partners who run it. */
 export class Group {
-  static readonly CAPACITY = 2;
+  static readonly CAPACITY = 10;
 
   private static readonly MAX_NAME_LENGTH = 40;
 
@@ -66,6 +66,16 @@ export class Group {
    */
   hasMember(userId: string): boolean {
     return this.members.some((member) => member.userId === userId);
+  }
+
+  /**
+   * Tells whether the group has a single partner, who then has nobody to ask
+   * for an OK.
+   *
+   * @returns True when the group has exactly one member.
+   */
+  isAlone(): boolean {
+    return this.members.length === 1;
   }
 
   /**

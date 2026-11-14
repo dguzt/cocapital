@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import type { ContactView } from "@/backend/modules/contacts/adapters/in/next/contact-view";
 import { createCreditSaleAction } from "@/backend/modules/inventory/adapters/in/next/credit-sale-actions";
 import { ContactPicker } from "@/components/contacts/contact-picker";
+import { useGroup } from "@/components/groups/group-context";
 import {
   FREQUENCY_WORD,
   FrequencyPicker,
@@ -33,6 +34,7 @@ const ERROR_TEXT: Record<string, string> = {
 
 /** Venta en cuotas, all in one screen like Nuevo préstamo. */
 export function CreditSaleWizard({ contacts }: { contacts: ContactView[] }) {
+  const { groupId, href } = useGroup();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
@@ -75,7 +77,7 @@ export function CreditSaleWizard({ contacts }: { contacts: ContactView[] }) {
   function confirm() {
     if (!buyerLabel) return;
     startTransition(async () => {
-      const result = await createCreditSaleAction({
+      const result = await createCreditSaleAction(groupId, {
         buyer: selected ? { id: selected.id } : { name: newName },
         item,
         price,
@@ -90,7 +92,7 @@ export function CreditSaleWizard({ contacts }: { contacts: ContactView[] }) {
       });
       if (result.ok) {
         toast.success("Venta registrada");
-        router.push(`/ventas/${result.saleId}`);
+        router.push(href(`/ventas/${result.saleId}`));
       } else {
         toast.error(
           ERROR_TEXT[result.error] ?? "Revisa los datos de la venta.",

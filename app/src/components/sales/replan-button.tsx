@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { replanCreditSaleAction } from "@/backend/modules/inventory/adapters/in/next/credit-sale-actions";
+import { useGroup } from "@/components/groups/group-context";
 import { FrequencyPicker } from "@/components/schedule/frequency-picker";
 import { ScheduleEditor } from "@/components/schedule/schedule-editor";
 import { useEditableSchedule } from "@/components/schedule/use-editable-schedule";
@@ -33,6 +34,7 @@ export function ReplanButton({
   pendingCount: number;
   frequency: Frequency;
 }) {
+  const { groupId } = useGroup();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -50,6 +52,7 @@ export function ReplanButton({
   function save() {
     startTransition(async () => {
       const result = await replanCreditSaleAction(
+        groupId,
         saleId,
         schedule.rows.map(({ dueDate, amount }) => ({ dueDate, amount })),
       );
@@ -119,7 +122,7 @@ export function ReplanButton({
             />
           )}
           <p className="text-center text-[11.5px] text-muted-foreground">
-            No necesita el OK de tu socio; queda en la actividad.
+            No necesita el OK de otro socio; queda en la actividad.
           </p>
           <Button
             className="h-12 w-full"

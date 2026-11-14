@@ -8,8 +8,13 @@ import { PendingApprovals } from "@/components/movements/pending-approvals";
 import { AppShell } from "@/components/shell/app-shell";
 import { isOverdue, todayInLima } from "@/lib/dates";
 
-export default async function ActivityPage() {
-  const { user, group } = await requireMembership();
+export default async function ActivityPage({
+  params,
+}: {
+  params: Promise<{ groupId: string }>;
+}) {
+  const { groupId } = await params;
+  const { user, group } = await requireMembership(groupId);
 
   const today = todayInLima();
   const [movements, installments, pendingChanges, planChanges] =

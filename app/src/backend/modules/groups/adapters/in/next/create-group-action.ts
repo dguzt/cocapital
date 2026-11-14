@@ -5,9 +5,10 @@ import { redirect } from "next/navigation";
 
 import { useCases } from "@/backend/application/container";
 import { requireUser } from "@/backend/modules/accounts/adapters/in/next/session";
+import { groupPath } from "@/lib/group-path";
 
 /**
- * Founds a group from the onboarding form and opens its panel.
+ * Founds a group from the new-group form and opens its panel.
  *
  * @param formData - The form, with the group name in `name`.
  */
@@ -23,10 +24,10 @@ export async function createGroupAction(formData: FormData) {
   });
 
   if (!result.ok) {
-    redirect(`/?error=${result.error.kind}`);
+    redirect(`/grupos/nuevo?error=${result.error.kind}`);
   }
 
   revalidatePath("/");
 
-  redirect("/");
+  redirect(groupPath(result.value.id));
 }

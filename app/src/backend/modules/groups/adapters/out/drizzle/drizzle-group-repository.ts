@@ -10,6 +10,8 @@ import { GroupMapper, type MemberRow } from "./group-mapper";
 import { Groups } from "./groups.table";
 import { Memberships } from "./memberships.table";
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export class DrizzleGroupRepository implements GroupRepository {
   static inject = ["db"] as const;
 
@@ -28,6 +30,22 @@ export class DrizzleGroupRepository implements GroupRepository {
       .orderBy(asc(Groups.createdAt));
 
     return this.withMembers(rows);
+  }
+
+  async findById(groupId: string): Promise<Group | null> {
+    if (!UUID.test(groupId)) {
+      return null;
+    }
+
+    const rows = await this.db
+      .select()
+      .from(Groups)
+      .where(eq(Groups.id, groupId))
+      .limit(1);
+
+    const [group] = await this.withMembers(rows);
+
+    return group ?? null;
   }
 
   async findByInviteCode(code: InviteCode): Promise<Group | null> {

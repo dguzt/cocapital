@@ -1,9 +1,10 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-
 import { useCases } from "@/backend/application/container";
-import { requireMembership } from "@/backend/modules/groups/adapters/in/next/membership";
+import {
+  requireMembership,
+  revalidateGroup,
+} from "@/backend/modules/groups/adapters/in/next/membership";
 import { ManualMovement } from "@/backend/modules/movements/domain/manual-movement";
 import type { MovementSnapshot } from "@/backend/modules/movements/domain/movement";
 import { todayInLima } from "@/lib/dates";
@@ -16,23 +17,18 @@ export type AddMovementForm = {
   concept?: string;
 };
 
-function revalidateLedgerAndLoans() {
-  revalidatePath("/");
-  revalidatePath("/actividad");
-  revalidatePath("/prestamos");
-  revalidatePath("/prestamos/[id]", "page");
-  revalidatePath("/ventas");
-  revalidatePath("/ventas/[id]", "page");
-}
-
 /**
  * Writes a movement typed in the "Nuevo movimiento" sheet.
  *
+ * @param groupId - The group the partner works in.
  * @param input - The form fields, amounts in soles.
  * @returns Ok, or the kind of validation error.
  */
-export async function addMovementAction(input: AddMovementForm) {
-  const { user, group } = await requireMembership();
+export async function addMovementAction(
+  groupId: string,
+  input: AddMovementForm,
+) {
+  const { user, group } = await requireMembership(groupId);
 
   const validated = ManualMovement.parse({ ...input, today: todayInLima() });
 
@@ -46,25 +42,28 @@ export async function addMovementAction(input: AddMovementForm) {
     userId: user.id,
   });
 
-  revalidatePath("/");
+  revalidateGroup(groupId);
 
   return { ok: true as const };
 }
 
 /**
- * Proposes new values for a movement; another partner must approve them.
+ * Proposes new values for a movement; another partner must approve them,
+ * unless the partner is alone.
  *
+ * @param groupId - The group the partner works in.
  * @param movementId - The movement.
  * @param input - The new amount, concept and cost, in soles.
  * @param before - The movement as the partner saw it.
- * @returns Ok, or the kind of error.
+ * @returns Whether it was applied at once, or the kind of error.
  */
 export async function proposeEditAction(
+  groupId: string,
   movementId: string,
   input: { amountSoles: string; concept: string; costSoles?: string },
   before: MovementSnapshot,
 ) {
-  const { user, group } = await requireMembership();
+  const { user, group } = await requireMembership(groupId);
 
   const amount = solesToCents(input.amountSoles);
 
@@ -88,6 +87,7 @@ export async function proposeEditAction(
   const result = await useCases.proposeChange.execute({
     groupId: group.id,
     actorId: user.id,
+    alone: group.isAlone(),
     movementId,
     kind: "edit",
     after,
@@ -97,25 +97,26 @@ export async function proposeEditAction(
     return { ok: false as const, error: result.error.kind };
   }
 
-  revalidatePath("/");
-  revalidatePath("/actividad");
+  revalidateGroup(groupId);
 
-  return { ok: true as const };
+  return { ok: true as const, applied: result.value.applied };
 }
 
 /**
  * Proposes voiding a movement; on a repay this undoes the collection once
  * another partner approves it.
  *
+ * @param groupId - The group the partner works in.
  * @param movementId - The movement.
- * @returns Ok, or the kind of error.
+ * @returns Whether it was applied at once, or the kind of error.
  */
-export async function proposeVoidAction(movementId: string) {
-  const { user, group } = await requireMembership();
+export async function proposeVoidAction(groupId: string, movementId: string) {
+  const { user, group } = await requireMembership(groupId);
 
   const result = await useCases.proposeChange.execute({
     groupId: group.id,
     actorId: user.id,
+    alone: group.isAlone(),
     movementId,
     kind: "void",
   });
@@ -124,23 +125,25 @@ export async function proposeVoidAction(movementId: string) {
     return { ok: false as const, error: result.error.kind };
   }
 
-  revalidateLedgerAndLoans();
+  revalidateGroup(groupId);
 
-  return { ok: true as const };
+  return { ok: true as const, applied: result.value.applied };
 }
 
 /**
  * Approves or rejects a change another partner proposed.
  *
+ * @param groupId - The group the partner works in.
  * @param pendingId - The change.
  * @param decision - Approve or reject.
  * @returns Whether it was applied, or the kind of error.
  */
 export async function decideChangeAction(
+  groupId: string,
   pendingId: string,
   decision: "approve" | "reject",
 ) {
-  const { user, group } = await requireMembership();
+  const { user, group } = await requireMembership(groupId);
 
   const result = await useCases.decideChange.execute({
     groupId: group.id,
@@ -153,7 +156,7 @@ export async function decideChangeAction(
     return { ok: false as const, error: result.error.kind };
   }
 
-  revalidateLedgerAndLoans();
+  revalidateGroup(groupId);
 
   return { ok: true as const, applied: result.value.applied };
 }
@@ -161,11 +164,15 @@ export async function decideChangeAction(
 /**
  * Reads every change proposed on a movement, for its detail dialog.
  *
+ * @param groupId - The group the partner works in.
  * @param movementId - The movement.
  * @returns The history, newest first.
  */
-export async function getMovementHistoryAction(movementId: string) {
-  const { group } = await requireMembership();
+export async function getMovementHistoryAction(
+  groupId: string,
+  movementId: string,
+) {
+  const { group } = await requireMembership(groupId);
 
   const history = await useCases.getMovementHistory.execute({
     groupId: group.id,

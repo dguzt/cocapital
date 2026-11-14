@@ -21,8 +21,8 @@ export class JoinGroup {
    * is not an error.
    *
    * @param input - The partner who joins and the invite code they received.
-   * @returns The group with the partner in it, or `InviteNotFound`,
-   *   `AlreadyInGroup` or `GroupFull`.
+   * @returns The group with the partner in it, or `InviteNotFound` or
+   *   `GroupFull`.
    */
   async execute(input: JoinGroupInput): Promise<Result<Group, GroupError>> {
     const code = InviteCode.from(input.code);
@@ -39,16 +39,6 @@ export class JoinGroup {
 
     if (group.hasMember(input.partner.userId)) {
       return ok(group);
-    }
-
-    const [current] = await this.groups.groupsOf(input.partner.userId);
-
-    if (current) {
-      return err({
-        kind: "AlreadyInGroup",
-        message: "a partner belongs to one group at most",
-        groupId: current.id,
-      });
     }
 
     const admitted = group.admit(input.partner);

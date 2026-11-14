@@ -18,7 +18,7 @@ describe("CreateGroup", () => {
     expect(groups.stored[0].members[0]).toEqual({ ...DIEGO, role: "creator" });
   });
 
-  it("refuses a partner who already has a group", async () => {
+  it("lets a partner found a second group", async () => {
     const groups = new InMemoryGroups();
 
     const useCase = new CreateGroup(groups);
@@ -27,8 +27,8 @@ describe("CreateGroup", () => {
 
     const second = await useCase.execute({ creator: DIEGO, name: "Otro" });
 
-    expect(!second.ok && second.error.kind).toBe("AlreadyInGroup");
-    expect(groups.stored).toHaveLength(1);
+    expect(second.ok).toBe(true);
+    expect(groups.stored).toHaveLength(2);
   });
 
   it("stores nothing when the name is invalid", async () => {

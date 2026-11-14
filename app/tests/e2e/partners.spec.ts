@@ -3,6 +3,8 @@ import { expect, type Page, test } from "@playwright/test";
 import {
   addMovement,
   capital,
+  GROUP_PANEL,
+  openInGroup,
   openSessionAs,
   PARTNER_A,
   PARTNER_B,
@@ -29,7 +31,7 @@ test.describe("dos socios comparten un capital", () => {
       ),
       partnerA.getByRole("button", { name: "Crear grupo" }).click(),
     ]);
-    await partnerA.goto("/");
+    await openInGroup(partnerA);
 
     const inviteLink = partnerA.getByText(/\/join\/[A-Z0-9]+/);
     const link = await inviteLink.textContent();
@@ -39,12 +41,12 @@ test.describe("dos socios comparten un capital", () => {
 
     await partnerB.goto(`/join/${code}`);
 
-    await expect(partnerB).toHaveURL("/");
+    await expect(partnerB).toHaveURL(GROUP_PANEL);
     await expect(capital(partnerB, "cash")).toHaveText("S/ 0.00");
 
     await partnerA.reload();
 
-    await expect(partnerA.getByText("Falta tu socio")).toHaveCount(0);
+    await expect(partnerA.getByText("Estás solo en este grupo")).toHaveCount(0);
   });
 
   test("un aporte y un gasto mueven el efectivo", async () => {
@@ -65,7 +67,7 @@ test.describe("dos socios comparten un capital", () => {
   });
 
   test("un préstamo pasa el capital de efectivo a prestado", async () => {
-    await partnerA.goto("/prestamos/nuevo");
+    await openInGroup(partnerA, "/prestamos/nuevo");
 
     await partnerA
       .getByRole("button", { name: "Elegir o crear prestatario" })
@@ -85,7 +87,7 @@ test.describe("dos socios comparten un capital", () => {
 
     await expect(partnerA).toHaveURL(/\/prestamos\/[0-9a-f-]+$/);
 
-    await partnerA.goto("/");
+    await openInGroup(partnerA);
 
     await expect(capital(partnerA, "cash")).toHaveText("S/ 650.00");
     await expect(capital(partnerA, "lent")).toHaveText("S/ 300.00");
@@ -93,7 +95,7 @@ test.describe("dos socios comparten un capital", () => {
   });
 
   test("cobrar una cuota devuelve capital más interés al efectivo", async () => {
-    await partnerA.goto("/prestamos");
+    await openInGroup(partnerA, "/prestamos");
     await partnerA.getByText("Prestatario E2E").first().click();
 
     await partnerA.getByRole("button", { name: "Cobrar" }).first().click();
@@ -101,7 +103,7 @@ test.describe("dos socios comparten un capital", () => {
 
     await expect(partnerA.getByText("Cobro registrado")).toBeVisible();
 
-    await partnerA.goto("/");
+    await openInGroup(partnerA);
 
     await expect(capital(partnerA, "cash")).toHaveText("S/ 815.00");
     await expect(capital(partnerA, "lent")).toHaveText("S/ 150.00");
@@ -109,7 +111,7 @@ test.describe("dos socios comparten un capital", () => {
   });
 
   test("anular un gasto necesita la aprobación del otro socio", async () => {
-    await partnerA.goto("/actividad");
+    await openInGroup(partnerA, "/actividad");
 
     await partnerA
       .getByText("Gasto E2E")
@@ -120,18 +122,18 @@ test.describe("dos socios comparten un capital", () => {
     await partnerA.getByRole("button", { name: "Anular" }).click();
 
     await expect(
-      partnerA.getByText("Anulación enviada — falta el OK de tu socio"),
+      partnerA.getByText("Anulación enviada — falta el OK de otro socio"),
     ).toBeVisible();
 
     await expect(
       partnerA.getByText("OK pendiente").filter({ visible: true }),
     ).toBeVisible();
 
-    await partnerA.goto("/");
+    await openInGroup(partnerA);
 
     await expect(capital(partnerA, "cash")).toHaveText("S/ 815.00");
 
-    await partnerB.goto("/");
+    await openInGroup(partnerB);
     await partnerB.getByRole("button", { name: "Aprobar" }).click();
 
     await expect(capital(partnerB, "cash")).toHaveText("S/ 865.00");

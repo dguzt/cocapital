@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { PlanChange } from "@/backend/modules/inventory/domain/plan-change";
 import type { LedgerMovement } from "@/backend/modules/movements/domain/ledger-movement";
+import { useGroup } from "@/components/groups/group-context";
 import type { ISODate } from "@/lib/dates";
 import { activityEntries, presentPlanChange } from "./activity-entries";
 import { MovementDialog } from "./movement-dialog/movement-dialog";
@@ -21,6 +22,7 @@ export function ActivityTable({
   pendingIds?: string[];
   limit?: number;
 }) {
+  const { href } = useGroup();
   const entries = activityEntries(movements, planChanges, limit);
 
   return (
@@ -50,7 +52,10 @@ export function ActivityTable({
                 className="border-b border-border last:border-0 hover:bg-white/[0.02]"
               >
                 <td className="py-3 pr-3">
-                  <Link href={plan.href} className="flex items-center gap-3">
+                  <Link
+                    href={href(plan.path)}
+                    className="flex items-center gap-3"
+                  >
                     <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-secondary text-sm font-semibold text-muted-foreground">
                       P
                     </span>

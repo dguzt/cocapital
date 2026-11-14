@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { proposeVoidCreditSaleAction } from "@/backend/modules/inventory/adapters/in/next/credit-sale-actions";
+import { useGroup } from "@/components/groups/group-context";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -34,16 +35,21 @@ export function VoidCreditSaleButton({
   className?: string;
   label?: string;
 }) {
+  const { groupId, alone } = useGroup();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 
   function propose() {
     startTransition(async () => {
-      const result = await proposeVoidCreditSaleAction(saleId);
+      const result = await proposeVoidCreditSaleAction(groupId, saleId);
       if (result.ok) {
         setOpen(false);
-        toast.success("Anulación enviada — falta el OK de tu socio");
+        toast.success(
+          result.applied
+            ? "Venta anulada"
+            : "Anulación enviada — falta el OK de otro socio",
+        );
         router.refresh();
       } else {
         toast.error(
@@ -88,7 +94,9 @@ export function VoidCreditSaleButton({
           </DialogDescription>
         </DialogHeader>
         <p className="text-center text-[11.5px] text-muted-foreground">
-          Se aplica cuando tu socio lo apruebe (doble confirmación).
+          {alone
+            ? "Eres el único socio: se aplica al instante y queda en la actividad."
+            : "Se aplica cuando otro socio lo apruebe."}
         </p>
         <DialogFooter className="gap-2">
           <Button
@@ -104,7 +112,11 @@ export function VoidCreditSaleButton({
             ) : (
               <Ban className="size-4" />
             )}
-            {pending ? "Enviando…" : "Enviar anulación"}
+            {pending
+              ? "Enviando…"
+              : alone
+                ? "Anular ahora"
+                : "Enviar anulación"}
           </Button>
         </DialogFooter>
       </DialogContent>

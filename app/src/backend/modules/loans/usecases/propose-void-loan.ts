@@ -2,17 +2,19 @@ import type { LoanError } from "@/backend/modules/loans/domain/errors";
 import type { LoanRepository } from "@/backend/modules/loans/ports/loan-repository";
 import type { PendingChangeError } from "@/backend/modules/movements/domain/errors";
 import type { ProposeSystemVoid } from "@/backend/modules/movements/usecases/propose-system-void";
+import type { SubmittedChange } from "@/backend/modules/movements/usecases/submit-change";
 import { err, type Result } from "@/lib/result";
 
 export type ProposeVoidLoanInput = {
   groupId: string;
   actorId: string;
+  alone: boolean;
   loanId: string;
 };
 
 /**
  * Proposes cancelling a whole loan, as a void of its lend movement. Another
- * partner approves it in the approvals inbox.
+ * partner approves it in the approvals inbox, unless the partner is alone.
  */
 export class ProposeVoidLoan {
   static inject = ["loans", "proposeSystemVoid"] as const;
@@ -25,13 +27,14 @@ export class ProposeVoidLoan {
   /**
    * Opens the pending cancellation.
    *
-   * @param input - The group, the proposing partner and the loan.
-   * @returns The pending change's id, or `LoanNotFound`,
-   *   `LoanAlreadyVoided` or why the void cannot be proposed.
+   * @param input - The group, the proposing partner, whether they are alone,
+   *   and the loan.
+   * @returns The change's id and whether it was applied at once, or
+   *   `LoanNotFound`, `LoanAlreadyVoided` or why the void cannot be proposed.
    */
   async execute(
     input: ProposeVoidLoanInput,
-  ): Promise<Result<{ pendingId: string }, LoanError | PendingChangeError>> {
+  ): Promise<Result<SubmittedChange, LoanError | PendingChangeError>> {
     const loan = await this.loans.findInGroup(input.groupId, input.loanId);
 
     if (!loan) {
@@ -54,6 +57,7 @@ export class ProposeVoidLoan {
       groupId: input.groupId,
       actorId: input.actorId,
       movementId: loan.lendMovementId,
+      alone: input.alone,
     });
   }
 }

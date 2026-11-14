@@ -1,11 +1,16 @@
 import { err, ok, type Result } from "@/lib/result";
+import type { ApprovedChange } from "./approved-change";
 import type { ChangeKind } from "./change-kind";
 import type { PendingChangeError } from "./errors";
-import type { MovementSnapshot, MovementStatus } from "./movement";
+import type {
+  MovementSnapshot,
+  MovementStatus,
+  MovementType,
+} from "./movement";
 
 /**
  * A partner's request to edit or void a movement. Nothing changes until
- * another partner approves it.
+ * another partner approves it, unless the partner runs the group alone.
  */
 export class ChangeProposal {
   private constructor(
@@ -71,5 +76,29 @@ export class ChangeProposal {
         kind === "edit" ? (after ?? null) : null,
       ),
     );
+  }
+
+  /**
+   * Turns the proposal into a change ready to apply, for a partner who runs
+   * the group alone and has nobody to ask for an OK.
+   *
+   * @param movementType - The type of the movement it targets.
+   * @returns The edit or void its owner must apply.
+   */
+  approvedAlone(movementType: MovementType): ApprovedChange {
+    if (this.kind === "edit" && this.after) {
+      return {
+        kind: "edit",
+        movementId: this.movementId,
+        movementType,
+        after: this.after,
+      };
+    }
+
+    return {
+      kind: "void",
+      movementId: this.movementId,
+      movementType,
+    };
   }
 }

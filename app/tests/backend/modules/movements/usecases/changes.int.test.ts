@@ -13,6 +13,7 @@ import {
   listMovements,
   listPendingChanges,
   proposeMovementChange,
+  proposeVoidLoan,
 } from "@tests/support/use-cases";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -369,5 +370,47 @@ describe("Deshacer cobro: anular un repay devuelve la cuota a pendiente", () => 
     );
     expect(repays).toHaveLength(2);
     expect(repays.filter((m) => m.status === "active")).toHaveLength(1);
+  });
+});
+
+describe("a partner alone in the group", () => {
+  it("applies an edit at once and records it as approved by its author", async () => {
+    const { ana, group, movement } = await seed();
+
+    const result = await proposeMovementChange(
+      group.id,
+      ana.id,
+      movement.id,
+      "edit",
+      editedTo45({ type: "contribute" }),
+      true,
+    );
+
+    expect(result.ok && result.value.applied).toBe(true);
+
+    const ledger = await listMovements(group.id);
+
+    expect(ledger[0].amount).toBe(4500);
+    expect(await listPendingChanges(group.id)).toHaveLength(0);
+
+    const history = await listMovementHistory(group.id, movement.id);
+
+    expect(history[0]).toMatchObject({
+      status: "approved",
+      proposerName: "Ana",
+      deciderName: "Ana",
+    });
+  });
+
+  it("voids a loan at once, through its owner", async () => {
+    const { ana, group, loanId } = await seedLoan();
+
+    const result = await proposeVoidLoan(group.id, ana.id, loanId, true);
+
+    expect(result.ok && result.value.applied).toBe(true);
+
+    const detail = await getLoanDetail(group.id, loanId);
+
+    expect(detail.ok && detail.value.status).toBe("voided");
   });
 });

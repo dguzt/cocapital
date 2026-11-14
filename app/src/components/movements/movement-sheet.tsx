@@ -14,6 +14,7 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { addMovementAction } from "@/backend/modules/movements/adapters/in/next/movement-actions";
 import type { MovementType } from "@/backend/modules/movements/domain/movement";
+import { useGroup } from "@/components/groups/group-context";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -54,6 +55,7 @@ const SHEET_TYPES: { type: MovementType; href?: string }[] = [
 ];
 
 export function MovementSheet() {
+  const { groupId, href } = useGroup();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<MovementType>("contribute");
@@ -63,7 +65,7 @@ export function MovementSheet() {
 
   function save() {
     startTransition(async () => {
-      const result = await addMovementAction({
+      const result = await addMovementAction(groupId, {
         type,
         amountSoles: amount,
         concept,
@@ -97,17 +99,17 @@ export function MovementSheet() {
           </DrawerHeader>
 
           <div className="grid grid-cols-3 gap-2">
-            {SHEET_TYPES.map(({ type: t, href }) => {
+            {SHEET_TYPES.map(({ type: t, href: path }) => {
               const meta = MOVEMENT_META[t];
-              const active = type === t && !href;
+              const active = type === t && !path;
               return (
                 <button
                   key={t}
                   type="button"
                   onClick={() => {
-                    if (href) {
+                    if (path) {
                       setOpen(false);
-                      router.push(href);
+                      router.push(href(path));
                     } else {
                       setType(t);
                     }

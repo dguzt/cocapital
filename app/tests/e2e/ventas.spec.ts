@@ -3,6 +3,8 @@ import { expect, type Page, test } from "@playwright/test";
 import {
   addMovement,
   capital,
+  GROUP_PANEL,
+  openInGroup,
   openSessionAs,
   PARTNER_A,
   PARTNER_B,
@@ -31,20 +33,20 @@ test.describe("vender al contado y en cuotas", () => {
     await partnerA.getByRole("button", { name: "Agregar movimiento" }).click();
     await partnerA.getByRole("button", { name: /^Venta/ }).click();
 
-    await expect(partnerA).toHaveURL("/ventas/nueva");
+    await expect(partnerA).toHaveURL(/\/g\/[0-9a-f-]+\/ventas\/nueva$/);
 
     await partnerA.locator("#cash-price").fill("100");
     await partnerA.locator("#cash-cost").fill("60");
     await partnerA.getByRole("button", { name: "Registrar venta" }).click();
 
-    await expect(partnerA).toHaveURL("/");
+    await expect(partnerA).toHaveURL(GROUP_PANEL);
     await expect(capital(partnerA, "cash")).toHaveText("S/ 845.00");
     await expect(capital(partnerA, "inventory")).toHaveText("S/ 60.00");
     await expect(capital(partnerA, "total")).toHaveText("S/ 1,055.00");
   });
 
   test("el cronograma de la venta en cuotas tiene que cuadrar para confirmar", async () => {
-    await partnerA.goto("/ventas/nueva");
+    await openInGroup(partnerA, "/ventas/nueva");
     await partnerA.getByRole("button", { name: "En cuotas" }).click();
 
     await partnerA
@@ -90,7 +92,7 @@ test.describe("vender al contado y en cuotas", () => {
 
     await expect(partnerA).toHaveURL(/\/ventas\/[0-9a-f-]+$/);
 
-    await partnerA.goto("/");
+    await openInGroup(partnerA);
 
     await expect(capital(partnerA, "cash")).toHaveText("S/ 865.00");
     await expect(capital(partnerA, "inventory")).toHaveText("S/ 0.00");
@@ -99,7 +101,7 @@ test.describe("vender al contado y en cuotas", () => {
   });
 
   test("cobrar una cuota recupera costo y suma el margen", async () => {
-    await partnerA.goto("/ventas");
+    await openInGroup(partnerA, "/ventas");
     await partnerA.getByText("Comprador E2E").first().click();
 
     await partnerA.getByRole("button", { name: "Cobrar" }).first().click();
@@ -107,7 +109,7 @@ test.describe("vender al contado y en cuotas", () => {
 
     await expect(partnerA.getByText("Cobro registrado")).toBeVisible();
 
-    await partnerA.goto("/");
+    await openInGroup(partnerA);
 
     await expect(capital(partnerA, "cash")).toHaveText("S/ 891.66");
     await expect(capital(partnerA, "receivable")).toHaveText("S/ 32.00");
@@ -115,7 +117,7 @@ test.describe("vender al contado y en cuotas", () => {
   });
 
   test("cambiar el plan no mueve el capital y queda en la actividad", async () => {
-    await partnerA.goto("/ventas");
+    await openInGroup(partnerA, "/ventas");
     await partnerA.getByText("Comprador E2E").first().click();
 
     await partnerA.getByRole("button", { name: "Cambiar plan" }).click();
@@ -132,7 +134,7 @@ test.describe("vender al contado y en cuotas", () => {
       partnerA.getByText("Plan cambiado · 2 → 4 cuotas"),
     ).toBeVisible();
 
-    await partnerA.goto("/actividad");
+    await openInGroup(partnerA, "/actividad");
 
     await expect(
       partnerA
@@ -140,13 +142,13 @@ test.describe("vender al contado y en cuotas", () => {
         .filter({ visible: true }),
     ).toBeVisible();
 
-    await partnerA.goto("/");
+    await openInGroup(partnerA);
 
     await expect(capital(partnerA, "total")).toHaveText("S/ 1,073.66");
   });
 
   test("anular la venta necesita el OK y devuelve el capital a antes de la venta", async () => {
-    await partnerA.goto("/ventas");
+    await openInGroup(partnerA, "/ventas");
     await partnerA.getByText("Comprador E2E").first().click();
 
     await partnerA.getByRole("button", { name: "Anular venta" }).click();
@@ -158,10 +160,10 @@ test.describe("vender al contado y en cuotas", () => {
     await partnerA.getByRole("button", { name: "Enviar anulación" }).click();
 
     await expect(
-      partnerA.getByText("Anulación pendiente — falta el OK de tu socio"),
+      partnerA.getByText("Anulación pendiente — falta el OK de otro socio"),
     ).toBeVisible();
 
-    await partnerB.goto("/");
+    await openInGroup(partnerB);
     await partnerB.getByRole("button", { name: "Aprobar" }).click();
 
     await expect(capital(partnerB, "cash")).toHaveText("S/ 845.00");

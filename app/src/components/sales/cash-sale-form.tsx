@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { addMovementAction } from "@/backend/modules/movements/adapters/in/next/movement-actions";
+import { useGroup } from "@/components/groups/group-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +17,7 @@ const ERROR_TEXT: Record<string, string> = {
 
 /** A sale paid in full now: cash in, cost out of inventory. */
 export function CashSaleForm() {
+  const { groupId, href } = useGroup();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [price, setPrice] = useState("");
@@ -24,7 +26,7 @@ export function CashSaleForm() {
 
   function save() {
     startTransition(async () => {
-      const result = await addMovementAction({
+      const result = await addMovementAction(groupId, {
         type: "sell_inventory",
         amountSoles: price,
         costSoles: cost,
@@ -33,7 +35,7 @@ export function CashSaleForm() {
 
       if (result.ok) {
         toast.success("Venta registrada");
-        router.push("/");
+        router.push(href());
       } else {
         toast.error(ERROR_TEXT[result.error] ?? "Algo salió mal.");
       }

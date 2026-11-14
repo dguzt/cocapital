@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { collectInstallmentAction } from "@/backend/modules/loans/adapters/in/next/loan-actions";
+import { useGroup } from "@/components/groups/group-context";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,13 +31,18 @@ export function CollectButton({
   amountCents: number;
   borrowerName: string;
 }) {
+  const { groupId } = useGroup();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 
   function collect() {
     startTransition(async () => {
-      const result = await collectInstallmentAction(loanId, installmentId);
+      const result = await collectInstallmentAction(
+        groupId,
+        loanId,
+        installmentId,
+      );
       if (result.ok) {
         setOpen(false);
         toast.success(`Cobro registrado · ${formatCents(result.amount)}`);

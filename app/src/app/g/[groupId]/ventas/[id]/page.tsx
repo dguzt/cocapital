@@ -13,6 +13,7 @@ import { VoidCreditSaleButton } from "@/components/sales/void-credit-sale-button
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
 import { formatDayMonth, isOverdue, todayInLima } from "@/lib/dates";
+import { groupPath } from "@/lib/group-path";
 import { formatCents } from "@/lib/money";
 
 function cuotaLabel(number: number) {
@@ -22,10 +23,10 @@ function cuotaLabel(number: number) {
 export default async function SaleDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ groupId: string; id: string }>;
 }) {
-  const { user, group } = await requireMembership();
-  const { id } = await params;
+  const { groupId, id } = await params;
+  const { user, group } = await requireMembership(groupId);
   const found = await useCases.getCreditSale.execute({
     groupId: group.id,
     saleId: id,
@@ -82,7 +83,7 @@ export default async function SaleDetailPage({
       actions={
         <div className="flex gap-2">
           <Button asChild variant="outline">
-            <Link href="/ventas">
+            <Link href={groupPath(group.id, "/ventas")}>
               <ArrowLeft className="size-4" /> Ventas
             </Link>
           </Button>
@@ -103,10 +104,10 @@ export default async function SaleDetailPage({
         {!isVoided && voidPending && (
           <section className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4">
             <p className="text-sm font-semibold text-amber-400">
-              Anulación pendiente — falta el OK de tu socio
+              Anulación pendiente — falta el OK de otro socio
             </p>
             <p className="mt-1 text-[13px] text-muted-foreground">
-              Se revierte la venta completa cuando tu socio lo apruebe.
+              Se revierte la venta completa cuando otro socio lo apruebe.
             </p>
           </section>
         )}

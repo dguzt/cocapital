@@ -4,6 +4,24 @@
 
 ---
 
+## D7 — Groups of 1 to 10, several groups per user
+
+**Date:** 2026-11-14
+**Status:** ✅ Locked (grilling session). Revives part of E5.
+
+1. **Capacity 1–10.** `Group.CAPACITY = 10`. A group of one is a real group: someone running their own business.
+2. **Several groups per user.** Creating or joining a group no longer fails with `AlreadyInGroup`. Joining is still idempotent.
+3. **Quorum = any other member.** The first OK from someone who did not propose the change applies it. No vote table. This is how `PendingChange` already works.
+4. **Alone ⇒ applied directly.** With one member, an edit or void is applied at once and stays in the activity history. Once a second member joins, double confirmation comes back.
+5. **The group lives in the URL.** Routes move under `/g/[groupId]/…`. `requireMembership(groupId)` checks you belong to THAT group. A selector in the header switches groups. No cookie, no hidden state.
+6. **`/` routes by count.** 0 groups → onboarding · 1 → redirect into it · 2+ → list of your groups (name and members only). Old routes (`/prestamos/…`, `/ventas/…`, `/actividad`) are dropped, not redirected.
+8. **Actions take the group explicitly.** Every server action receives `groupId` as its first argument and checks membership in that group. No header, no cookie.
+7. **Invites as today.** Anyone with the code joins, up to 10. Nobody removes members yet: leave/kick and creator-only management stay in E5.
+
+**Accepted risks:** one inactive member can't block, but any one member can approve a peer's change alone · no way to remove a member · a pending change proposed while alone can't exist (applied directly).
+
+---
+
 ## D6 — Venta en cuotas (credit sales) + contacts
 
 **Date:** 2026-10-20
