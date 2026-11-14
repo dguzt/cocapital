@@ -78,6 +78,10 @@ tests/              mirrors src. *.test.ts = unit · *.int.test.ts = Neon test b
 
 The driver is `neon-serverless` (WebSocket), so transactions are real. A use case that writes more than once wraps the writes in `this.uow.run(async () => … return ok(…) )`: an `err` result or a throw rolls everything back, and a unit already running is joined. Repositories just run their queries; the `db` they hold follows the transaction in progress (AsyncLocalStorage).
 
+### Migrations and deploys
+
+The production build migrates before it builds (`app/vercel.json`): a failed migration fails the build, and prod keeps serving the previous deploy. Never migrate prod by hand. Migrations stay expand/contract, because a migration can land while the previous code is still live.
+
 ### Rules that hold it together (enforced)
 
 | Rule | Enforced by |
