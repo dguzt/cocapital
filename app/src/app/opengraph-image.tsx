@@ -21,9 +21,9 @@ const color = {
 
 const buckets = [
   { label: "Cash", value: "S/ 520.00", pct: "50.5%", swatch: color.primary },
-  { label: "Lent", value: "S/ 300.00", pct: "29.1%", swatch: "#71717a" },
-  { label: "Inventory", value: "S/ 130.00", pct: "12.6%", swatch: "#52525b" },
-  { label: "Receivable", value: "S/ 80.00", pct: "7.8%", swatch: "#3f3f46" },
+  { label: "Lent", value: "S/ 300.00", pct: "29.1%", swatch: "#38bdf8" },
+  { label: "Inventory", value: "S/ 130.00", pct: "12.6%", swatch: "#fbbf24" },
+  { label: "Receivable", value: "S/ 80.00", pct: "7.8%", swatch: "#a78bfa" },
 ];
 
 const font = (file: string) =>
@@ -73,12 +73,14 @@ export default async function OpengraphImage() {
               width: 52,
               height: 52,
               borderRadius: 14,
-              background: color.card,
-              border: `1px solid ${color.border}`,
-              fontSize: 30,
+              background: color.primary,
+              boxShadow: "0 10px 30px rgba(52,211,153,0.25)",
+              color: "#04170e",
+              fontFamily: "Geist Mono",
+              fontSize: 20,
             }}
           >
-            💰
+            S/
           </div>
           <div style={{ fontSize: 30, fontWeight: 600, letterSpacing: -0.5 }}>
             CoCapital
