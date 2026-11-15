@@ -348,15 +348,16 @@ export const es = {
     installmentCount: (
       count: number,
       frequency: "daily" | "weekly" | "biweekly" | "monthly",
-    ) =>
-      `${count} cuota${count === 1 ? "" : "s"} ${
-        {
-          daily: "diaria",
-          weekly: "semanal",
-          biweekly: "quincenal",
-          monthly: "mensual",
-        }[frequency]
-      }${count === 1 ? "" : frequency === "daily" ? "s" : "es"}`,
+    ) => {
+      const word = {
+        daily: ["diaria", "diarias"],
+        weekly: ["semanal", "semanales"],
+        biweekly: ["quincenal", "quincenales"],
+        monthly: ["mensual", "mensuales"],
+      }[frequency][count === 1 ? 0 : 1];
+
+      return `${count} cuota${count === 1 ? "" : "s"} ${word}`;
+    },
   },
   schedule: {
     title: "Cronograma · edítalo si quieres",

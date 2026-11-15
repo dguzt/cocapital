@@ -36,9 +36,9 @@ test.describe("español e inglés", () => {
     );
     await shot(page, "en-01-landing");
 
-    await page.getByRole("button", { name: "Español" }).click();
+    await page.getByRole("link", { name: "Español" }).click();
 
-    await expect(page).toHaveURL("/");
+    await expect(page).toHaveURL("/?l=es");
     await expect(page.getByRole("heading", { level: 1 })).toContainText(
       "El capital de tu negocio",
     );
@@ -80,7 +80,7 @@ test.describe("español e inglés", () => {
     ).toBeVisible();
     await shot(partnerA, "en-06-activity");
 
-    await partnerA.getByRole("button", { name: "Español" }).first().click();
+    await partnerA.getByRole("link", { name: "Español" }).first().click();
 
     await expect(
       partnerA.getByRole("banner").getByText("Actividad", { exact: true }),
