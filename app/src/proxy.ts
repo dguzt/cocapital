@@ -5,11 +5,12 @@
  * so an invited partner signs up first and lands back on the invite.
  */
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { withLocale } from "@/i18n/with-locale";
 
 // "/" is public: it renders the landing for visitors, the Panel for members.
 const isPublicRoute = createRouteMatcher([
   "/",
-  "/opengraph-image(.*)",
+  "/og/(.*)",
   "/sign-in(.*)",
   "/sign-up(.*)",
 ]);
@@ -18,6 +19,8 @@ export default clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {
     await auth.protect();
   }
+
+  return withLocale(req);
 });
 
 export const config = {
