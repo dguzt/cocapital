@@ -5,6 +5,7 @@ import { toGroupView } from "@/backend/modules/groups/adapters/in/next/group-vie
 import { requireMembership } from "@/backend/modules/groups/adapters/in/next/membership";
 import { LoanWizard } from "@/components/loans/loan-wizard/loan-wizard";
 import { AppShell } from "@/components/shell/app-shell";
+import { getDictionary } from "@/i18n/get-dictionary";
 import { isOverdue, todayInLima } from "@/lib/dates";
 
 export default async function NewLoanPage({
@@ -22,6 +23,7 @@ export default async function NewLoanPage({
   const overdueCount = installments.filter(
     (i) => i.status === "pending" && isOverdue(i.dueDate, today),
   ).length;
+  const t = (await getDictionary()).loans;
 
   return (
     <AppShell
@@ -29,8 +31,8 @@ export default async function NewLoanPage({
       group={toGroupView(group)}
       active="loans"
       overdueCount={overdueCount}
-      title="Nuevo préstamo"
-      subtitle="El cronograma se calcula solo — tú solo confirmas"
+      title={t.newLoan}
+      subtitle={t.newSubtitle}
     >
       <div className="max-w-2xl">
         <LoanWizard contacts={contacts.map(toContactView)} />

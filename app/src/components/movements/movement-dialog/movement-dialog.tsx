@@ -18,7 +18,6 @@ import {
 import type { ChangeHistoryItem } from "@/backend/modules/movements/domain/change-history-item";
 import type { LedgerMovement } from "@/backend/modules/movements/domain/ledger-movement";
 import { useGroup } from "@/components/groups/group-context";
-import { MOVEMENT_META } from "@/components/movements/movement-meta";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,20 +27,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useDictionary } from "@/i18n/i18n-provider";
 import { groupPath } from "@/lib/group-path";
 import { formatCents } from "@/lib/money";
 import { allowedActions } from "./actions-by-type";
 import { ChangeHistory } from "./change-history";
 import { type EditDraft, EditForm } from "./edit-form";
-
-const ERROR_TEXT: Record<string, string> = {
-  ChangeAlreadyPending: "Ya hay un cambio esperando el OK de otro socio.",
-  SystemMovement:
-    "Este movimiento pertenece a un préstamo o a una venta en cuotas — corrígelo desde ahí.",
-  MovementVoided: "Este movimiento ya fue anulado.",
-  InvalidAmount: "Ingresa un monto válido.",
-  InvalidCost: "El costo no es válido.",
-};
 
 const emptyDraft: EditDraft = { amount: "", concept: "", cost: "" };
 
@@ -53,23 +44,6 @@ const OWNER_OF: Partial<Record<LedgerMovement["type"], Owner>> = {
   sell_on_credit: "sale",
   collect_sale: "sale",
 };
-
-const OWNER_TEXT = {
-  loan: {
-    button: "Ir al préstamo",
-    collection:
-      "Este cobro pertenece a un préstamo. Para anularlo, ve al préstamo.",
-    entry:
-      "Este movimiento pertenece a un préstamo. Para editarlo o anularlo, ve al préstamo.",
-  },
-  sale: {
-    button: "Ir a la venta",
-    collection:
-      "Este cobro pertenece a una venta en cuotas. Para anularlo, ve a la venta.",
-    entry:
-      "Este movimiento pertenece a una venta en cuotas. Para anularla, ve a la venta.",
-  },
-} as const;
 
 /** The page a ledger row of a loan or a credit sale links to, at its cuota. */
 async function ownerHref(
@@ -123,7 +97,9 @@ export function MovementDialog({
   const [target, setTarget] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const meta = MOVEMENT_META[movement.type];
+  const copy = useDictionary();
+  const t = copy.movementDialog;
+  const label = copy.movementTypes[movement.type].label;
   const { canEdit, canVoid, note } = allowedActions(
     movement.type,
     movement.status,
@@ -170,14 +146,10 @@ export function MovementDialog({
       );
       if (result.ok) {
         setOpen(false);
-        toast.success(
-          result.applied
-            ? "Cambio aplicado"
-            : "Cambio enviado — falta el OK de otro socio",
-        );
+        toast.success(result.applied ? t.changeApplied : t.changeSent);
         router.refresh();
       } else {
-        toast.error(ERROR_TEXT[result.error] ?? "Algo salió mal.");
+        toast.error(t.errors[result.error] ?? t.genericError);
       }
     });
   }
@@ -187,14 +159,10 @@ export function MovementDialog({
       const result = await proposeVoidAction(groupId, movement.id);
       if (result.ok) {
         setOpen(false);
-        toast.success(
-          result.applied
-            ? "Movimiento anulado"
-            : "Anulación enviada — falta el OK de otro socio",
-        );
+        toast.success(result.applied ? t.voided : t.voidSent);
         router.refresh();
       } else {
-        toast.error(ERROR_TEXT[result.error] ?? "Algo salió mal.");
+        toast.error(t.errors[result.error] ?? t.genericError);
       }
     });
   }
@@ -205,7 +173,7 @@ export function MovementDialog({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {meta.label}
+            {label}
             {movement.concept ? ` · ${movement.concept}` : ""}
           </DialogTitle>
           <DialogDescription>
@@ -213,13 +181,13 @@ export function MovementDialog({
             <span className="font-mono tabular-nums">
               {formatCents(movement.amount)}
             </span>
-            {movement.status === "voided" && " · anulado"}
+            {movement.status === "voided" && t.voidedSuffix}
           </DialogDescription>
         </DialogHeader>
 
         {hasPending && (
           <p className="rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-[13px] text-amber-400">
-            Hay un cambio esperando el OK de otro socio.
+            {t.pendingNotice}
           </p>
         )}
 
@@ -237,8 +205,8 @@ export function MovementDialog({
           <div className="rounded-lg border border-border bg-secondary/50 px-3 py-3">
             <p className="text-[13px] text-muted-foreground">
               {movement.type === "repay" || movement.type === "collect_sale"
-                ? OWNER_TEXT[owner].collection
-                : OWNER_TEXT[owner].entry}
+                ? t.owner[owner].collection
+                : t.owner[owner].entry}
             </p>
             <Button
               className="mt-2.5 w-full"
@@ -248,12 +216,12 @@ export function MovementDialog({
             >
               {target ? (
                 <Link href={target}>
-                  <ArrowRight className="size-4" /> {OWNER_TEXT[owner].button}
+                  <ArrowRight className="size-4" /> {t.owner[owner].button}
                 </Link>
               ) : (
                 <>
                   <Loader2 className="size-4 animate-spin" />{" "}
-                  {OWNER_TEXT[owner].button}
+                  {t.owner[owner].button}
                 </>
               )}
             </Button>
@@ -266,7 +234,7 @@ export function MovementDialog({
               disabled={!canEdit}
               onClick={() => setMode("edit")}
             >
-              Editar
+              {t.edit}
             </Button>
             <Button
               className="flex-1"
@@ -275,16 +243,13 @@ export function MovementDialog({
               onClick={submitVoid}
             >
               {pending && <Loader2 className="size-4 animate-spin" />}
-              Anular
+              {t.void}
             </Button>
           </div>
         )}
 
         {mode === "view" && !owner && alone && (canEdit || canVoid) && (
-          <p className="text-[12px] text-muted-foreground">
-            Eres el único socio: editar o anular se aplica al instante y queda
-            en la actividad.
-          </p>
+          <p className="text-[12px] text-muted-foreground">{t.aloneNote}</p>
         )}
 
         {mode === "view" && !owner && note && (

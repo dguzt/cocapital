@@ -10,6 +10,7 @@ import { MovementSheet } from "@/components/movements/movement-sheet";
 import { PendingApprovals } from "@/components/movements/pending-approvals";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
+import { getDictionary } from "@/i18n/get-dictionary";
 import { isOverdue, todayInLima } from "@/lib/dates";
 import { groupPath } from "@/lib/group-path";
 
@@ -28,6 +29,7 @@ export default async function PanelPage({
     useCases.listPendingChanges.execute({ groupId: group.id }),
     useCases.getCapitalSummary.execute({ groupId: group.id }),
   ]);
+  const t = await getDictionary();
   const overdueCount = installments.filter(
     (i) => i.status === "pending" && isOverdue(i.dueDate, today),
   ).length;
@@ -40,13 +42,13 @@ export default async function PanelPage({
       group={toGroupView(group)}
       active="panel"
       overdueCount={overdueCount}
-      title="Panel"
-      subtitle="Resumen del capital compartido"
+      title={t.panel.title}
+      subtitle={t.panel.subtitle}
       actions={
         <>
           <Button asChild variant="outline">
             <Link href={groupPath(group.id, "/actividad")}>
-              <Activity className="size-4" /> Actividad
+              <Activity className="size-4" /> {t.panel.activity}
             </Link>
           </Button>
           <MovementSheet />
@@ -63,6 +65,7 @@ export default async function PanelPage({
           capital={capital}
           pendingIds={pendingIds}
           today={today}
+          t={t.dashboard}
         />
       </div>
     </AppShell>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { PlanChange } from "@/backend/modules/inventory/domain/plan-change";
 import type { LedgerMovement } from "@/backend/modules/movements/domain/ledger-movement";
 import { useGroup } from "@/components/groups/group-context";
+import { useDictionary } from "@/i18n/i18n-provider";
 import type { ISODate } from "@/lib/dates";
 import { activityEntries, presentPlanChange } from "./activity-entries";
 import { MovementDialog } from "./movement-dialog/movement-dialog";
@@ -23,13 +24,18 @@ export function ActivityTable({
   limit?: number;
 }) {
   const { href } = useGroup();
+  const t = useDictionary();
   const entries = activityEntries(movements, planChanges, limit);
 
   return (
     <table className="w-full border-collapse">
       <thead>
         <tr className="border-b border-border text-left">
-          {["Movimiento", "Por", "Cuándo"].map((h) => (
+          {[
+            t.activity.columns.movement,
+            t.activity.columns.by,
+            t.activity.columns.when,
+          ].map((h) => (
             <th
               key={h}
               className="pb-3 pr-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
@@ -38,14 +44,14 @@ export function ActivityTable({
             </th>
           ))}
           <th className="pb-3 text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Monto
+            {t.activity.columns.amount}
           </th>
         </tr>
       </thead>
       <tbody>
         {entries.map((entry) => {
           if (entry.kind === "plan") {
-            const plan = presentPlanChange(entry.change, today);
+            const plan = presentPlanChange(entry.change, today, t);
             return (
               <tr
                 key={entry.change.id}
@@ -87,7 +93,7 @@ export function ActivityTable({
             );
           }
           const m = entry.movement;
-          const it = presentMovement(m, today);
+          const it = presentMovement(m, today, t);
           const hasPending = pendingIds.includes(m.id);
           return (
             <MovementDialog key={m.id} movement={m} hasPending={hasPending}>
@@ -106,7 +112,7 @@ export function ActivityTable({
                         {it.title}
                         {hasPending && (
                           <span className="ml-1.5 text-[11px] font-medium text-amber-400">
-                            OK pendiente
+                            {t.activity.okPending}
                           </span>
                         )}
                       </span>

@@ -8,12 +8,8 @@ import { useGroup } from "@/components/groups/group-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useDictionary } from "@/i18n/i18n-provider";
 import { sanitizeMoneyInput } from "@/lib/money";
-
-const ERROR_TEXT: Record<string, string> = {
-  InvalidAmount: "Ingresa un precio válido en soles.",
-  InvalidCost: "El costo debe ser un número válido.",
-};
 
 /** A sale paid in full now: cash in, cost out of inventory. */
 export function CashSaleForm() {
@@ -23,6 +19,7 @@ export function CashSaleForm() {
   const [price, setPrice] = useState("");
   const [cost, setCost] = useState("");
   const [item, setItem] = useState("");
+  const t = useDictionary().cashSale;
 
   function save() {
     startTransition(async () => {
@@ -34,10 +31,10 @@ export function CashSaleForm() {
       });
 
       if (result.ok) {
-        toast.success("Venta registrada");
+        toast.success(t.saved);
         router.push(href());
       } else {
-        toast.error(ERROR_TEXT[result.error] ?? "Algo salió mal.");
+        toast.error(t.errors[result.error] ?? t.genericError);
       }
     });
   }
@@ -46,7 +43,7 @@ export function CashSaleForm() {
     <div className="space-y-5">
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
-          <Label htmlFor="cash-price">Precio (S/)</Label>
+          <Label htmlFor="cash-price">{t.price}</Label>
           <Input
             id="cash-price"
             inputMode="decimal"
@@ -57,7 +54,7 @@ export function CashSaleForm() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="cash-cost">Costo base (S/) · opcional</Label>
+          <Label htmlFor="cash-cost">{t.cost}</Label>
           <Input
             id="cash-cost"
             inputMode="decimal"
@@ -68,15 +65,13 @@ export function CashSaleForm() {
           />
         </div>
       </div>
-      <p className="-mt-3 text-[11px] text-muted-foreground">
-        Con el costo, la ganancia de la venta entra al capital.
-      </p>
+      <p className="-mt-3 text-[11px] text-muted-foreground">{t.costHint}</p>
       <div className="space-y-2">
-        <Label htmlFor="cash-item">Qué vendes · opcional</Label>
+        <Label htmlFor="cash-item">{t.item}</Label>
         <Input
           id="cash-item"
           maxLength={80}
-          placeholder="Ej. 3 perfumes · feria"
+          placeholder={t.itemPlaceholder}
           value={item}
           onChange={(e) => setItem(e.target.value)}
           className="h-12 text-base"
@@ -88,7 +83,7 @@ export function CashSaleForm() {
         onClick={save}
       >
         {pending && <Loader2 className="size-4 animate-spin" />}
-        {pending ? "Registrando…" : "Registrar venta"}
+        {pending ? t.recording : t.save}
       </Button>
     </div>
   );

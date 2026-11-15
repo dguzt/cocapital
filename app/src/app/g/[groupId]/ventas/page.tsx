@@ -7,6 +7,7 @@ import { requireMembership } from "@/backend/modules/groups/adapters/in/next/mem
 import { toCreditSaleView } from "@/backend/modules/inventory/adapters/in/next/credit-sale-view";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
+import { getDictionary } from "@/i18n/get-dictionary";
 import { isOverdue, todayInLima } from "@/lib/dates";
 import { groupPath } from "@/lib/group-path";
 import { formatCents } from "@/lib/money";
@@ -27,6 +28,7 @@ export default async function SalesPage({
     (i) => i.status === "pending" && isOverdue(i.dueDate, today),
   ).length;
   const views = sales.map((sale) => toCreditSaleView(sale, today));
+  const t = (await getDictionary()).sales;
 
   return (
     <AppShell
@@ -34,12 +36,12 @@ export default async function SalesPage({
       group={toGroupView(group)}
       active="sales"
       overdueCount={overdueCount}
-      title="Ventas en cuotas"
-      subtitle="Lo que te deben por ventas"
+      title={t.title}
+      subtitle={t.subtitle}
       actions={
         <Button asChild>
           <Link href={groupPath(group.id, "/ventas/nueva")}>
-            <Plus className="size-4" /> Nueva venta
+            <Plus className="size-4" /> {t.newSale}
           </Link>
         </Button>
       }
@@ -49,13 +51,13 @@ export default async function SalesPage({
           <div className="flex size-14 items-center justify-center rounded-2xl bg-emerald-400/15 text-2xl text-emerald-400">
             →
           </div>
-          <p className="mt-4 font-medium">Aún no hay ventas en cuotas</p>
+          <p className="mt-4 font-medium">{t.emptyTitle}</p>
           <p className="mt-1 max-w-xs text-muted-foreground text-sm">
-            Registra la primera: las cuotas se calculan solas.
+            {t.emptyBody}
           </p>
           <Button asChild className="mt-4">
             <Link href={groupPath(group.id, "/ventas/nueva")}>
-              Vender en cuotas
+              {t.sellOnCredit}
             </Link>
           </Button>
         </section>
@@ -79,17 +81,20 @@ export default async function SalesPage({
                       {sale.buyerName}
                     </span>
                     <span className="block truncate text-[12.5px] text-zinc-500">
-                      {sale.item} · {sale.collectedCount}/{sale.totalCount}{" "}
-                      cobradas
+                      {t.collectedOf(
+                        sale.item,
+                        sale.collectedCount,
+                        sale.totalCount,
+                      )}
                     </span>
                   </span>
                   {voided ? (
                     <span className="rounded-full bg-secondary px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
-                      Anulada
+                      {t.voided}
                     </span>
                   ) : sale.settled ? (
                     <span className="rounded-full bg-emerald-400/15 px-2.5 py-1 text-[11px] font-semibold text-emerald-400">
-                      Saldada
+                      {t.settled}
                     </span>
                   ) : (
                     <span className="text-right">
@@ -100,8 +105,8 @@ export default async function SalesPage({
                         className={`block text-[11px] font-semibold ${sale.overdueCount > 0 ? "text-destructive" : "text-muted-foreground"}`}
                       >
                         {sale.overdueCount > 0
-                          ? `⚠ ${sale.overdueCount} vencida${sale.overdueCount > 1 ? "s" : ""}`
-                          : "al día"}
+                          ? t.overdue(sale.overdueCount)
+                          : t.onTrack}
                       </span>
                     </span>
                   )}
@@ -118,7 +123,7 @@ export default async function SalesPage({
           className="fixed inset-x-4 bottom-4 z-40 h-13 shadow-lg shadow-emerald-400/20"
         >
           <Link href={groupPath(group.id, "/ventas/nueva")}>
-            <Plus className="size-5" /> Nueva venta
+            <Plus className="size-5" /> {t.newSale}
           </Link>
         </Button>
       </div>

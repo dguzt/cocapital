@@ -12,8 +12,10 @@ import type { UserView } from "@/backend/modules/accounts/adapters/in/next/user-
 import type { GroupView } from "@/backend/modules/groups/adapters/in/next/group-view";
 import { GroupProvider } from "@/components/groups/group-context";
 import { GroupSwitcher } from "@/components/groups/group-switcher";
+import { LanguageSwitcher } from "@/components/shell/language-switcher";
 import { MobileMenu } from "@/components/shell/mobile-menu";
 import { Button } from "@/components/ui/button";
+import { getDictionary } from "@/i18n/get-dictionary";
 import { groupPath } from "@/lib/group-path";
 
 export type NavKey = "panel" | "loans" | "sales" | "activity";
@@ -21,31 +23,26 @@ export type NavKey = "panel" | "loans" | "sales" | "activity";
 const NAV: {
   key: NavKey;
   path: string;
-  label: string;
   icon: React.ReactNode;
 }[] = [
   {
     key: "panel",
     path: "",
-    label: "Panel",
     icon: <LayoutGrid className="size-[18px]" />,
   },
   {
     key: "loans",
     path: "/prestamos",
-    label: "Préstamos",
     icon: <Package className="size-[18px]" />,
   },
   {
     key: "sales",
     path: "/ventas",
-    label: "Ventas",
     icon: <ShoppingBag className="size-[18px]" />,
   },
   {
     key: "activity",
     path: "/actividad",
-    label: "Actividad",
     icon: <Activity className="size-[18px]" />,
   },
 ];
@@ -70,6 +67,7 @@ export async function AppShell({
   children: React.ReactNode;
 }) {
   const groups = await useCases.listMyGroups.execute({ userId: user.id });
+  const t = await getDictionary();
 
   const switchable = groups.map((item) => ({
     id: item.id,
@@ -81,6 +79,7 @@ export async function AppShell({
 
   const nav = NAV.map((item) => ({
     ...item,
+    label: t.shell.nav[item.key],
     href: groupPath(group.id, item.path),
   }));
 
@@ -95,9 +94,10 @@ export async function AppShell({
             <span className="flex size-9 items-center justify-center rounded-xl bg-emerald-400 font-mono text-sm font-semibold text-emerald-950 shadow-lg shadow-emerald-400/25">
               S/
             </span>
-            <span className="text-lg font-semibold tracking-tight">
-              cocapital
+            <span className="flex-1 text-lg font-semibold tracking-tight">
+              CoCapital
             </span>
+            <LanguageSwitcher />
           </div>
 
           <div className="mt-5">
@@ -145,7 +145,7 @@ export async function AppShell({
                 variant="outline"
                 size="icon"
                 className="size-8"
-                title="Cerrar sesión"
+                title={t.shell.signOut}
               >
                 <LogOut className="size-[15px]" />
               </Button>
@@ -169,6 +169,7 @@ export async function AppShell({
               />
               <p className="text-[12px] text-muted-foreground">{title}</p>
             </div>
+            <LanguageSwitcher />
             <MobileMenu
               items={nav.map(({ key, href, label }) => ({ key, href, label }))}
               active={active}

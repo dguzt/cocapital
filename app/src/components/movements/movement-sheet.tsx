@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useDictionary } from "@/i18n/i18n-provider";
 import { sanitizeMoneyInput } from "@/lib/money";
 import { DIR_BADGE, MOVEMENT_META } from "./movement-meta";
 
@@ -37,11 +38,6 @@ const ICONS: Record<MovementType, React.ReactNode> = {
   repay: <ArrowDownToLine className="size-4" />,
   sell_on_credit: <PackageMinus className="size-4" />,
   collect_sale: <ArrowDownToLine className="size-4" />,
-};
-
-const ERROR_TEXT: Record<string, string> = {
-  InvalidAmount: "Ingresa un monto válido en soles.",
-  InvalidType: "Elige un tipo de movimiento.",
 };
 
 /** Manual types record here; selling, lending and collecting open their own pages. */
@@ -62,6 +58,7 @@ export function MovementSheet() {
   const [amount, setAmount] = useState("");
   const [concept, setConcept] = useState("");
   const [pending, startTransition] = useTransition();
+  const copy = useDictionary();
 
   function save() {
     startTransition(async () => {
@@ -74,10 +71,13 @@ export function MovementSheet() {
         setOpen(false);
         setAmount("");
         setConcept("");
-        toast.success("Movimiento registrado");
+        toast.success(copy.movementSheet.saved);
         router.refresh();
       } else {
-        toast.error(ERROR_TEXT[result.error] ?? "Algo salió mal.");
+        toast.error(
+          copy.movementSheet.errors[result.error] ??
+            copy.movementSheet.genericError,
+        );
       }
     });
   }
@@ -89,18 +89,19 @@ export function MovementSheet() {
           size="lg"
           className="fixed inset-x-4 bottom-4 z-40 h-13 shadow-lg shadow-emerald-400/20 md:static md:inset-auto md:w-auto"
         >
-          <Plus className="size-5" /> Agregar movimiento
+          <Plus className="size-5" /> {copy.movementSheet.add}
         </Button>
       </DrawerTrigger>
       <DrawerContent>
         <div className="mx-auto w-full max-w-md overflow-y-auto px-4 pb-8">
           <DrawerHeader className="px-0">
-            <DrawerTitle>Nuevo movimiento</DrawerTitle>
+            <DrawerTitle>{copy.movementSheet.title}</DrawerTitle>
           </DrawerHeader>
 
           <div className="grid grid-cols-3 gap-2">
             {SHEET_TYPES.map(({ type: t, href: path }) => {
               const meta = MOVEMENT_META[t];
+              const typeCopy = copy.movementTypes[t];
               const active = type === t && !path;
               return (
                 <button
@@ -127,10 +128,10 @@ export function MovementSheet() {
                   </span>
                   <span>
                     <span className="block font-medium text-sm">
-                      {meta.label}
+                      {typeCopy.label}
                     </span>
                     <span className="block text-[11px] text-muted-foreground">
-                      {meta.hint}
+                      {typeCopy.hint}
                     </span>
                   </span>
                 </button>
@@ -140,7 +141,7 @@ export function MovementSheet() {
 
           <div className="mt-5 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="amount">Monto (S/)</Label>
+              <Label htmlFor="amount">{copy.movementSheet.amount}</Label>
               <Input
                 id="amount"
                 inputMode="decimal"
@@ -151,11 +152,11 @@ export function MovementSheet() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="concept">Concepto · opcional</Label>
+              <Label htmlFor="concept">{copy.movementSheet.concept}</Label>
               <Input
                 id="concept"
                 maxLength={80}
-                placeholder={MOVEMENT_META[type].conceptPlaceholder}
+                placeholder={copy.movementTypes[type].conceptPlaceholder}
                 value={concept}
                 onChange={(e) => setConcept(e.target.value)}
                 className="h-12 text-base"
@@ -166,7 +167,7 @@ export function MovementSheet() {
               onClick={save}
               disabled={pending || !amount.trim()}
             >
-              {pending ? "Guardando…" : "Guardar movimiento"}
+              {pending ? copy.movementSheet.saving : copy.movementSheet.save}
             </Button>
           </div>
         </div>

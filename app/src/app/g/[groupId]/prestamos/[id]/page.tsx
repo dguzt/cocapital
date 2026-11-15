@@ -11,15 +11,10 @@ import { UndoCollectionButton } from "@/components/loans/undo-collection-button"
 import { VoidLoanButton } from "@/components/loans/void-loan-button";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
-import { isOverdue, todayInLima } from "@/lib/dates";
+import { getDictionary } from "@/i18n/get-dictionary";
+import { formatDayMonth, isOverdue, todayInLima } from "@/lib/dates";
 import { groupPath } from "@/lib/group-path";
 import { formatCents } from "@/lib/money";
-
-const MONTHS = "ene feb mar abr may jun jul ago sep oct nov dic".split(" ");
-function shortDate(iso: string) {
-  const [, m, d] = iso.split("-").map(Number);
-  return `${d} ${MONTHS[m - 1]}`;
-}
 
 export default async function LoanDetailPage({
   params,
@@ -38,6 +33,8 @@ export default async function LoanDetailPage({
   if (!loan.ok) notFound();
 
   const today = todayInLima();
+  const copy = await getDictionary();
+  const t = copy.loans;
   const groupInstallments = await useCases.listGroupInstallments.execute({
     groupId: group.id,
   });
@@ -63,14 +60,14 @@ export default async function LoanDetailPage({
     loan.value.rateBps % 100 === 0 ? 0 : 2,
   );
   const summary = [
-    { label: "Prestado", value: loan.value.capital, cls: "" },
+    { label: t.summary.lent, value: loan.value.capital, cls: "" },
     {
-      label: "Ganancia esperada",
+      label: t.summary.expectedProfit,
       value: loan.value.expectedInterest,
       cls: "text-emerald-400",
     },
-    { label: "Cobrado", value: loan.value.collectedAmount, cls: "" },
-    { label: "Pendiente", value: loan.value.pendingAmount, cls: "" },
+    { label: t.summary.collected, value: loan.value.collectedAmount, cls: "" },
+    { label: t.summary.pending, value: loan.value.pendingAmount, cls: "" },
   ];
 
   return (
@@ -80,12 +77,12 @@ export default async function LoanDetailPage({
       active="loans"
       overdueCount={overdueCount}
       title={loan.value.borrowerName}
-      subtitle={`${formatCents(loan.value.capital)} al ${rate}%`}
+      subtitle={t.detailSubtitle(formatCents(loan.value.capital), rate)}
       actions={
         <div className="flex gap-2">
           <Button asChild variant="outline">
             <Link href={groupPath(group.id, "/prestamos")}>
-              <ArrowLeft className="size-4" /> Préstamos
+              <ArrowLeft className="size-4" /> {t.title}
             </Link>
           </Button>
           {!isVoided && !voidPending && (
@@ -102,20 +99,19 @@ export default async function LoanDetailPage({
       <div className="flex max-w-3xl flex-col gap-5">
         {isVoided && (
           <section className="rounded-2xl border border-border bg-secondary p-4">
-            <p className="text-sm font-semibold">Préstamo anulado</p>
+            <p className="text-sm font-semibold">{t.voidedTitle}</p>
             <p className="mt-1 text-[13px] text-muted-foreground">
-              Se revirtió por completo: el capital volvió a caja y sus cobros
-              fueron deshechos.
+              {t.voidedBody}
             </p>
           </section>
         )}
         {!isVoided && voidPending && (
           <section className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4">
             <p className="text-sm font-semibold text-amber-400">
-              Anulación pendiente — falta el OK de otro socio
+              {t.voidPendingTitle}
             </p>
             <p className="mt-1 text-[13px] text-muted-foreground">
-              Se revierte el préstamo completo cuando otro socio lo apruebe.
+              {t.voidPendingBody}
             </p>
           </section>
         )}
@@ -139,7 +135,7 @@ export default async function LoanDetailPage({
 
         <section className="rounded-2xl border border-border bg-card p-5">
           <HighlightCuota targetId={highlightId ?? null} />
-          <h2 className="font-semibold">Cuotas</h2>
+          <h2 className="font-semibold">{t.installments}</h2>
           <ul className="mt-2 divide-y divide-border">
             {loan.value.installments.map((inst) => {
               const overdue =
@@ -154,11 +150,11 @@ export default async function LoanDetailPage({
                   className="flex items-center gap-2 rounded-lg py-3.5 md:gap-3"
                 >
                   <span className="w-14 shrink-0 text-[15px] font-medium md:w-16">
-                    Cuota {inst.number}
+                    {copy.schedule.installmentN(inst.number)}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block font-mono text-[13px] text-muted-foreground">
-                      {shortDate(inst.dueDate)}
+                      {formatDayMonth(inst.dueDate, copy.dates.shortMonths)}
                     </span>
                     <span
                       className={`mt-1 inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold ${
@@ -173,17 +169,17 @@ export default async function LoanDetailPage({
                     >
                       {awaitingUndo ? (
                         <>
-                          <span className="md:hidden">Falta OK</span>
+                          <span className="md:hidden">{t.status.needsOk}</span>
                           <span className="hidden md:inline">
-                            Deshacer cobro · falta el OK
+                            {t.status.undoNeedsOk}
                           </span>
                         </>
                       ) : inst.status === "collected" ? (
-                        "Cobrada"
+                        t.status.collected
                       ) : overdue ? (
-                        "Vencida"
+                        t.status.overdue
                       ) : (
-                        "Pendiente"
+                        t.status.pending
                       )}
                     </span>
                   </span>
@@ -233,7 +229,7 @@ export default async function LoanDetailPage({
               capitalCents={loan.value.capital}
               collectedCount={collectedCount}
               className="w-full"
-              label="Anular préstamo"
+              label={t.voidLoan}
             />
           </div>
         )}

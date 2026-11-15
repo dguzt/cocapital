@@ -71,14 +71,15 @@ export function isOverdue(dueDate: ISODate, today: ISODate): boolean {
   return dueDate < today;
 }
 
-const SHORT_MONTHS = "ene feb mar abr may jun jul ago sep oct nov dic".split(
-  " ",
-);
-
-/** "2026-08-08" → "8 ago" (cronograma rows, activity dates). */
-export function formatDayMonth(date: ISODate): string {
+/**
+ * A day as "8 ago" or "8 Aug".
+ * @param date - the day
+ * @param shortMonths - the twelve month abbreviations of the reader's language
+ * @returns the day and month
+ */
+export function formatDayMonth(date: ISODate, shortMonths: string[]): string {
   const [, m, d] = date.split("-").map(Number);
-  return `${d} ${SHORT_MONTHS[m - 1]}`;
+  return `${d} ${shortMonths[m - 1]}`;
 }
 
 /** Approximate loan length in days, for the annual rate shown as reference. */

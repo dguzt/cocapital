@@ -7,6 +7,7 @@ import { toGroupView } from "@/backend/modules/groups/adapters/in/next/group-vie
 import { requireMembership } from "@/backend/modules/groups/adapters/in/next/membership";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
+import { getDictionary } from "@/i18n/get-dictionary";
 import { todayInLima } from "@/lib/dates";
 import { groupPath } from "@/lib/group-path";
 import { formatCents } from "@/lib/money";
@@ -23,6 +24,7 @@ export default async function LoansPage({
     today: todayInLima(),
   });
   const overdueCount = R.sumBy(loans, (l) => l.overdueCount);
+  const t = (await getDictionary()).loans;
 
   return (
     <AppShell
@@ -30,12 +32,12 @@ export default async function LoansPage({
       group={toGroupView(group)}
       active="loans"
       overdueCount={overdueCount}
-      title="Préstamos"
-      subtitle="Capital prestado y cronogramas"
+      title={t.title}
+      subtitle={t.subtitle}
       actions={
         <Button asChild>
           <Link href={groupPath(group.id, "/prestamos/nuevo")}>
-            <Plus className="size-4" /> Nuevo préstamo
+            <Plus className="size-4" /> {t.newLoan}
           </Link>
         </Button>
       }
@@ -45,13 +47,13 @@ export default async function LoansPage({
           <div className="flex size-14 items-center justify-center rounded-2xl bg-emerald-400/15 text-2xl text-emerald-400">
             →
           </div>
-          <p className="mt-4 font-medium">Aún no hay préstamos</p>
+          <p className="mt-4 font-medium">{t.emptyTitle}</p>
           <p className="mt-1 max-w-xs text-muted-foreground text-sm">
-            Crea el primero: el cronograma de cuotas se genera solo.
+            {t.emptyBody}
           </p>
           <Button asChild className="mt-4">
             <Link href={groupPath(group.id, "/prestamos/nuevo")}>
-              Crear préstamo
+              {t.create}
             </Link>
           </Button>
         </section>
@@ -75,12 +77,12 @@ export default async function LoansPage({
                       {loan.borrowerName}
                     </span>
                     <span className="block text-[12.5px] text-zinc-500">
-                      {loan.collectedCount}/{loan.totalCount} cobradas
+                      {t.collectedOf(loan.collectedCount, loan.totalCount)}
                     </span>
                   </span>
                   {voided ? (
                     <span className="rounded-full bg-secondary px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
-                      Anulado
+                      {t.voided}
                     </span>
                   ) : (
                     <span className="text-right">
@@ -91,8 +93,8 @@ export default async function LoansPage({
                         className={`block text-[11px] font-semibold ${loan.overdueCount > 0 ? "text-destructive" : "text-muted-foreground"}`}
                       >
                         {loan.overdueCount > 0
-                          ? `⚠ ${loan.overdueCount} vencida${loan.overdueCount > 1 ? "s" : ""}`
-                          : "al día"}
+                          ? t.overdue(loan.overdueCount)
+                          : t.onTrack}
                       </span>
                     </span>
                   )}
@@ -109,7 +111,7 @@ export default async function LoansPage({
           className="fixed inset-x-4 bottom-4 z-40 h-13 shadow-lg shadow-emerald-400/20"
         >
           <Link href={groupPath(group.id, "/prestamos/nuevo")}>
-            <Plus className="size-5" /> Nuevo préstamo
+            <Plus className="size-5" /> {t.newLoan}
           </Link>
         </Button>
       </div>

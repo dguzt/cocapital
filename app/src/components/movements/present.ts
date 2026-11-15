@@ -1,7 +1,8 @@
 /** Shared presenter: one movement → everything the feed/table shows. */
 import type { LedgerMovement } from "@/backend/modules/movements/domain/ledger-movement";
+import type { Dictionary } from "@/i18n/dictionaries";
 import type { ISODate } from "@/lib/dates";
-import { limaDateOf, limaTimeOf } from "@/lib/dates";
+import { formatDayMonth, limaDateOf, limaTimeOf } from "@/lib/dates";
 import { formatCents } from "@/lib/money";
 import { DIR_BADGE, MOVEMENT_META } from "./movement-meta";
 
@@ -20,24 +21,28 @@ export type PresentedMovement = {
   voided: boolean;
 };
 
-/** "Hoy", "Ayer" or "8 ago" for a day. */
-export function dayLabel(date: ISODate, today: ISODate): string {
-  if (date === today) return "Hoy";
+/** "Today", "Yesterday" or "8 Aug" for a day, in the reader's language. */
+export function dayLabel(
+  date: ISODate,
+  today: ISODate,
+  t: Dictionary["dates"],
+): string {
+  if (date === today) return t.today;
   const [y, m, d] = today.split("-").map(Number);
   const yesterday = new Date(Date.UTC(y, m - 1, d - 1))
     .toISOString()
     .slice(0, 10);
-  if (date === yesterday) return "Ayer";
-  const MONTHS = "ene feb mar abr may jun jul ago sep oct nov dic".split(" ");
-  const [, mm, dd] = date.split("-").map(Number);
-  return `${dd} ${MONTHS[mm - 1]}`;
+  if (date === yesterday) return t.yesterday;
+  return formatDayMonth(date, t.shortMonths);
 }
 
 export function presentMovement(
   m: LedgerMovement,
   today: ISODate,
+  t: Dictionary,
 ): PresentedMovement {
   const meta = MOVEMENT_META[m.type];
+  const label = t.movementTypes[m.type].label;
   const amount =
     meta.dir === "out"
       ? { text: `– ${formatCents(m.amount)}`, cls: "text-destructive" }
@@ -47,27 +52,27 @@ export function presentMovement(
 
   const note =
     m.type === "sell_inventory" && m.cost !== null
-      ? `Ganancia ${formatCents(m.amount - m.cost)}`
+      ? t.activity.profit(formatCents(m.amount - m.cost))
       : m.type === "repay" && m.cost !== null
-        ? `Interés ${formatCents(m.amount - m.cost)}`
+        ? t.activity.interest(formatCents(m.amount - m.cost))
         : m.type === "collect_sale" && m.cost !== null && m.cost < m.amount
-          ? `Ganancia ${formatCents(m.amount - m.cost)}`
+          ? t.activity.profit(formatCents(m.amount - m.cost))
           : m.type === "sell_on_credit"
-            ? "→ Por cobrar"
+            ? t.activity.toReceivable
             : m.type === "buy_inventory"
-              ? "→ Inventario"
+              ? t.activity.toInventory
               : m.type === "lend"
-                ? "→ Prestado"
+                ? t.activity.toLent
                 : null;
 
   // "Cuándo" = registry time (createdAt), exact: "Hoy · 14:32", "8 ago · 09:15".
-  const registeredDay = dayLabel(limaDateOf(m.createdAt), today);
+  const registeredDay = dayLabel(limaDateOf(m.createdAt), today, t.dates);
   return {
     id: m.id,
-    title: meta.label,
+    title: label,
     concept: m.concept,
     badgeCls: DIR_BADGE[meta.dir],
-    initial: meta.label[0],
+    initial: label[0],
     author: m.authorName,
     authorInitial: m.authorName[0]?.toUpperCase() ?? "?",
     day: `${registeredDay} · ${limaTimeOf(m.createdAt)}`,
