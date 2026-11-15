@@ -4,7 +4,12 @@ import { XIcon } from "lucide-react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import type * as React from "react";
 import { Button } from "@/components/ui/button";
+import { useDictionary } from "@/i18n/i18n-provider";
 import { cn } from "@/lib/utils";
+
+function CloseLabel() {
+  return useDictionary().common.close;
+}
 
 function Dialog({
   ...props
@@ -74,7 +79,9 @@ function DialogContent({
               size="icon-sm"
             >
               <XIcon />
-              <span className="sr-only">Close</span>
+              <span className="sr-only">
+                <CloseLabel />
+              </span>
             </Button>
           </DialogPrimitive.Close>
         )}
@@ -113,7 +120,9 @@ function DialogFooter({
       {children}
       {showCloseButton && (
         <DialogPrimitive.Close asChild>
-          <Button variant="outline">Close</Button>
+          <Button variant="outline">
+            <CloseLabel />
+          </Button>
         </DialogPrimitive.Close>
       )}
     </div>

@@ -48,6 +48,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
           type="button"
           lang={option}
           title={t.language[option]}
+          aria-label={t.language[option]}
           aria-pressed={option === locale}
           onClick={() => choose(option)}
           className={cn(

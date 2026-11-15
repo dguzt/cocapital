@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { ContactView } from "@/backend/modules/contacts/adapters/in/next/contact-view";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useDictionary } from "@/i18n/i18n-provider";
 
 /** Picks a contact of the group, or creates one by typing a new name. */
 export function ContactPicker({
@@ -24,6 +25,7 @@ export function ContactPicker({
   onSelect: (b: ContactView | null) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const t = useDictionary().contactPicker;
 
   const newName = query.trim();
   const filtered = contacts.filter((b) =>
@@ -50,7 +52,7 @@ export function ContactPicker({
         <div className="space-y-1 rounded-xl border border-border bg-card p-2">
           <Input
             autoFocus
-            placeholder="Buscar o escribir un nombre nuevo"
+            placeholder={t.search}
             value={query}
             onChange={(e) => {
               onQueryChange(e.target.value);
@@ -84,7 +86,7 @@ export function ContactPicker({
                   onClick={() => setOpen(false)}
                   className="w-full rounded-lg px-2 py-2 text-left text-[15px] text-emerald-400 hover:bg-secondary"
                 >
-                  + Crear "{newName}"
+                  {t.create(newName)}
                 </button>
               </li>
             )}

@@ -4,6 +4,7 @@ import type { LedgerMovement } from "@/backend/modules/movements/domain/ledger-m
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useDictionary } from "@/i18n/i18n-provider";
 import { sanitizeMoneyInput } from "@/lib/money";
 
 export type EditDraft = { amount: string; concept: string; cost: string };
@@ -25,10 +26,12 @@ export function EditForm({
   onCancel: () => void;
   onSubmit: () => void;
 }) {
+  const t = useDictionary().editForm;
+
   return (
     <div className="space-y-3">
       <div className="space-y-1.5">
-        <Label htmlFor="edit-amount">Monto (S/)</Label>
+        <Label htmlFor="edit-amount">{t.amount}</Label>
         <Input
           id="edit-amount"
           inputMode="decimal"
@@ -42,7 +45,7 @@ export function EditForm({
 
       {movement.type === "sell_inventory" && (
         <div className="space-y-1.5">
-          <Label htmlFor="edit-cost">Costo (S/) · opcional</Label>
+          <Label htmlFor="edit-cost">{t.cost}</Label>
           <Input
             id="edit-cost"
             inputMode="decimal"
@@ -56,7 +59,7 @@ export function EditForm({
       )}
 
       <div className="space-y-1.5">
-        <Label htmlFor="edit-concept">Concepto</Label>
+        <Label htmlFor="edit-concept">{t.concept}</Label>
         <Input
           id="edit-concept"
           maxLength={80}
@@ -73,18 +76,16 @@ export function EditForm({
           onClick={onCancel}
           disabled={pending}
         >
-          Cancelar
+          {t.cancel}
         </Button>
         <Button className="flex-1" onClick={onSubmit} disabled={pending}>
           {pending && <Loader2 className="size-4 animate-spin" />}
-          {pending ? "Enviando…" : alone ? "Guardar cambio" : "Proponer cambio"}
+          {pending ? t.sending : alone ? t.saveChange : t.proposeChange}
         </Button>
       </div>
 
       <p className="text-center text-[11.5px] text-muted-foreground">
-        {alone
-          ? "Eres el único socio: se aplica al instante y queda en la actividad."
-          : "Se aplica cuando otro socio lo apruebe."}
+        {alone ? t.aloneNote : t.partnerNote}
       </p>
     </div>
   );

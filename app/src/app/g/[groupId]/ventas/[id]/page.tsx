@@ -12,13 +12,10 @@ import { UndoSaleCollectionButton } from "@/components/sales/undo-sale-collectio
 import { VoidCreditSaleButton } from "@/components/sales/void-credit-sale-button";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
+import { getDictionary } from "@/i18n/get-dictionary";
 import { formatDayMonth, isOverdue, todayInLima } from "@/lib/dates";
 import { groupPath } from "@/lib/group-path";
 import { formatCents } from "@/lib/money";
-
-function cuotaLabel(number: number) {
-  return number === 0 ? "Inicial" : `Cuota ${number}`;
-}
 
 export default async function SaleDetailPage({
   params,
@@ -34,6 +31,10 @@ export default async function SaleDetailPage({
   if (!found.ok) notFound();
 
   const today = todayInLima();
+  const copy = await getDictionary();
+  const t = copy.sales;
+  const cuotaLabel = (number: number) =>
+    number === 0 ? t.downPayment : copy.schedule.installmentN(number);
   const [installments, pendingChanges] = await Promise.all([
     useCases.listGroupInstallments.execute({ groupId: group.id }),
     useCases.listPendingChanges.execute({ groupId: group.id }),
@@ -50,14 +51,14 @@ export default async function SaleDetailPage({
   const voidPending = undoPending.has(sale.saleMovementId);
   const pendingRows = sale.installments.filter((i) => i.status === "pending");
   const summary = [
-    { label: "Precio", value: sale.price, cls: "" },
+    { label: t.summary.price, value: sale.price, cls: "" },
     {
-      label: "Margen esperado",
+      label: t.summary.expectedMargin,
       value: sale.expectedMargin,
       cls: "text-emerald-400",
     },
-    { label: "Cobrado", value: sale.collectedAmount, cls: "" },
-    { label: "Pendiente", value: sale.pendingAmount, cls: "" },
+    { label: t.summary.collected, value: sale.collectedAmount, cls: "" },
+    { label: t.summary.pending, value: sale.pendingAmount, cls: "" },
   ];
 
   const voidButton = (className?: string, label?: string) => (
@@ -79,12 +80,16 @@ export default async function SaleDetailPage({
       active="sales"
       overdueCount={overdueCount}
       title={sale.buyerName}
-      subtitle={`${sale.item} · ${formatCents(sale.price)}${sale.cost !== null ? ` · costo ${formatCents(sale.cost)}` : ""}`}
+      subtitle={t.detailSubtitle(
+        sale.item,
+        formatCents(sale.price),
+        sale.cost !== null ? formatCents(sale.cost) : null,
+      )}
       actions={
         <div className="flex gap-2">
           <Button asChild variant="outline">
             <Link href={groupPath(group.id, "/ventas")}>
-              <ArrowLeft className="size-4" /> Ventas
+              <ArrowLeft className="size-4" /> {copy.shell.nav.sales}
             </Link>
           </Button>
           {!isVoided && !voidPending && voidButton()}
@@ -94,20 +99,19 @@ export default async function SaleDetailPage({
       <div className="flex max-w-3xl flex-col gap-5">
         {isVoided && (
           <section className="rounded-2xl border border-border bg-secondary p-4">
-            <p className="text-sm font-semibold">Venta anulada</p>
+            <p className="text-sm font-semibold">{t.voidedTitle}</p>
             <p className="mt-1 text-[13px] text-muted-foreground">
-              Se revirtió por completo: lo vendido volvió al inventario y sus
-              cobros fueron deshechos.
+              {t.voidedBody}
             </p>
           </section>
         )}
         {!isVoided && voidPending && (
           <section className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4">
             <p className="text-sm font-semibold text-amber-400">
-              Anulación pendiente — falta el OK de otro socio
+              {t.voidPendingTitle}
             </p>
             <p className="mt-1 text-[13px] text-muted-foreground">
-              Se revierte la venta completa cuando otro socio lo apruebe.
+              {t.voidPendingBody}
             </p>
           </section>
         )}
@@ -131,7 +135,7 @@ export default async function SaleDetailPage({
 
         <section className="rounded-2xl border border-border bg-card p-5">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="font-semibold">Cuotas</h2>
+            <h2 className="font-semibold">{t.installments}</h2>
             {!isVoided && pendingRows.length > 0 && (
               <ReplanButton
                 saleId={sale.id}
@@ -161,12 +165,15 @@ export default async function SaleDetailPage({
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block font-mono text-[13px] text-muted-foreground">
-                      {formatDayMonth(inst.dueDate)}
+                      {formatDayMonth(inst.dueDate, copy.dates.shortMonths)}
                       {margin !== null && (
                         <span className="hidden md:inline">
                           {" "}
-                          · {formatCents(inst.costShare ?? 0)} costo +{" "}
-                          {formatCents(margin)} margen
+                          ·{" "}
+                          {t.costPlusMargin(
+                            formatCents(inst.costShare ?? 0),
+                            formatCents(margin),
+                          )}
                         </span>
                       )}
                     </span>
@@ -182,12 +189,12 @@ export default async function SaleDetailPage({
                       }`}
                     >
                       {awaitingUndo
-                        ? "Falta OK"
+                        ? copy.loans.status.needsOk
                         : inst.status === "collected"
-                          ? "Cobrada"
+                          ? copy.loans.status.collected
                           : inst.overdue
-                            ? "Vencida"
-                            : "Pendiente"}
+                            ? copy.loans.status.overdue
+                            : copy.loans.status.pending}
                     </span>
                   </span>
                   <span className="w-20 text-right font-mono text-[15px] font-medium tabular-nums md:w-24">
@@ -224,9 +231,7 @@ export default async function SaleDetailPage({
         </section>
 
         {!isVoided && !voidPending && (
-          <div className="md:hidden">
-            {voidButton("w-full", "Anular venta")}
-          </div>
+          <div className="md:hidden">{voidButton("w-full", t.voidSale)}</div>
         )}
       </div>
     </AppShell>

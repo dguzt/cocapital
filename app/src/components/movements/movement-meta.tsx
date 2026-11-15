@@ -1,76 +1,20 @@
-/** Shared Spanish presentation for movement types (labels/hints per design). */
 import type { MovementType } from "@/backend/modules/movements/domain/movement";
 
 export type Direction = "in" | "out" | "move";
 
+/** How each movement type moves money, and a sample amount for its input. */
 export const MOVEMENT_META: Record<
   MovementType,
-  {
-    label: string;
-    hint: string;
-    dir: Direction;
-    /** Per-type examples (prototype seed vocabulary) — one generic
-     *  placeholder for every type was confusing. */
-    amountPlaceholder: string;
-    conceptPlaceholder: string;
-  }
+  { dir: Direction; amountPlaceholder: string }
 > = {
-  contribute: {
-    label: "Aporte",
-    hint: "Agregar efectivo",
-    dir: "in",
-    amountPlaceholder: "500.00",
-    conceptPlaceholder: "Ej. Aporte de julio",
-  },
-  buy_inventory: {
-    label: "Compra",
-    hint: "Efectivo → inventario",
-    dir: "move",
-    amountPlaceholder: "480.00",
-    conceptPlaceholder: "Ej. 12 perfumes surtidos",
-  },
-  sell_inventory: {
-    label: "Venta",
-    hint: "Al contado o en cuotas",
-    dir: "in",
-    amountPlaceholder: "210.00",
-    conceptPlaceholder: "Ej. 3 perfumes · feria",
-  },
-  lend: {
-    label: "Préstamo",
-    hint: "Cronograma",
-    dir: "move",
-    amountPlaceholder: "300.00",
-    conceptPlaceholder: "Ej. Préstamo a Karina",
-  },
-  repay: {
-    label: "Cobro",
-    hint: "Cobrar cuota",
-    dir: "in",
-    amountPlaceholder: "82.50",
-    conceptPlaceholder: "Ej. Karina · cuota 1",
-  },
-  sell_on_credit: {
-    label: "Venta en cuotas",
-    hint: "Cronograma",
-    dir: "move",
-    amountPlaceholder: "100.00",
-    conceptPlaceholder: "Ej. Juan · Licuadora",
-  },
-  collect_sale: {
-    label: "Cobro de venta",
-    hint: "Cobrar cuota",
-    dir: "in",
-    amountPlaceholder: "20.00",
-    conceptPlaceholder: "Ej. Juan · Licuadora · cuota 1",
-  },
-  expense: {
-    label: "Gasto",
-    hint: "Sale efectivo",
-    dir: "out",
-    amountPlaceholder: "15.00",
-    conceptPlaceholder: "Ej. Movilidad · delivery",
-  },
+  contribute: { dir: "in", amountPlaceholder: "500.00" },
+  buy_inventory: { dir: "move", amountPlaceholder: "480.00" },
+  sell_inventory: { dir: "in", amountPlaceholder: "210.00" },
+  lend: { dir: "move", amountPlaceholder: "300.00" },
+  repay: { dir: "in", amountPlaceholder: "82.50" },
+  sell_on_credit: { dir: "move", amountPlaceholder: "100.00" },
+  collect_sale: { dir: "in", amountPlaceholder: "20.00" },
+  expense: { dir: "out", amountPlaceholder: "15.00" },
 };
 
 export const DIR_BADGE: Record<Direction, string> = {

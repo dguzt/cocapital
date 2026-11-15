@@ -5,6 +5,7 @@ import { toGroupView } from "@/backend/modules/groups/adapters/in/next/group-vie
 import { requireMembership } from "@/backend/modules/groups/adapters/in/next/membership";
 import { NewSale } from "@/components/sales/new-sale";
 import { AppShell } from "@/components/shell/app-shell";
+import { getDictionary } from "@/i18n/get-dictionary";
 import { isOverdue, todayInLima } from "@/lib/dates";
 
 export default async function NewSalePage({
@@ -22,6 +23,7 @@ export default async function NewSalePage({
   const overdueCount = installments.filter(
     (i) => i.status === "pending" && isOverdue(i.dueDate, today),
   ).length;
+  const t = (await getDictionary()).sales;
 
   return (
     <AppShell
@@ -29,8 +31,8 @@ export default async function NewSalePage({
       group={toGroupView(group)}
       active="sales"
       overdueCount={overdueCount}
-      title="Nueva venta"
-      subtitle="Al contado o en cuotas"
+      title={t.newSale}
+      subtitle={t.newSubtitle}
     >
       <div className="max-w-2xl">
         <NewSale contacts={contacts.map(toContactView)} />

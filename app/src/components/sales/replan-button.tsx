@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useDictionary } from "@/i18n/i18n-provider";
 import { type Frequency, todayInLima } from "@/lib/dates";
 import { formatCents, sanitizeIntInput } from "@/lib/money";
 
@@ -41,6 +42,7 @@ export function ReplanButton({
   const [count, setCount] = useState(String(pendingCount));
   const [frequency, setFrequency] = useState<Frequency>(initialFrequency);
   const [startDate, setStartDate] = useState(todayInLima());
+  const t = useDictionary().replan;
 
   const schedule = useEditableSchedule({
     amount: pendingCents,
@@ -58,15 +60,11 @@ export function ReplanButton({
       );
       if (result.ok) {
         setOpen(false);
-        toast.success(
-          `Plan cambiado · ${result.fromCount} → ${result.toCount} cuotas`,
-        );
+        toast.success(t.changed(result.fromCount, result.toCount));
         router.refresh();
       } else {
         toast.error(
-          result.error === "ScheduleMismatch"
-            ? "Las cuotas no suman lo pendiente."
-            : "No se pudo cambiar el plan.",
+          result.error === "ScheduleMismatch" ? t.mismatch : t.failed,
         );
       }
     });
@@ -76,23 +74,23 @@ export function ReplanButton({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="sm" variant="outline">
-          Cambiar plan
+          {t.trigger}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90dvh] max-w-md overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Cambiar plan</DialogTitle>
+          <DialogTitle>{t.title}</DialogTitle>
           <DialogDescription>
-            Reparte lo pendiente,{" "}
+            {t.bodyStart}{" "}
             <span className="font-mono font-semibold text-foreground tabular-nums">
               {formatCents(pendingCents)}
             </span>
-            , en nuevas cuotas. Las ya cobradas no cambian.
+            {t.bodyEnd}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="replan-count"># de cuotas</Label>
+            <Label htmlFor="replan-count">{t.count}</Label>
             <Input
               id="replan-count"
               inputMode="numeric"
@@ -103,7 +101,7 @@ export function ReplanButton({
           </div>
           <FrequencyPicker value={frequency} onChange={setFrequency} />
           <div className="space-y-2">
-            <Label htmlFor="replan-start">Fecha de inicio</Label>
+            <Label htmlFor="replan-start">{t.startDate}</Label>
             <Input
               id="replan-start"
               type="date"
@@ -117,12 +115,12 @@ export function ReplanButton({
               rows={schedule.rows}
               edits={schedule.edits}
               total={pendingCents}
-              totalLabel="Pendiente"
+              totalLabel={t.totalLabel}
               onEdit={schedule.edit}
             />
           )}
           <p className="text-center text-[11.5px] text-muted-foreground">
-            No necesita el OK de otro socio; queda en la actividad.
+            {t.note}
           </p>
           <Button
             className="h-12 w-full"
@@ -130,7 +128,7 @@ export function ReplanButton({
             onClick={save}
           >
             {pending && <Loader2 className="size-4 animate-spin" />}
-            {pending ? "Guardando…" : "Guardar plan"}
+            {pending ? t.saving : t.save}
           </Button>
         </div>
       </DialogContent>

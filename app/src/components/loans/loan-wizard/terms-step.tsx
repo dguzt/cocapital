@@ -3,6 +3,7 @@
 import { FrequencyPicker } from "@/components/schedule/frequency-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useDictionary } from "@/i18n/i18n-provider";
 import type { Frequency, ISODate } from "@/lib/dates";
 import { sanitizeIntInput, sanitizeMoneyInput } from "@/lib/money";
 
@@ -21,11 +22,13 @@ export function TermsStep({
   terms: LoanTerms;
   onChange: (patch: Partial<LoanTerms>) => void;
 }) {
+  const t = useDictionary().loanWizard;
+
   return (
     <>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
-          <Label htmlFor="capital">Monto (S/)</Label>
+          <Label htmlFor="capital">{t.amount}</Label>
           <Input
             id="capital"
             inputMode="decimal"
@@ -38,7 +41,7 @@ export function TermsStep({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="rate">Interés total (%)</Label>
+          <Label htmlFor="rate">{t.rate}</Label>
           <Input
             id="rate"
             inputMode="decimal"
@@ -53,7 +56,7 @@ export function TermsStep({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="count"># de cuotas</Label>
+        <Label htmlFor="count">{t.count}</Label>
         <Input
           id="count"
           inputMode="numeric"
@@ -72,7 +75,7 @@ export function TermsStep({
       />
 
       <div className="space-y-2">
-        <Label htmlFor="start">Fecha de inicio</Label>
+        <Label htmlFor="start">{t.startDate}</Label>
         <Input
           id="start"
           type="date"

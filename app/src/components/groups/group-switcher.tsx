@@ -6,8 +6,8 @@ import { DropdownMenu } from "radix-ui";
 import { toast } from "sonner";
 import type { GroupView } from "@/backend/modules/groups/adapters/in/next/group-view";
 import { MemberAvatars } from "@/components/groups/member-avatars";
+import { useDictionary } from "@/i18n/i18n-provider";
 import { groupPath } from "@/lib/group-path";
-import { membersLabel } from "@/lib/members-label";
 
 export function GroupSwitcher({
   group,
@@ -20,6 +20,7 @@ export function GroupSwitcher({
   sectionPath: string;
   compact?: boolean;
 }) {
+  const t = useDictionary();
   const full = group.members.length >= group.capacity;
 
   async function copyInvite() {
@@ -28,7 +29,7 @@ export function GroupSwitcher({
     try {
       await navigator.clipboard.writeText(link);
 
-      toast.success("Enlace de invitación copiado");
+      toast.success(t.groups.inviteCopied);
     } catch {
       toast.message(link);
     }
@@ -42,7 +43,7 @@ export function GroupSwitcher({
             ? "flex min-w-0 flex-1 items-center gap-1.5 text-left"
             : "flex w-full items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-2.5 text-left transition-colors hover:border-emerald-400/40"
         }
-        aria-label="Cambiar de grupo"
+        aria-label={t.groups.switchGroup}
       >
         {!compact && <MemberAvatars members={group.members} />}
         <span className="min-w-0 flex-1">
@@ -50,7 +51,7 @@ export function GroupSwitcher({
           {!compact && (
             <span className="mt-0.5 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
               <span className="size-1.5 rounded-full bg-emerald-400 shadow-[0_0_0_3px_rgba(52,211,153,.15)]" />
-              {membersLabel(group.members.length)}
+              {t.groups.members(group.members.length)}
             </span>
           )}
         </span>
@@ -64,7 +65,7 @@ export function GroupSwitcher({
           className="z-50 w-64 rounded-xl border border-border bg-popover p-1.5 text-popover-foreground shadow-xl"
         >
           <DropdownMenu.Label className="px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-            Tus grupos
+            {t.groups.yourGroups}
           </DropdownMenu.Label>
 
           {groups.map((item) => (
@@ -92,9 +93,7 @@ export function GroupSwitcher({
             className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm outline-none data-[disabled]:opacity-50 data-[highlighted]:bg-accent"
           >
             <Link2 className="size-4" />
-            {full
-              ? `Grupo lleno (${group.capacity}/${group.capacity})`
-              : "Copiar enlace de invitación"}
+            {full ? t.groups.groupFull(group.capacity) : t.groups.copyInvite}
           </DropdownMenu.Item>
 
           <DropdownMenu.Item asChild>
@@ -103,7 +102,7 @@ export function GroupSwitcher({
               className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm outline-none data-[highlighted]:bg-accent"
             >
               <Plus className="size-4" />
-              Crear otro grupo
+              {t.groups.createAnother}
             </Link>
           </DropdownMenu.Item>
         </DropdownMenu.Content>

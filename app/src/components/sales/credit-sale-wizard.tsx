@@ -7,15 +7,13 @@ import type { ContactView } from "@/backend/modules/contacts/adapters/in/next/co
 import { createCreditSaleAction } from "@/backend/modules/inventory/adapters/in/next/credit-sale-actions";
 import { ContactPicker } from "@/components/contacts/contact-picker";
 import { useGroup } from "@/components/groups/group-context";
-import {
-  FREQUENCY_WORD,
-  FrequencyPicker,
-} from "@/components/schedule/frequency-picker";
+import { FrequencyPicker } from "@/components/schedule/frequency-picker";
 import { ScheduleEditor } from "@/components/schedule/schedule-editor";
 import { useEditableSchedule } from "@/components/schedule/use-editable-schedule";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useDictionary } from "@/i18n/i18n-provider";
 import { type Frequency, todayInLima } from "@/lib/dates";
 import {
   formatCents,
@@ -24,19 +22,13 @@ import {
   solesToCents,
 } from "@/lib/money";
 
-const ERROR_TEXT: Record<string, string> = {
-  ScheduleMismatch: "Las cuotas no suman el precio.",
-  ContactNameRequired: "Elige o escribe el nombre del comprador.",
-  ItemRequired: "Escribe qué vendes.",
-  InvalidCost: "El costo debe ser un número válido.",
-  InvalidDownPayment: "El pago inicial debe ser menor que el precio.",
-};
-
 /** Venta en cuotas, all in one screen like Nuevo préstamo. */
 export function CreditSaleWizard({ contacts }: { contacts: ContactView[] }) {
   const { groupId, href } = useGroup();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const copy = useDictionary();
+  const t = copy.creditSaleWizard;
 
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<ContactView | null>(null);
@@ -91,12 +83,10 @@ export function CreditSaleWizard({ contacts }: { contacts: ContactView[] }) {
         })),
       });
       if (result.ok) {
-        toast.success("Venta registrada");
+        toast.success(t.saved);
         router.push(href(`/ventas/${result.saleId}`));
       } else {
-        toast.error(
-          ERROR_TEXT[result.error] ?? "Revisa los datos de la venta.",
-        );
+        toast.error(t.errors[result.error] ?? t.genericError);
       }
     });
   }
@@ -104,8 +94,8 @@ export function CreditSaleWizard({ contacts }: { contacts: ContactView[] }) {
   return (
     <div className="space-y-5">
       <ContactPicker
-        label="Comprador"
-        placeholder="Elegir o crear comprador"
+        label={t.buyer}
+        placeholder={t.buyerPlaceholder}
         contacts={contacts}
         query={query}
         selected={selected}
@@ -114,11 +104,11 @@ export function CreditSaleWizard({ contacts }: { contacts: ContactView[] }) {
       />
 
       <div className="space-y-2">
-        <Label htmlFor="item">Qué vendes</Label>
+        <Label htmlFor="item">{t.item}</Label>
         <Input
           id="item"
           maxLength={80}
-          placeholder="Ej. Licuadora Oster"
+          placeholder={t.itemPlaceholder}
           value={item}
           onChange={(e) => setItem(e.target.value)}
           className="h-12 text-base"
@@ -127,7 +117,7 @@ export function CreditSaleWizard({ contacts }: { contacts: ContactView[] }) {
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
-          <Label htmlFor="price">Precio (S/)</Label>
+          <Label htmlFor="price">{t.price}</Label>
           <Input
             id="price"
             inputMode="decimal"
@@ -138,7 +128,7 @@ export function CreditSaleWizard({ contacts }: { contacts: ContactView[] }) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="cost">Costo base (S/) · opcional</Label>
+          <Label htmlFor="cost">{t.cost}</Label>
           <Input
             id="cost"
             inputMode="decimal"
@@ -152,7 +142,7 @@ export function CreditSaleWizard({ contacts }: { contacts: ContactView[] }) {
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
-          <Label htmlFor="down">Pago inicial (S/) · opcional</Label>
+          <Label htmlFor="down">{t.down}</Label>
           <Input
             id="down"
             inputMode="decimal"
@@ -163,7 +153,7 @@ export function CreditSaleWizard({ contacts }: { contacts: ContactView[] }) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="count"># de cuotas</Label>
+          <Label htmlFor="count">{t.count}</Label>
           <Input
             id="count"
             inputMode="numeric"
@@ -178,7 +168,7 @@ export function CreditSaleWizard({ contacts }: { contacts: ContactView[] }) {
       <FrequencyPicker value={frequency} onChange={setFrequency} />
 
       <div className="space-y-2">
-        <Label htmlFor="start">Fecha de inicio</Label>
+        <Label htmlFor="start">{t.startDate}</Label>
         <Input
           id="start"
           type="date"
@@ -190,26 +180,23 @@ export function CreditSaleWizard({ contacts }: { contacts: ContactView[] }) {
 
       <div className="rounded-xl border border-border bg-card p-4">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Resumen
+          {t.summary}
         </p>
         <p className="mt-1.5 text-[15px]">
           {schedule.rows.length === 0 ? (
-            <span className="text-muted-foreground">
-              Completa el precio para ver las cuotas.
-            </span>
+            <span className="text-muted-foreground">{t.fillIn}</span>
           ) : (
             <>
-              Por cobrar{" "}
+              {t.toCollect}{" "}
               <span className="font-mono font-semibold tabular-nums">
                 {formatCents(toCollect)}
               </span>{" "}
-              · {schedule.rows.length} cuota
-              {schedule.rows.length === 1 ? "" : "s"}{" "}
-              {FREQUENCY_WORD[frequency]}
+              ·{" "}
+              {copy.frequency.installmentCount(schedule.rows.length, frequency)}
               {margin !== null && (
                 <span className="text-muted-foreground">
                   {" "}
-                  · margen {formatCents(margin)}
+                  · {t.margin(formatCents(margin))}
                 </span>
               )}
             </>
@@ -222,7 +209,7 @@ export function CreditSaleWizard({ contacts }: { contacts: ContactView[] }) {
           rows={schedule.rows}
           edits={schedule.edits}
           total={toCollect}
-          totalLabel="Por cobrar"
+          totalLabel={t.toCollect}
           onEdit={schedule.edit}
         />
       )}
@@ -233,7 +220,7 @@ export function CreditSaleWizard({ contacts }: { contacts: ContactView[] }) {
         onClick={confirm}
       >
         {pending && <Loader2 className="size-4 animate-spin" />}
-        {pending ? "Registrando venta…" : "Confirmar venta"}
+        {pending ? t.saving : t.confirm}
       </Button>
     </div>
   );
