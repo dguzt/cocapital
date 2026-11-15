@@ -1,13 +1,10 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
+import { dictionaries } from "@/i18n/dictionaries";
+import { LOCALES, toLocale } from "@/i18n/locale";
 
-export const alt =
-  "CoCapital: know where every sol is. Shared books for small partnerships.";
-
-export const size = { width: 1200, height: 630 };
-
-export const contentType = "image/png";
+const size = { width: 1200, height: 630 };
 
 const color = {
   bg: "#0b0b0e",
@@ -20,21 +17,36 @@ const color = {
 };
 
 const buckets = [
-  { label: "Cash", value: "S/ 520.00", pct: "50.5%", swatch: color.primary },
-  { label: "Lent", value: "S/ 300.00", pct: "29.1%", swatch: "#38bdf8" },
-  { label: "Inventory", value: "S/ 130.00", pct: "12.6%", swatch: "#fbbf24" },
-  { label: "Receivable", value: "S/ 80.00", pct: "7.8%", swatch: "#a78bfa" },
-];
+  { key: "cash", value: "S/ 520.00", pct: "50.5%", swatch: color.primary },
+  { key: "lent", value: "S/ 300.00", pct: "29.1%", swatch: "#38bdf8" },
+  { key: "inventory", value: "S/ 130.00", pct: "12.6%", swatch: "#fbbf24" },
+  { key: "receivable", value: "S/ 80.00", pct: "7.8%", swatch: "#a78bfa" },
+] as const;
 
 const font = (file: string) =>
   readFile(join(process.cwd(), "assets/fonts", file));
 
+export function generateStaticParams() {
+  return LOCALES.map((locale) => ({ locale }));
+}
+
 /**
- * Link preview card shown when CoCapital is shared: the pitch on the left,
- * the capital panel on the right.
+ * Link preview card shown when CoCapital is shared, in the visitor's language:
+ * the pitch on the left, the capital panel on the right.
  * @returns the 1200×630 PNG card
  */
-export default async function OpengraphImage() {
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ locale: string }> },
+) {
+  const locale = toLocale((await params).locale);
+
+  if (!locale) {
+    return new Response(null, { status: 404 });
+  }
+
+  const t = dictionaries[locale].og;
+
   const [regular, medium, semibold, mono] = await Promise.all([
     font("Geist-Regular.ttf"),
     font("Geist-Medium.ttf"),
@@ -96,7 +108,7 @@ export default async function OpengraphImage() {
               letterSpacing: -2.6,
             }}
           >
-            Know where every sol is.
+            {t.headline}
           </div>
           <div
             style={{
@@ -106,8 +118,7 @@ export default async function OpengraphImage() {
               color: color.muted,
             }}
           >
-            Shared books for small partnerships. Sales, loans and installments,
-            approved by every partner.
+            {t.subline}
           </div>
         </div>
 
@@ -145,7 +156,7 @@ export default async function OpengraphImage() {
             color: color.muted,
           }}
         >
-          TOTAL CAPITAL
+          {t.totalCapital}
         </div>
         <div
           style={{
@@ -170,7 +181,7 @@ export default async function OpengraphImage() {
         >
           {buckets.map((bucket) => (
             <div
-              key={bucket.label}
+              key={bucket.key}
               style={{ width: bucket.pct, background: bucket.swatch }}
             />
           ))}
@@ -181,7 +192,7 @@ export default async function OpengraphImage() {
         >
           {buckets.map((bucket) => (
             <div
-              key={bucket.label}
+              key={bucket.key}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -199,7 +210,9 @@ export default async function OpengraphImage() {
                   background: bucket.swatch,
                 }}
               />
-              <div style={{ flexGrow: 1, fontWeight: 500 }}>{bucket.label}</div>
+              <div style={{ flexGrow: 1, fontWeight: 500 }}>
+                {t[bucket.key]}
+              </div>
               <div style={{ fontFamily: "Geist Mono" }}>{bucket.value}</div>
               <div
                 style={{
@@ -240,7 +253,7 @@ export default async function OpengraphImage() {
               background: color.primary,
             }}
           />
-          Every edit needs a partner's OK
+          {t.badge}
         </div>
       </div>
     </div>,
