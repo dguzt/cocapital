@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { useDictionary } from "@/i18n/i18n-provider";
 import type { ISODate } from "@/lib/dates";
 import { formatDayMonth } from "@/lib/dates";
 import { formatCents, sanitizeMoneyInput } from "@/lib/money";
@@ -18,6 +19,7 @@ function TappableDate({
   value: ISODate;
   onChange: (d: ISODate) => void;
 }) {
+  const t = useDictionary();
   const [editing, setEditing] = useState(false);
   if (editing) {
     return (
@@ -38,9 +40,9 @@ function TappableDate({
       type="button"
       onClick={() => setEditing(true)}
       className="rounded px-1 py-0.5 font-mono text-[13px] text-muted-foreground hover:bg-secondary hover:text-foreground"
-      title="Tocar para cambiar la fecha"
+      title={t.schedule.tapToChange}
     >
-      {formatDayMonth(value)}
+      {formatDayMonth(value, t.dates.shortMonths)}
     </button>
   );
 }
@@ -62,19 +64,20 @@ export function ScheduleEditor({
   totalLabel: string;
   onEdit: (number: number, patch: Edit) => void;
 }) {
+  const t = useDictionary().schedule;
   const scheduled = rows.reduce((a, r) => a + r.amount, 0);
   const drift = scheduled - total;
 
   return (
     <div>
       <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        Cronograma · edítalo si quieres
+        {t.title}
       </p>
       <ul className="mt-1 divide-y divide-border">
         {rows.map((r) => (
           <li key={r.number} className="flex items-center gap-3 py-2.5">
             <span className="w-16 shrink-0 text-[15px] font-semibold">
-              Cuota {r.number}
+              {t.installmentN(r.number)}
             </span>
             <span className="flex-1">
               <TappableDate
@@ -102,12 +105,12 @@ export function ScheduleEditor({
           drift === 0 ? "text-muted-foreground" : "text-amber-400"
         }`}
       >
-        Programado {formatCents(scheduled)} · {totalLabel} {formatCents(total)}{" "}
-        ·{" "}
+        {t.scheduled} {formatCents(scheduled)} · {totalLabel}{" "}
+        {formatCents(total)} ·{" "}
         {drift === 0 ? (
-          <span className="text-emerald-400">coincide ✓</span>
+          <span className="text-emerald-400">{t.matches}</span>
         ) : (
-          `difiere ${drift > 0 ? "+" : ""}${formatCents(drift)}`
+          t.differs(`${drift > 0 ? "+" : ""}${formatCents(drift)}`)
         )}
       </p>
     </div>

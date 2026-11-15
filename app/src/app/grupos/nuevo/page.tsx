@@ -1,6 +1,7 @@
 import { useCases } from "@/backend/application/container";
 import { requireUser } from "@/backend/modules/accounts/adapters/in/next/session";
 import { Onboarding } from "@/components/onboarding/onboarding";
+import { getDictionary } from "@/i18n/get-dictionary";
 
 export default async function NewGroupPage({
   searchParams,
@@ -9,9 +10,10 @@ export default async function NewGroupPage({
 }) {
   const user = await requireUser();
 
-  const [groups, { error }] = await Promise.all([
+  const [groups, { error }, t] = await Promise.all([
     useCases.listMyGroups.execute({ userId: user.id }),
     searchParams,
+    getDictionary(),
   ]);
 
   return (
@@ -19,6 +21,8 @@ export default async function NewGroupPage({
       userName={user.name}
       error={error}
       hasGroups={groups.length > 0}
+      t={t.onboarding}
+      hello={t.groups.hello}
     />
   );
 }

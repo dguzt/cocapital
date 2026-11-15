@@ -1,5 +1,6 @@
 import type { PlanChange } from "@/backend/modules/inventory/domain/plan-change";
 import type { LedgerMovement } from "@/backend/modules/movements/domain/ledger-movement";
+import type { Dictionary } from "@/i18n/dictionaries";
 import { type ISODate, limaDateOf, limaTimeOf } from "@/lib/dates";
 import { dayLabel } from "./present";
 
@@ -34,17 +35,22 @@ export function activityEntries(
  *
  * @param change - The rewrite.
  * @param today - Today's date in Lima.
+ * @param t - The copy in the reader's language.
  * @returns The title, subtitle, counts, time and the sale's page within the
  *   group.
  */
-export function presentPlanChange(change: PlanChange, today: ISODate) {
+export function presentPlanChange(
+  change: PlanChange,
+  today: ISODate,
+  t: Dictionary,
+) {
   return {
-    title: "Plan cambiado",
+    title: t.activity.planChanged,
     concept: `${change.buyerName} · ${change.item}`,
-    counts: `${change.fromCount} → ${change.toCount} cuotas`,
+    counts: t.activity.installmentCounts(change.fromCount, change.toCount),
     author: change.authorName,
     authorInitial: change.authorName[0]?.toUpperCase() ?? "?",
-    day: `${dayLabel(limaDateOf(change.createdAt), today)} · ${limaTimeOf(change.createdAt)}`,
+    day: `${dayLabel(limaDateOf(change.createdAt), today, t.dates)} · ${limaTimeOf(change.createdAt)}`,
     path: `/ventas/${change.saleId}`,
   };
 }

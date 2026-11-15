@@ -19,6 +19,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { useDictionary } from "@/i18n/i18n-provider";
 
 const ICONS = {
   panel: <LayoutGrid className="size-5" />,
@@ -41,18 +42,19 @@ export function MobileMenu({
   userEmail: string;
 }) {
   const [open, setOpen] = useState(false);
+  const t = useDictionary();
 
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Menú">
+        <Button variant="ghost" size="icon" aria-label={t.shell.menu}>
           <Menu className="size-6" />
         </Button>
       </DrawerTrigger>
       <DrawerContent>
         <div className="mx-auto w-full max-w-md px-4 pb-8">
           <DrawerHeader className="px-0">
-            <DrawerTitle>Menú</DrawerTitle>
+            <DrawerTitle>{t.shell.menu}</DrawerTitle>
           </DrawerHeader>
           <nav className="flex flex-col gap-1">
             {items.map((item) => (
@@ -90,7 +92,7 @@ export function MobileMenu({
             </span>
             <SignOutButton>
               <Button variant="outline" size="sm">
-                <LogOut className="size-4" /> Salir
+                <LogOut className="size-4" /> {t.shell.signOutShort}
               </Button>
             </SignOutButton>
           </div>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { PlanChange } from "@/backend/modules/inventory/domain/plan-change";
 import type { LedgerMovement } from "@/backend/modules/movements/domain/ledger-movement";
 import { useGroup } from "@/components/groups/group-context";
+import { useDictionary } from "@/i18n/i18n-provider";
 import type { ISODate } from "@/lib/dates";
 import { activityEntries, presentPlanChange } from "./activity-entries";
 import { MovementDialog } from "./movement-dialog/movement-dialog";
@@ -23,6 +24,7 @@ export function ActivityFeed({
   limit?: number;
 }) {
   const { href } = useGroup();
+  const t = useDictionary();
   const entries = activityEntries(movements, planChanges, limit);
   if (entries.length === 0) return null;
 
@@ -30,7 +32,7 @@ export function ActivityFeed({
     <ul className="divide-y divide-border">
       {entries.map((entry) => {
         if (entry.kind === "plan") {
-          const it = presentPlanChange(entry.change, today);
+          const it = presentPlanChange(entry.change, today, t);
           return (
             <li key={entry.change.id}>
               <Link
@@ -56,7 +58,7 @@ export function ActivityFeed({
           );
         }
         const m = entry.movement;
-        const it = presentMovement(m, today);
+        const it = presentMovement(m, today, t);
         const hasPending = pendingIds.includes(m.id);
         return (
           <MovementDialog key={m.id} movement={m} hasPending={hasPending}>
@@ -77,7 +79,7 @@ export function ActivityFeed({
                   {it.author} · {it.day}
                   {hasPending && (
                     <span className="ml-1.5 text-amber-400">
-                      · OK pendiente
+                      · {t.activity.okPending}
                     </span>
                   )}
                 </span>

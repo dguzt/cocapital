@@ -4,19 +4,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/ui/submit-button";
-
-const ERROR_TEXT: Record<string, string> = {
-  InvalidGroupName: "El nombre debe tener entre 1 y 40 caracteres.",
-};
+import type { Dictionary } from "@/i18n/dictionaries";
 
 export function Onboarding({
   userName,
   error,
   hasGroups = false,
+  t,
+  hello,
 }: {
   userName: string;
   error?: string;
   hasGroups?: boolean;
+  t: Dictionary["onboarding"];
+  hello: Dictionary["groups"]["hello"];
 }) {
   return (
     <main className="flex min-h-screen items-center justify-center p-4">
@@ -26,23 +27,20 @@ export function Onboarding({
             S/
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">
-            {hasGroups ? "Nuevo grupo" : `Hola, ${userName}`}
+            {hasGroups ? t.newGroup : hello(userName)}
           </h1>
-          <p className="text-muted-foreground text-sm">
-            Puedes usarlo solo o invitar hasta 9 socios. Si te invitaron, abre
-            el enlace que te enviaron.
-          </p>
+          <p className="text-muted-foreground text-sm">{t.intro}</p>
         </div>
 
         <Card>
           <CardContent className="pt-6">
             <form action={createGroupAction} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Nombre del grupo</Label>
+                <Label htmlFor="name">{t.groupName}</Label>
                 <Input
                   id="name"
                   name="name"
-                  placeholder="Ej. Inversiones D&R"
+                  placeholder={t.placeholder}
                   maxLength={40}
                   required
                   className="h-12 text-base"
@@ -50,14 +48,11 @@ export function Onboarding({
               </div>
               {error && (
                 <p className="text-sm text-destructive">
-                  {ERROR_TEXT[error] ?? "Algo salió mal. Intenta de nuevo."}
+                  {t.errors[error] ?? t.genericError}
                 </p>
               )}
-              <SubmitButton
-                className="h-12 w-full"
-                pendingText="Creando grupo…"
-              >
-                Crear grupo
+              <SubmitButton className="h-12 w-full" pendingText={t.creating}>
+                {t.create}
               </SubmitButton>
             </form>
           </CardContent>
@@ -66,7 +61,7 @@ export function Onboarding({
         {hasGroups && (
           <p className="text-center text-sm">
             <Link href="/" className="text-muted-foreground underline">
-              Volver a mis grupos
+              {t.backToGroups}
             </Link>
           </p>
         )}

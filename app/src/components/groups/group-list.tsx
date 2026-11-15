@@ -3,15 +3,17 @@ import Link from "next/link";
 import type { GroupView } from "@/backend/modules/groups/adapters/in/next/group-view";
 import { MemberAvatars } from "@/components/groups/member-avatars";
 import { Button } from "@/components/ui/button";
+import type { Dictionary } from "@/i18n/dictionaries";
 import { groupPath } from "@/lib/group-path";
-import { membersLabel } from "@/lib/members-label";
 
 export function GroupList({
   userName,
   groups,
+  t,
 }: {
   userName: string;
   groups: GroupView[];
+  t: Dictionary["groups"];
 }) {
   return (
     <main className="flex min-h-screen items-center justify-center p-4">
@@ -21,11 +23,9 @@ export function GroupList({
             S/
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">
-            Hola, {userName}
+            {t.hello(userName)}
           </h1>
-          <p className="text-muted-foreground text-sm">
-            ¿En qué grupo vas a trabajar?
-          </p>
+          <p className="text-muted-foreground text-sm">{t.pickGroup}</p>
         </div>
 
         <ul className="flex flex-col gap-2">
@@ -43,7 +43,7 @@ export function GroupList({
                     {group.name}
                   </span>
                   <span className="text-muted-foreground text-xs">
-                    {membersLabel(group.members.length)}
+                    {t.members(group.members.length)}
                   </span>
                 </span>
                 <ChevronRight className="size-4 text-muted-foreground" />
@@ -54,7 +54,7 @@ export function GroupList({
 
         <Button asChild variant="outline" className="w-full">
           <Link href="/grupos/nuevo">
-            <Plus className="size-4" /> Crear otro grupo
+            <Plus className="size-4" /> {t.createAnother}
           </Link>
         </Button>
       </div>

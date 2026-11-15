@@ -16,6 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useDictionary } from "@/i18n/i18n-provider";
 import { formatCents } from "@/lib/money";
 
 export function CollectButton({
@@ -35,6 +36,8 @@ export function CollectButton({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
+  const copy = useDictionary();
+  const t = copy.collect;
 
   function collect() {
     startTransition(async () => {
@@ -45,13 +48,13 @@ export function CollectButton({
       );
       if (result.ok) {
         setOpen(false);
-        toast.success(`Cobro registrado · ${formatCents(result.amount)}`);
+        toast.success(t.recorded(formatCents(result.amount)));
         router.refresh();
       } else {
         toast.error(
           result.error === "InstallmentNotCollectable"
-            ? "Esta cuota ya fue cobrada."
-            : "No se pudo registrar el cobro.",
+            ? t.alreadyCollected
+            : t.failed,
         );
         router.refresh();
       }
@@ -61,13 +64,13 @@ export function CollectButton({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">Cobrar</Button>
+        <Button size="sm">{t.button}</Button>
       </DialogTrigger>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Registrar cobro</DialogTitle>
+          <DialogTitle>{t.title}</DialogTitle>
           <DialogDescription>
-            {borrowerName} · cuota {number} ·{" "}
+            {borrowerName} · {copy.common.installment(number)} ·{" "}
             <span className="font-mono font-semibold text-foreground tabular-nums">
               {formatCents(amountCents)}
             </span>
@@ -79,7 +82,7 @@ export function CollectButton({
             onClick={() => setOpen(false)}
             disabled={pending}
           >
-            Cancelar
+            {copy.common.cancel}
           </Button>
           <Button onClick={collect} disabled={pending}>
             {pending ? (
@@ -87,7 +90,7 @@ export function CollectButton({
             ) : (
               <Check className="size-4" />
             )}
-            {pending ? "Registrando…" : "Confirmar cobro"}
+            {pending ? t.recording : t.confirm}
           </Button>
         </DialogFooter>
       </DialogContent>

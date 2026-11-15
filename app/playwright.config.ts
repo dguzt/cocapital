@@ -21,6 +21,7 @@ export default defineConfig({
 
   use: {
     ...devices["Pixel 7"],
+    locale: "es-PE",
     baseURL: `http://localhost:${PORT}`,
     trace: "retain-on-failure",
   },
@@ -31,6 +32,11 @@ export default defineConfig({
       name: "grupos",
       testMatch: /grupos\.spec\.ts/,
       dependencies: ["historia"],
+    },
+    {
+      name: "idioma",
+      testMatch: /idioma\.spec\.ts/,
+      dependencies: ["grupos"],
     },
   ],
 

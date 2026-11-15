@@ -15,6 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useDictionary } from "@/i18n/i18n-provider";
 import { formatCents } from "@/lib/money";
 
 /** Proposes cancelling a whole credit sale and its cobros (doble confirmación). */
@@ -25,7 +26,7 @@ export function VoidCreditSaleButton({
   collectedCount,
   collectedCents,
   className,
-  label = "Anular",
+  label,
 }: {
   saleId: string;
   buyerName: string;
@@ -39,25 +40,23 @@ export function VoidCreditSaleButton({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
+  const copy = useDictionary();
+  const t = copy.voidSale;
 
   function propose() {
     startTransition(async () => {
       const result = await proposeVoidCreditSaleAction(groupId, saleId);
       if (result.ok) {
         setOpen(false);
-        toast.success(
-          result.applied
-            ? "Venta anulada"
-            : "Anulación enviada — falta el OK de otro socio",
-        );
+        toast.success(result.applied ? t.voided : t.sent);
         router.refresh();
       } else {
         toast.error(
           result.error === "CreditSaleVoided"
-            ? "Esta venta ya fue anulada."
+            ? t.alreadyVoided
             : result.error === "ChangeAlreadyPending"
-              ? "Ya hay una anulación esperando el OK."
-              : "No se pudo enviar la anulación.",
+              ? t.alreadyPending
+              : t.failed,
         );
         router.refresh();
       }
@@ -71,20 +70,17 @@ export function VoidCreditSaleButton({
           variant="outline"
           className={`text-destructive ${className ?? ""}`}
         >
-          <Ban className="size-4" /> {label}
+          <Ban className="size-4" /> {label ?? t.trigger}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Anular venta</DialogTitle>
+          <DialogTitle>{t.title}</DialogTitle>
           <DialogDescription>
-            {buyerName} · {item}. Se revierte como si nunca hubiera existido: lo
-            vendido vuelve al inventario
+            {t.bodyStart(buyerName, item)}
             {collectedCount > 0 && (
               <>
-                {" "}
-                y también se anulan {collectedCount} cobro
-                {collectedCount > 1 ? "s" : ""} por{" "}
+                {t.collectedPart(collectedCount)}{" "}
                 <span className="font-mono font-semibold text-foreground tabular-nums">
                   {formatCents(collectedCents)}
                 </span>
@@ -94,9 +90,7 @@ export function VoidCreditSaleButton({
           </DialogDescription>
         </DialogHeader>
         <p className="text-center text-[11.5px] text-muted-foreground">
-          {alone
-            ? "Eres el único socio: se aplica al instante y queda en la actividad."
-            : "Se aplica cuando otro socio lo apruebe."}
+          {alone ? copy.common.aloneNote : copy.common.partnerNote}
         </p>
         <DialogFooter className="gap-2">
           <Button
@@ -104,7 +98,7 @@ export function VoidCreditSaleButton({
             onClick={() => setOpen(false)}
             disabled={pending}
           >
-            Cancelar
+            {copy.common.cancel}
           </Button>
           <Button onClick={propose} disabled={pending}>
             {pending ? (
@@ -113,10 +107,10 @@ export function VoidCreditSaleButton({
               <Ban className="size-4" />
             )}
             {pending
-              ? "Enviando…"
+              ? copy.common.sending
               : alone
-                ? "Anular ahora"
-                : "Enviar anulación"}
+                ? copy.common.voidNow
+                : copy.common.sendVoid}
           </Button>
         </DialogFooter>
       </DialogContent>

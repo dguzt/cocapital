@@ -11,6 +11,7 @@ import type { LedgerMovement } from "@/backend/modules/movements/domain/ledger-m
 import { ActivityFeed } from "@/components/movements/activity-feed";
 import { ActivityTable } from "@/components/movements/activity-table";
 import { MovementSheet } from "@/components/movements/movement-sheet";
+import type { Dictionary } from "@/i18n/dictionaries";
 import type { ISODate } from "@/lib/dates";
 import { groupPath } from "@/lib/group-path";
 import { formatCents } from "@/lib/money";
@@ -22,6 +23,7 @@ export function PanelContent({
   capital,
   pendingIds,
   today,
+  t,
 }: {
   groupId: string;
   user: UserView;
@@ -29,6 +31,7 @@ export function PanelContent({
   capital: CapitalSummary;
   pendingIds: string[];
   today: ISODate;
+  t: Dictionary["dashboard"];
 }) {
   const positive =
     Math.max(capital.cash, 0) +
@@ -40,27 +43,27 @@ export function PanelContent({
 
   const buckets = [
     {
-      label: "Efectivo",
-      full: "Efectivo disponible",
+      label: t.cash,
+      full: t.cashAvailable,
       value: capital.cash,
       swatch: "bg-capital-cash",
     },
     {
-      label: "Inventario",
-      full: "Inventario",
+      label: t.inventory,
+      full: t.inventory,
       value: capital.inventory,
       swatch: "bg-capital-inventory",
     },
     {
-      label: "Prestado",
-      full: "Prestado",
+      label: t.lent,
+      full: t.lent,
       value: capital.lent,
       swatch: "bg-capital-lent",
       href: groupPath(groupId, "/prestamos"),
     },
     {
-      label: "Por cobrar",
-      full: "Cuentas por cobrar",
+      label: t.receivable,
+      full: t.receivableFull,
       value: capital.receivable,
       swatch: "bg-capital-receivable",
       href: groupPath(groupId, "/ventas"),
@@ -70,19 +73,19 @@ export function PanelContent({
   const immobilized = capital.inventory + capital.lent + capital.receivable;
   const immobilizedRows = [
     {
-      label: "Inventario",
+      label: t.inventory,
       value: capital.inventory,
       swatch: "bg-capital-inventory",
       testId: "capital-inventory",
     },
     {
-      label: "Prestado",
+      label: t.lent,
       value: capital.lent,
       swatch: "bg-capital-lent",
       testId: "capital-lent",
     },
     {
-      label: "Cuentas por cobrar",
+      label: t.receivableFull,
       value: capital.receivable,
       swatch: "bg-capital-receivable",
       testId: "capital-receivable",
@@ -97,7 +100,7 @@ export function PanelContent({
             collapses into "inmovilizado" (what exists but can't be spent). */}
         <section className="rounded-2xl border border-border bg-gradient-to-br from-card to-[#121215] p-6 md:p-7">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Efectivo disponible
+            {t.cashAvailable}
           </p>
           <p
             data-testid="capital-cash"
@@ -120,8 +123,12 @@ export function PanelContent({
             ))}
           </div>
           <div className="mt-2 flex justify-between font-mono text-[11px] tabular-nums text-zinc-500">
-            <span>Disponible · {pct(capital.cash)}</span>
-            <span>Inmovilizado · {pct(immobilized)}</span>
+            <span>
+              {t.available} · {pct(capital.cash)}
+            </span>
+            <span>
+              {t.immobilized} · {pct(immobilized)}
+            </span>
           </div>
           <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3.5">
             {/* inmovilizado — the total, then its pieces */}
@@ -129,7 +136,7 @@ export function PanelContent({
               <div className="flex items-center gap-2">
                 <span className="size-2.5 shrink-0 rounded-sm bg-zinc-600" />
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Inmovilizado
+                  {t.immobilized}
                 </span>
               </div>
               <p className="mt-2.5 whitespace-nowrap font-mono text-[22px] font-semibold tabular-nums">
@@ -160,7 +167,7 @@ export function PanelContent({
               <div className="flex items-center gap-2">
                 <span className="size-2.5 shrink-0 rounded-sm border border-zinc-600 bg-secondary" />
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Capital total
+                  {t.totalCapital}
                 </span>
               </div>
               <p
@@ -170,7 +177,7 @@ export function PanelContent({
                 {formatCents(capital.total)}
               </p>
               <p className="mt-0.5 whitespace-nowrap font-mono text-[11px] text-zinc-500 tabular-nums">
-                efectivo + inmovilizado
+                {t.cashPlusImmobilized}
               </p>
             </div>
           </div>
@@ -179,12 +186,12 @@ export function PanelContent({
         {/* actividad reciente */}
         <section className="rounded-2xl border border-border bg-card p-5">
           <div className="flex items-baseline justify-between">
-            <h2 className="font-bold">Actividad reciente</h2>
+            <h2 className="font-bold">{t.recentActivity}</h2>
             <Link
               href={groupPath(groupId, "/actividad")}
               className="text-[13px] font-semibold text-emerald-400 hover:text-emerald-300"
             >
-              Ver todo →
+              {t.seeAll}
             </Link>
           </div>
           {movements.length === 0 ? (
@@ -192,10 +199,9 @@ export function PanelContent({
               <div className="flex size-12 items-center justify-center rounded-2xl bg-emerald-400/15 text-xl text-emerald-400">
                 +
               </div>
-              <p className="mt-3 font-medium text-sm">Aún no hay movimientos</p>
+              <p className="mt-3 font-medium text-sm">{t.noMovements}</p>
               <p className="mt-1 max-w-xs text-muted-foreground text-xs">
-                {user.name}, registra el primer aporte del grupo con "Agregar
-                movimiento".
+                {t.firstMovementHint(user.name)}
               </p>
             </div>
           ) : (
@@ -224,9 +230,9 @@ export function PanelContent({
       {/* right column */}
       <div className="flex flex-col gap-5">
         <section className="rounded-2xl border border-border bg-card p-6">
-          <h2 className="font-bold">Dónde está</h2>
+          <h2 className="font-bold">{t.whereItIs}</h2>
           <p className="mt-1 text-[13px] text-muted-foreground">
-            Cómo se reparte el capital del grupo ahora mismo.
+            {t.whereItIsHint}
           </p>
           <div className="mt-4">
             {buckets.map((b, i) => {
@@ -259,11 +265,11 @@ export function PanelContent({
         </section>
 
         <section className="rounded-2xl border border-border bg-card p-6">
-          <h2 className="font-bold">Ganancia acumulada</h2>
+          <h2 className="font-bold">{t.accumulatedProfit}</h2>
           <div className="mt-4 grid grid-cols-2 gap-3">
             {[
-              { label: "Por ventas", value: capital.salesProfit },
-              { label: "Por intereses", value: capital.collectedInterest },
+              { label: t.fromSales, value: capital.salesProfit },
+              { label: t.fromInterest, value: capital.collectedInterest },
             ].map((g) => (
               <div
                 key={g.label}
@@ -279,18 +285,18 @@ export function PanelContent({
             ))}
           </div>
           <p className="mt-3.5 inline-flex rounded-full border border-border bg-secondary px-3 py-1.5 text-xs font-medium text-muted-foreground">
-            Ganancia total del grupo · {formatCents(totalProfit)}
+            {t.totalProfit} · {formatCents(totalProfit)}
           </p>
           {capital.expectedSalesMargin > 0 && (
             <p
               data-testid="capital-expected-sales-margin"
               className="mt-2 text-xs text-muted-foreground"
             >
-              Margen por cobrar en ventas ·{" "}
+              {t.expectedMargin} ·{" "}
               <span className="font-mono tabular-nums">
                 {formatCents(capital.expectedSalesMargin)}
               </span>{" "}
-              · no suma al total hasta cobrarse
+              · {t.expectedMarginNote}
             </p>
           )}
         </section>

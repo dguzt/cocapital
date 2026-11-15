@@ -16,6 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useDictionary } from "@/i18n/i18n-provider";
 import { formatCents } from "@/lib/money";
 
 export function UndoCollectionButton({
@@ -33,23 +34,19 @@ export function UndoCollectionButton({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
+  const copy = useDictionary();
+  const t = copy.undoCollection;
 
   function undo() {
     startTransition(async () => {
       const result = await proposeVoidAction(groupId, repayMovementId);
       if (result.ok) {
         setOpen(false);
-        toast.success(
-          result.applied
-            ? "Cobro deshecho"
-            : "Deshacer cobro enviado — falta el OK de otro socio",
-        );
+        toast.success(result.applied ? t.undone : t.sent);
         router.refresh();
       } else {
         toast.error(
-          result.error === "ChangeAlreadyPending"
-            ? "Ya hay un cambio esperando el OK."
-            : "No se pudo enviar la anulación.",
+          result.error === "ChangeAlreadyPending" ? t.alreadyPending : t.failed,
         );
         router.refresh();
       }
@@ -60,24 +57,22 @@ export function UndoCollectionButton({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="sm" variant="outline" className="text-destructive">
-          Anular
+          {t.trigger}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Anular cobro</DialogTitle>
+          <DialogTitle>{t.title}</DialogTitle>
           <DialogDescription>
-            {borrowerName} · cuota {number} ·{" "}
+            {borrowerName} · {copy.common.installment(number)} ·{" "}
             <span className="font-mono font-semibold text-foreground tabular-nums">
               {formatCents(amountCents)}
             </span>
-            . La cuota vuelve a pendiente y podrás volver a cobrarla.
+            {t.backToPending}
           </DialogDescription>
         </DialogHeader>
         <p className="text-center text-[11.5px] text-muted-foreground">
-          {alone
-            ? "Eres el único socio: se aplica al instante y queda en la actividad."
-            : "Se aplica cuando otro socio lo apruebe."}
+          {alone ? copy.common.aloneNote : copy.common.partnerNote}
         </p>
         <DialogFooter className="gap-2">
           <Button
@@ -85,7 +80,7 @@ export function UndoCollectionButton({
             onClick={() => setOpen(false)}
             disabled={pending}
           >
-            Cancelar
+            {copy.common.cancel}
           </Button>
           <Button onClick={undo} disabled={pending}>
             {pending ? (
@@ -94,10 +89,10 @@ export function UndoCollectionButton({
               <Ban className="size-4" />
             )}
             {pending
-              ? "Enviando…"
+              ? copy.common.sending
               : alone
-                ? "Anular ahora"
-                : "Enviar anulación"}
+                ? copy.common.voidNow
+                : copy.common.sendVoid}
           </Button>
         </DialogFooter>
       </DialogContent>

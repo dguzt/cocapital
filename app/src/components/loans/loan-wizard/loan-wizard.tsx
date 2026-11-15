@@ -19,6 +19,7 @@ import {
   ScheduleEditor,
 } from "@/components/schedule/schedule-editor";
 import { Button } from "@/components/ui/button";
+import { useDictionary } from "@/i18n/i18n-provider";
 import { PERIOD_DAYS, todayInLima } from "@/lib/dates";
 import { solesToCents } from "@/lib/money";
 import { SummaryCard } from "./summary-card";
@@ -28,6 +29,7 @@ export function LoanWizard({ contacts }: { contacts: ContactView[] }) {
   const { groupId, href } = useGroup();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const t = useDictionary().loanWizard;
 
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<ContactView | null>(null);
@@ -93,10 +95,10 @@ export function LoanWizard({ contacts }: { contacts: ContactView[] }) {
         installments: rows,
       });
       if (result.ok) {
-        toast.success("Préstamo creado");
+        toast.success(t.created);
         router.push(href(`/prestamos/${result.loanId}`));
       } else {
-        toast.error("No se pudo crear el préstamo. Revisa los datos.");
+        toast.error(t.failed);
       }
     });
   }
@@ -104,8 +106,8 @@ export function LoanWizard({ contacts }: { contacts: ContactView[] }) {
   return (
     <div className="space-y-5">
       <ContactPicker
-        label="Prestatario"
-        placeholder="Elegir o crear prestatario"
+        label={t.borrower}
+        placeholder={t.borrowerPlaceholder}
         contacts={contacts}
         query={query}
         selected={selected}
@@ -115,7 +117,7 @@ export function LoanWizard({ contacts }: { contacts: ContactView[] }) {
 
       <TermsStep
         terms={terms}
-        onChange={(patch) => setTerms((t) => ({ ...t, ...patch }))}
+        onChange={(patch) => setTerms((prev) => ({ ...prev, ...patch }))}
       />
 
       <SummaryCard
@@ -130,7 +132,7 @@ export function LoanWizard({ contacts }: { contacts: ContactView[] }) {
           rows={rows}
           edits={edits}
           total={base.total}
-          totalLabel="Préstamo"
+          totalLabel={t.totalLabel}
           onEdit={(number, patch) =>
             setEdits((prev) => ({
               ...prev,
@@ -146,7 +148,7 @@ export function LoanWizard({ contacts }: { contacts: ContactView[] }) {
         onClick={confirm}
       >
         {pending && <Loader2 className="size-4 animate-spin" />}
-        {pending ? "Creando préstamo…" : "Confirmar préstamo"}
+        {pending ? t.creating : t.confirm}
       </Button>
     </div>
   );

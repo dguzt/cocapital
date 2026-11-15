@@ -8,22 +8,16 @@ import { decideChangeAction } from "@/backend/modules/movements/adapters/in/next
 import type { PendingChangeItem } from "@/backend/modules/movements/domain/pending-change-item";
 import { useGroup } from "@/components/groups/group-context";
 import { Button } from "@/components/ui/button";
+import { useDictionary } from "@/i18n/i18n-provider";
 import { formatCents } from "@/lib/money";
-import { MOVEMENT_META } from "./movement-meta";
-
-function whoProposes(items: PendingChangeItem[]): string {
-  const names = [...new Set(items.map((item) => item.proposerName))];
-
-  return names.length === 1
-    ? `${names[0]} propone`
-    : `${names.length} socios proponen`;
-}
 
 export function PendingApprovals({ items }: { items: PendingChangeItem[] }) {
   const { groupId } = useGroup();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [actingOn, setActingOn] = useState<string | null>(null);
+  const copy = useDictionary();
+  const t = copy.approvals;
 
   if (items.length === 0) return null;
 
@@ -32,12 +26,10 @@ export function PendingApprovals({ items }: { items: PendingChangeItem[] }) {
     startTransition(async () => {
       const result = await decideChangeAction(groupId, id, decision);
       if (result.ok) {
-        toast.success(
-          decision === "approve" ? "Cambio aprobado" : "Cambio rechazado",
-        );
+        toast.success(decision === "approve" ? t.approved : t.rejected);
         router.refresh();
       } else {
-        toast.error("No se pudo registrar tu decisión.");
+        toast.error(t.decideError);
         router.refresh();
       }
       setActingOn(null);
@@ -47,12 +39,14 @@ export function PendingApprovals({ items }: { items: PendingChangeItem[] }) {
   return (
     <section className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4">
       <p className="text-sm font-semibold">
-        {whoProposes(items)} {items.length} cambio{items.length > 1 ? "s" : ""}{" "}
-        — falta tu OK
+        {t.header(
+          [...new Set(items.map((item) => item.proposerName))],
+          items.length,
+        )}
       </p>
       <ul className="mt-3 space-y-2.5">
         {items.map((item) => {
-          const meta = MOVEMENT_META[item.before.type];
+          const label = copy.movementTypes[item.before.type].label;
           const acting = actingOn === item.id;
           return (
             <li
@@ -63,40 +57,44 @@ export function PendingApprovals({ items }: { items: PendingChangeItem[] }) {
                 <span className="font-semibold">{item.proposerName}</span>{" "}
                 {item.kind === "void" && item.before.type === "repay" ? (
                   <>
-                    quiere{" "}
-                    <span className="text-destructive">deshacer el cobro</span>
-                    {item.before.concept ? ` de ${item.before.concept}` : ""} de{" "}
+                    {t.wants}{" "}
+                    <span className="text-destructive">{t.undoCollection}</span>
+                    {item.before.concept
+                      ? t.ofConcept(item.before.concept)
+                      : ""}{" "}
+                    {t.amountOf}{" "}
                     <span className="font-mono tabular-nums">
                       {formatCents(item.before.amount)}
                     </span>{" "}
                     <span className="text-muted-foreground">
-                      — la cuota vuelve a pendiente
+                      {t.backToPending}
                     </span>
                   </>
                 ) : item.kind === "void" && item.before.type === "lend" ? (
                   <>
-                    quiere{" "}
-                    <span className="text-destructive">anular el préstamo</span>{" "}
-                    de{" "}
+                    {t.wants}{" "}
+                    <span className="text-destructive">{t.voidLoan}</span>{" "}
+                    {t.amountOf}{" "}
                     <span className="font-mono tabular-nums">
                       {formatCents(item.before.amount)}
                     </span>{" "}
                     <span className="text-muted-foreground">
-                      — se revierte por completo, incluidos sus cobros
+                      {t.loanReversed}
                     </span>
                   </>
                 ) : item.kind === "void" ? (
                   <>
-                    quiere <span className="text-destructive">anular</span>{" "}
-                    {meta.label}
-                    {item.before.concept ? ` · ${item.before.concept}` : ""} de{" "}
+                    {t.wants} <span className="text-destructive">{t.void}</span>{" "}
+                    {label}
+                    {item.before.concept ? ` · ${item.before.concept}` : ""}{" "}
+                    {t.amountOf}{" "}
                     <span className="font-mono tabular-nums">
                       {formatCents(item.before.amount)}
                     </span>
                   </>
                 ) : (
                   <>
-                    quiere cambiar {meta.label}
+                    {t.wantsChange} {label}
                     {item.before.concept ? ` · ${item.before.concept}` : ""}:{" "}
                     <span className="font-mono tabular-nums">
                       {formatCents(item.before.amount)}
@@ -120,7 +118,7 @@ export function PendingApprovals({ items }: { items: PendingChangeItem[] }) {
                   ) : (
                     <X className="size-4" />
                   )}
-                  Rechazar
+                  {t.reject}
                 </Button>
                 <Button
                   size="sm"
@@ -132,7 +130,7 @@ export function PendingApprovals({ items }: { items: PendingChangeItem[] }) {
                   ) : (
                     <Check className="size-4" />
                   )}
-                  Aprobar
+                  {t.approve}
                 </Button>
               </span>
             </li>
