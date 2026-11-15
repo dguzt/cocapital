@@ -7,7 +7,12 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 // "/" is public: it renders the landing for visitors, the Panel for members.
-const isPublicRoute = createRouteMatcher(["/", "/sign-in(.*)", "/sign-up(.*)"]);
+const isPublicRoute = createRouteMatcher([
+  "/",
+  "/opengraph-image(.*)",
+  "/sign-in(.*)",
+  "/sign-up(.*)",
+]);
 
 export default clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {
