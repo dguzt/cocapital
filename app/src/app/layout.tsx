@@ -19,8 +19,19 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://cocapital-five.vercel.app"),
   title: "CoCapital",
   description: "Capital compartido, claro para los dos.",
+  openGraph: {
+    title: "CoCapital",
+    description:
+      "Shared capital for small partnerships: log every sale, loan and payment, and always know where the money is.",
+    siteName: "CoCapital",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default function RootLayout({

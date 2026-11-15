@@ -43,26 +43,26 @@ export function PanelContent({
       label: "Efectivo",
       full: "Efectivo disponible",
       value: capital.cash,
-      swatch: "bg-emerald-400",
+      swatch: "bg-capital-cash",
     },
     {
       label: "Inventario",
       full: "Inventario",
       value: capital.inventory,
-      swatch: "bg-zinc-500",
+      swatch: "bg-capital-inventory",
     },
     {
       label: "Prestado",
       full: "Prestado",
       value: capital.lent,
-      swatch: "bg-zinc-700",
+      swatch: "bg-capital-lent",
       href: groupPath(groupId, "/prestamos"),
     },
     {
       label: "Por cobrar",
       full: "Cuentas por cobrar",
       value: capital.receivable,
-      swatch: "bg-zinc-800",
+      swatch: "bg-capital-receivable",
       href: groupPath(groupId, "/ventas"),
     },
   ];
@@ -72,19 +72,19 @@ export function PanelContent({
     {
       label: "Inventario",
       value: capital.inventory,
-      swatch: "bg-zinc-500",
+      swatch: "bg-capital-inventory",
       testId: "capital-inventory",
     },
     {
       label: "Prestado",
       value: capital.lent,
-      swatch: "bg-zinc-700",
+      swatch: "bg-capital-lent",
       testId: "capital-lent",
     },
     {
       label: "Cuentas por cobrar",
       value: capital.receivable,
-      swatch: "bg-zinc-800",
+      swatch: "bg-capital-receivable",
       testId: "capital-receivable",
     },
   ];
@@ -108,10 +108,16 @@ export function PanelContent({
           {/* one thing only: how much is liquid vs. tied up */}
           <div className="mt-5 flex h-3 gap-0.5 overflow-hidden rounded-lg bg-secondary">
             <div
-              className="bg-emerald-400"
+              className="bg-capital-cash"
               style={{ width: pct(capital.cash) }}
             />
-            <div className="bg-zinc-600" style={{ width: pct(immobilized) }} />
+            {immobilizedRows.map((r) => (
+              <div
+                key={r.label}
+                className={r.swatch}
+                style={{ width: pct(r.value) }}
+              />
+            ))}
           </div>
           <div className="mt-2 flex justify-between font-mono text-[11px] tabular-nums text-zinc-500">
             <span>Disponible · {pct(capital.cash)}</span>

@@ -30,9 +30,24 @@ const FEATURES = [
 /** Static echo of the real dashboard hero — the product IS the pitch. */
 function CapitalPreview() {
   const buckets = [
-    { label: "Efectivo", value: 52000, swatch: "bg-emerald-400", pct: "50.5%" },
-    { label: "Inventario", value: 21000, swatch: "bg-zinc-500", pct: "20.4%" },
-    { label: "Prestado", value: 30000, swatch: "bg-zinc-700", pct: "29.1%" },
+    {
+      label: "Efectivo",
+      value: 52000,
+      swatch: "bg-capital-cash",
+      pct: "50.5%",
+    },
+    {
+      label: "Inventario",
+      value: 21000,
+      swatch: "bg-capital-inventory",
+      pct: "20.4%",
+    },
+    {
+      label: "Prestado",
+      value: 30000,
+      swatch: "bg-capital-lent",
+      pct: "29.1%",
+    },
   ];
   return (
     <div className="rounded-2xl border border-border bg-gradient-to-br from-card to-[#121215] p-6 shadow-2xl shadow-black/40">
