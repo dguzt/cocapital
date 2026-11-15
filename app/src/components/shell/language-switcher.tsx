@@ -1,56 +1,30 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useTransition } from "react";
 import { useDictionary, useLocale } from "@/i18n/i18n-provider";
-import { LOCALE_PARAM, LOCALES, type Locale } from "@/i18n/locale";
-import { setLocale } from "@/i18n/set-locale";
+import { LOCALE_PARAM, LOCALES } from "@/i18n/locale";
 import { cn } from "@/lib/utils";
 
 /**
- * The always-visible ES · EN toggle; the choice is remembered.
- * @param className - extra classes for the wrapper
+ * The always-visible ES · EN toggle. The proxy remembers the ?l= it links to.
  */
-export function LanguageSwitcher({ className }: { className?: string }) {
+export function LanguageSwitcher() {
   const locale = useLocale();
   const t = useDictionary();
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
-
-  const choose = (next: Locale) => {
-    if (next === locale) {
-      return;
-    }
-
-    startTransition(async () => {
-      await setLocale(next);
-
-      const url = new URL(window.location.href);
-      url.searchParams.delete(LOCALE_PARAM);
-
-      router.replace(`${url.pathname}${url.search}`);
-      router.refresh();
-    });
-  };
 
   return (
-    <fieldset
+    <nav
       aria-label={t.language.label}
-      disabled={pending}
-      className={cn(
-        "inline-flex min-w-0 items-center rounded-lg border border-border bg-card p-0.5 font-mono text-[11px] font-semibold",
-        className,
-      )}
+      className="inline-flex items-center rounded-lg border border-border bg-card p-0.5 font-mono text-[11px] font-semibold"
     >
       {LOCALES.map((option) => (
-        <button
+        // <a>, not <Link>: prefetching ?l= would switch the language without a click
+        <a
           key={option}
-          type="button"
+          href={`?${LOCALE_PARAM}=${option}`}
           lang={option}
           title={t.language[option]}
           aria-label={t.language[option]}
-          aria-pressed={option === locale}
-          onClick={() => choose(option)}
+          aria-current={option === locale ? "true" : undefined}
           className={cn(
             "rounded-md px-2 py-1 uppercase transition-colors",
             option === locale
@@ -59,8 +33,8 @@ export function LanguageSwitcher({ className }: { className?: string }) {
           )}
         >
           {option}
-        </button>
+        </a>
       ))}
-    </fieldset>
+    </nav>
   );
 }
