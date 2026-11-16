@@ -10,6 +10,7 @@ import {
   Memberships,
   MovementChanges,
   Movements,
+  RateLimitWindows,
   Users,
 } from "@/backend/infra/db/schema";
 
@@ -26,4 +27,5 @@ export async function truncateAll() {
   await db.delete(Memberships);
   await db.delete(Groups);
   await db.delete(Users);
+  await db.delete(RateLimitWindows);
 }
