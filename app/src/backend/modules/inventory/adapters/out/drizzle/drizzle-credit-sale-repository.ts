@@ -1,10 +1,12 @@
-import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 
 import type { Database } from "@/backend/infra/db/client";
 import { Contacts } from "@/backend/modules/contacts/adapters/out/drizzle/contacts.table";
 import type { CreditSale } from "@/backend/modules/inventory/domain/credit-sale";
 import type { CreditSaleInstallment } from "@/backend/modules/inventory/domain/credit-sale-installment";
+import type { CreditSaleListItem } from "@/backend/modules/inventory/domain/credit-sale-list-item";
 import type { CreditSaleRepository } from "@/backend/modules/inventory/ports/credit-sale-repository";
+import type { ISODate } from "@/lib/dates";
 import { CreditSaleInstallments } from "./credit-sale-installments.table";
 import { CreditSaleMapper } from "./credit-sale-mapper";
 import { CreditSales } from "./credit-sales.table";
@@ -37,8 +39,44 @@ export class DrizzleCreditSaleRepository implements CreditSaleRepository {
     return sale ?? null;
   }
 
-  async listByGroup(groupId: string): Promise<CreditSale[]> {
-    return this.withInstallments(eq(CreditSales.groupId, groupId));
+  async listItems(
+    groupId: string,
+    today: ISODate,
+  ): Promise<CreditSaleListItem[]> {
+    const pending = sql`${CreditSaleInstallments.status} = 'pending'`;
+
+    const pendingCount = sql<number>`count(${CreditSaleInstallments.id}) FILTER (WHERE ${pending})`;
+
+    return this.db
+      .select({
+        id: CreditSales.id,
+        buyerName: Contacts.name,
+        item: CreditSales.item,
+        status: CreditSales.status,
+        collectedCount:
+          sql<number>`count(${CreditSaleInstallments.id}) FILTER (WHERE NOT ${pending})`.mapWith(
+            Number,
+          ),
+        totalCount: count(CreditSaleInstallments.id),
+        overdueCount:
+          sql<number>`CASE WHEN ${CreditSales.status} = 'voided' THEN 0 ELSE count(${CreditSaleInstallments.id}) FILTER (WHERE ${pending} AND ${CreditSaleInstallments.dueDate} < ${today}) END`.mapWith(
+            Number,
+          ),
+        pendingAmount:
+          sql<number>`coalesce(sum(${CreditSaleInstallments.amount}) FILTER (WHERE ${pending}), 0)`.mapWith(
+            Number,
+          ),
+        settled: sql<boolean>`${pendingCount} = 0`.mapWith(Boolean),
+      })
+      .from(CreditSales)
+      .innerJoin(Contacts, eq(Contacts.id, CreditSales.buyerId))
+      .leftJoin(
+        CreditSaleInstallments,
+        eq(CreditSaleInstallments.saleId, CreditSales.id),
+      )
+      .where(eq(CreditSales.groupId, groupId))
+      .groupBy(CreditSales.id, Contacts.name)
+      .orderBy(desc(CreditSales.createdAt));
   }
 
   async idBySaleMovement(

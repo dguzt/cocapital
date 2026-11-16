@@ -4,17 +4,28 @@ import type {
   MovementStatus,
 } from "@/backend/modules/movements/domain/movement";
 import type { MovementEntry } from "@/backend/modules/movements/domain/movement-entry";
+import type { MovementTotal } from "@/backend/modules/movements/domain/movement-total";
 import type { StoredMovement } from "@/backend/modules/movements/domain/stored-movement";
+import type { PageRequest } from "@/lib/page";
 
 /** Storage of the ledger. */
 export interface MovementRepository {
   /**
-   * Lists a group's ledger.
+   * Lists one page of a group's ledger.
    *
    * @param groupId - The group.
-   * @returns Every movement with its author, newest first.
+   * @param page - How many movements, and the last one already read.
+   * @returns The movements with their author, newest first.
    */
-  listByGroup(groupId: string): Promise<LedgerMovement[]>;
+  listPage(groupId: string, page: PageRequest): Promise<LedgerMovement[]>;
+
+  /**
+   * Adds up a group's ledger.
+   *
+   * @param groupId - The group.
+   * @returns One total per type and status.
+   */
+  totalsByGroup(groupId: string): Promise<MovementTotal[]>;
 
   /**
    * Finds one movement, only if it belongs to the group.

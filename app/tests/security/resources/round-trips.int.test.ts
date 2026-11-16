@@ -1,11 +1,11 @@
 /** Security audit D: DB round trips per request and whether they grow with the data. */
 
 import {
+  countOverdueInstallments,
   createCreditSale,
   createLoan,
   listContacts,
   listCreditSales,
-  listGroupInstallments,
   listLoans,
   listMovements,
   listPendingChanges,
@@ -185,12 +185,12 @@ describe("D-rt: read paths (control, expected to pass)", () => {
       await measure("listLoans", () => listLoans(group.id, TODAY));
       await measure("listMovements", () => listMovements(group.id));
       await measure("listPendingChanges", () => listPendingChanges(group.id));
-      await measure("listGroupInstallments", () =>
-        listGroupInstallments(group.id),
+      await measure("countOverdueInstallments", () =>
+        countOverdueInstallments(group.id, TODAY),
       );
       await measure("listContacts", () => listContacts(group.id));
       await measure("listPlanChanges", () => listPlanChanges(group.id));
-      await measure("listCreditSales", () => listCreditSales(group.id));
+      await measure("listCreditSales", () => listCreditSales(group.id, TODAY));
       await measure("getCapitalSummary", () =>
         useCases.getCapitalSummary.execute({ groupId: group.id }),
       );
@@ -215,8 +215,8 @@ describe("D-rt: read paths (control, expected to pass)", () => {
   }, 240_000);
 });
 
-describe("D-rt: the Panel page reads the ledger twice", () => {
-  it("renders with one read of movements and one of installments", async () => {
+describe("D-rt: the Panel page never reads the whole ledger", () => {
+  it("reads one page of movements and sums the rest", async () => {
     const { group } = await seedGroup();
 
     const { sql } = await recordQueries(() =>
@@ -240,7 +240,11 @@ describe("D-rt: the Panel page reads the ledger twice", () => {
       installmentReads.length,
     );
 
-    expect(ledgerReads.length).toBe(1);
+    const bounded = (text: string) => /\blimit\b|\bsum\(/i.test(text);
+
+    expect(ledgerReads.length).toBe(2);
+    expect(ledgerReads.every(bounded)).toBe(true);
     expect(installmentReads.length).toBe(1);
+    expect(installmentReads.every(bounded)).toBe(true);
   }, 60_000);
 });

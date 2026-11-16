@@ -1,5 +1,6 @@
 import type { PlanChange } from "@/backend/modules/inventory/domain/plan-change";
 import type { PlanChangeEntry } from "@/backend/modules/inventory/domain/plan-change-entry";
+import type { PageRequest } from "@/lib/page";
 
 /** The record of every rewrite of a credit sale's plan. */
 export interface PlanChangeRepository {
@@ -12,10 +13,11 @@ export interface PlanChangeRepository {
   record(entry: PlanChangeEntry): Promise<void>;
 
   /**
-   * Lists the rewrites of a group's sales.
+   * Lists one page of the rewrites of a group's sales.
    *
    * @param groupId - The group.
+   * @param page - How many rewrites, and the last one already read.
    * @returns The rewrites, newest first.
    */
-  listByGroup(groupId: string): Promise<PlanChange[]>;
+  listPage(groupId: string, page: PageRequest): Promise<PlanChange[]>;
 }

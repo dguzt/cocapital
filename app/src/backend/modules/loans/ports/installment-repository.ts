@@ -1,6 +1,7 @@
 import type { Installment } from "@/backend/modules/loans/domain/installment";
-import type { InstallmentTerm } from "@/backend/modules/loans/domain/installment-term";
+import type { InstallmentTotal } from "@/backend/modules/loans/domain/installment-total";
 import type { Schedule } from "@/backend/modules/loans/domain/schedule";
+import type { ISODate } from "@/lib/dates";
 
 /** Storage of the cuotas of every loan. */
 export interface InstallmentRepository {
@@ -13,12 +14,21 @@ export interface InstallmentRepository {
   listByLoan(loanId: string): Promise<Installment[]>;
 
   /**
-   * Lists the cuotas of a group's loans that are not voided.
+   * Adds up the cuotas of a group's loans that are not voided.
    *
    * @param groupId - The group.
-   * @returns What each cuota owes or paid.
+   * @returns Principal and interest, one total per status.
    */
-  listTermsByGroup(groupId: string): Promise<InstallmentTerm[]>;
+  totalsByGroup(groupId: string): Promise<InstallmentTotal[]>;
+
+  /**
+   * Counts the pending cuotas of a group's live loans due before today.
+   *
+   * @param groupId - The group.
+   * @param today - Today's date in Lima.
+   * @returns How many are overdue.
+   */
+  countOverdue(groupId: string, today: ISODate): Promise<number>;
 
   /**
    * Lists the repay movements of a loan's collected cuotas.

@@ -13,7 +13,7 @@ import { VoidCreditSaleButton } from "@/components/sales/void-credit-sale-button
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
 import { getDictionary } from "@/i18n/get-dictionary";
-import { formatDayMonth, isOverdue, todayInLima } from "@/lib/dates";
+import { formatDayMonth, todayInLima } from "@/lib/dates";
 import { groupPath } from "@/lib/group-path";
 import { formatCents } from "@/lib/money";
 
@@ -35,13 +35,10 @@ export default async function SaleDetailPage({
   const t = copy.sales;
   const cuotaLabel = (number: number) =>
     number === 0 ? t.downPayment : copy.schedule.installmentN(number);
-  const [installments, pendingChanges] = await Promise.all([
-    useCases.listGroupInstallments.execute({ groupId: group.id }),
+  const [overdueCount, pendingChanges] = await Promise.all([
+    useCases.countOverdueInstallments.execute({ groupId: group.id, today }),
     useCases.listPendingChanges.execute({ groupId: group.id }),
   ]);
-  const overdueCount = installments.filter(
-    (i) => i.status === "pending" && isOverdue(i.dueDate, today),
-  ).length;
 
   const sale = toCreditSaleView(found.value, today);
   const undoPending = new Set(

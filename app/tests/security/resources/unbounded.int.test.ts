@@ -5,7 +5,8 @@ import {
   createCreditSale,
   createGroup,
   createLoan,
-  listGroupInstallments,
+  getCapitalSummary,
+  listLoans,
   listMovements,
   listPlanChanges,
 } from "@tests/support/use-cases";
@@ -24,103 +25,95 @@ beforeEach(truncateAll, 120_000);
 
 const PAGE = 100;
 
-describe("D-unb: reads return every row ever written", () => {
-  it.fails(
-    "listMovements is bounded by a page",
-    async () => {
-      const { owner, group } = await seedGroup();
+describe("D-unb: reads return a page or a total, never every row", () => {
+  it("listMovements is bounded by a page", async () => {
+    const { owner, group } = await seedGroup();
 
-      await db.insert(Movements).values(
-        Array.from({ length: 600 }, (_, i) => ({
-          groupId: group.id,
-          userId: owner.id,
-          type: "expense" as const,
-          amount: 100 + i,
-          date: TODAY,
-        })),
-      );
+    await db.insert(Movements).values(
+      Array.from({ length: 600 }, (_, i) => ({
+        groupId: group.id,
+        userId: owner.id,
+        type: "expense" as const,
+        amount: 100 + i,
+        date: TODAY,
+      })),
+    );
 
-      const rows = await listMovements(group.id);
+    const rows = await listMovements(group.id);
 
-      console.log("listMovements returned", rows.length, "rows");
+    console.log("listMovements returned", rows.length, "rows");
 
-      expect(rows.length).toBeLessThanOrEqual(PAGE);
-    },
-    60_000,
-  );
+    expect(rows.length).toBeLessThanOrEqual(PAGE);
+  }, 60_000);
 
-  it.fails(
-    "listPlanChanges is bounded by a page",
-    async () => {
-      const { owner, group } = await seedGroup();
+  it("listPlanChanges is bounded by a page", async () => {
+    const { owner, group } = await seedGroup();
 
-      const sale = await createCreditSale(group.id, owner.id, {
-        buyer: { name: "B" },
-        item: "I",
-        price: 1000,
-        cost: null,
-        downPayment: 0,
+    const sale = await createCreditSale(group.id, owner.id, {
+      buyer: { name: "B" },
+      item: "I",
+      price: 1000,
+      cost: null,
+      downPayment: 0,
+      frequency: "monthly",
+      startDate: TODAY,
+      installments: [{ dueDate: "2027-01-10", amount: 1000 }],
+    });
+
+    if (!sale.ok) {
+      throw new Error("seed failed");
+    }
+
+    await db.insert(CreditSalePlanChanges).values(
+      Array.from({ length: 600 }, () => ({
+        saleId: sale.value.saleId,
+        userId: owner.id,
+        fromCount: 1,
+        toCount: 1,
+      })),
+    );
+
+    const rows = await listPlanChanges(group.id);
+
+    console.log("listPlanChanges returned", rows.length, "rows");
+
+    expect(rows.length).toBeLessThanOrEqual(PAGE);
+  }, 60_000);
+
+  it("the capital and the loans list add cuotas up instead of returning them", async () => {
+    const { owner, group } = await seedGroup();
+
+    for (let i = 0; i < 3; i++) {
+      const created = await createLoan(group.id, owner.id, {
+        borrower: { name: `B${i}` },
+        capital: 3600,
+        rateBps: 1000,
         frequency: "monthly",
         startDate: TODAY,
-        installments: [{ dueDate: "2027-01-10", amount: 1000 }],
+        installments: Array.from({ length: 360 }, (_, n) => ({
+          number: n + 1,
+          dueDate: "2027-01-10",
+          amount: 11,
+          principal: 10,
+          interest: 1,
+        })),
       });
 
-      if (!sale.ok) {
-        throw new Error("seed failed");
+      if (!created.ok) {
+        throw new Error(`seed failed ${created.error.kind}`);
       }
+    }
 
-      await db.insert(CreditSalePlanChanges).values(
-        Array.from({ length: 600 }, () => ({
-          saleId: sale.value.saleId,
-          userId: owner.id,
-          fromCount: 1,
-          toCount: 1,
-        })),
-      );
+    const loans = await listLoans(group.id, TODAY);
 
-      const rows = await listPlanChanges(group.id);
+    const capital = await getCapitalSummary(group.id);
 
-      console.log("listPlanChanges returned", rows.length, "rows");
+    console.log("listLoans returned", loans.length, "rows for 1080 cuotas");
 
-      expect(rows.length).toBeLessThanOrEqual(PAGE);
-    },
-    60_000,
-  );
-
-  it.fails(
-    "listGroupInstallments (every Panel/loan/sale page) is bounded",
-    async () => {
-      const { owner, group } = await seedGroup();
-
-      for (let i = 0; i < 3; i++) {
-        const created = await createLoan(group.id, owner.id, {
-          borrower: { name: `B${i}` },
-          capital: 3600,
-          rateBps: 1000,
-          frequency: "monthly",
-          startDate: TODAY,
-          installments: Array.from({ length: 360 }, (_, n) => ({
-            number: n + 1,
-            dueDate: "2027-01-10",
-            amount: 11,
-            principal: 10,
-            interest: 1,
-          })),
-        });
-
-        if (!created.ok) {
-          throw new Error(`seed failed ${created.error.kind}`);
-        }
-      }
-
-      const rows = await listGroupInstallments(group.id);
-
-      console.log("listGroupInstallments returned", rows.length, "rows");
-
-      expect(rows.length).toBeLessThanOrEqual(PAGE);
-    },
-    120_000,
-  );
+    expect(loans.length).toBeLessThanOrEqual(PAGE);
+    expect(loans.map((loan) => loan.totalCount)).toEqual([360, 360, 360]);
+    expect(capital.lent).toBe(3 * 3600);
+  }, 120_000);
 });
 
 describe("D-abuse: one request can write unbounded rows or bytes", () => {

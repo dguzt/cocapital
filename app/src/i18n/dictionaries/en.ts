@@ -231,6 +231,7 @@ export const en: Dictionary = {
     planChanged: "Plan changed",
     installmentCounts: (from: number, to: number) =>
       `${from} → ${to} installments`,
+    loadMore: "Load more",
     okPending: "Awaiting OK",
     columns: {
       movement: "Movement",
