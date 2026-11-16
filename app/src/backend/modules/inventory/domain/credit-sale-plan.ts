@@ -1,6 +1,6 @@
 import * as R from "remeda";
 
-import type { Cents } from "@/lib/money";
+import { type Cents, MAX_CENTS } from "@/lib/money";
 import { err, ok, type Result } from "@/lib/result";
 import type { CreditSaleError } from "./errors";
 import { IsoDate } from "./iso-date";
@@ -8,6 +8,8 @@ import type { PlannedInstallment } from "./planned-installment";
 
 /** What a credit sale is sold for and how it is paid: it always adds up to the price. */
 export class CreditSalePlan {
+  private static readonly MAX_INSTALLMENTS = 360;
+
   private constructor(
     readonly price: Cents,
     readonly cost: Cents | null,
@@ -32,7 +34,7 @@ export class CreditSalePlan {
   }): Result<CreditSalePlan, CreditSaleError> {
     const { price, cost, downPayment, installments } = input;
 
-    if (!Number.isInteger(price) || price <= 0) {
+    if (!Number.isInteger(price) || price <= 0 || price > MAX_CENTS) {
       return err({
         kind: "InvalidPrice",
         message: `price must be a positive integer in cents, got ${price}`,
@@ -88,13 +90,18 @@ export class CreditSalePlan {
    * Names the first rule a list of cuotas breaks.
    *
    * @param installments - The cuotas to check.
-   * @returns `empty`, `amount` or `due-date`, or null when they are fine.
+   * @returns `empty`, `too-many`, `amount` or `due-date`, or null when they
+   *   are fine.
    */
   static brokenRule(
     installments: readonly PlannedInstallment[],
   ): string | null {
     if (installments.length === 0) {
       return "empty";
+    }
+
+    if (installments.length > CreditSalePlan.MAX_INSTALLMENTS) {
+      return "too-many";
     }
 
     if (

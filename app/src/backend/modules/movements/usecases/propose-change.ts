@@ -2,6 +2,7 @@ import type { ChangeKind } from "@/backend/modules/movements/domain/change-kind"
 import { ChangeProposal } from "@/backend/modules/movements/domain/change-proposal";
 import type { PendingChangeError } from "@/backend/modules/movements/domain/errors";
 import type { MovementSnapshot } from "@/backend/modules/movements/domain/movement";
+import type { MovementEdit } from "@/backend/modules/movements/domain/movement-edit";
 import type { StoredMovement } from "@/backend/modules/movements/domain/stored-movement";
 import type { ChangeRepository } from "@/backend/modules/movements/ports/change-repository";
 import type { MovementRepository } from "@/backend/modules/movements/ports/movement-repository";
@@ -17,7 +18,7 @@ export type ProposeChangeInput = {
   movementId: string;
   alone: boolean;
   kind: ChangeKind;
-  after?: MovementSnapshot;
+  edit?: MovementEdit;
 };
 
 /**
@@ -40,8 +41,8 @@ export class ProposeChange {
    * Opens a pending change on the movement.
    *
    * @param input - The group, the proposing partner, the movement, the kind of
-   *   change, for an edit the proposed values, and whether the partner is
-   *   alone in the group.
+   *   change, for an edit what it changes, and whether the partner is alone
+   *   in the group.
    * @returns The change's id and whether it was applied at once, or why
    *   it cannot be proposed.
    */
@@ -78,7 +79,7 @@ export class ProposeChange {
       },
       hasPendingChange: await this.changes.hasPendingFor(input.movementId),
       kind: input.kind,
-      after: input.after,
+      edit: input.edit,
       actorId: input.actorId,
     });
 

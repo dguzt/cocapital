@@ -18,9 +18,10 @@ export interface ChangeRepository {
    * Stores a new pending change.
    *
    * @param change - The proposal.
-   * @returns The id of the stored change.
+   * @returns The id of the stored change, or null when the movement already
+   *   has one pending.
    */
-  propose(change: ChangeProposal): Promise<{ id: string }>;
+  propose(change: ChangeProposal): Promise<{ id: string } | null>;
 
   /**
    * Finds a change together with the movement it targets.
@@ -31,12 +32,13 @@ export interface ChangeRepository {
   findUnderDecision(pendingId: string): Promise<ChangeUnderDecision | null>;
 
   /**
-   * Records the decision on a change.
+   * Records the decision on a change that is still pending.
    *
    * @param pendingId - The change.
    * @param decision - Approved or rejected, by whom and when.
+   * @returns False when the change was already decided.
    */
-  decide(pendingId: string, decision: ChangeDecision): Promise<void>;
+  decide(pendingId: string, decision: ChangeDecision): Promise<boolean>;
 
   /**
    * Lists a group's changes still waiting for an OK.

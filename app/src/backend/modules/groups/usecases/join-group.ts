@@ -3,6 +3,7 @@ import type { GroupError } from "@/backend/modules/groups/domain/group-error";
 import { InviteCode } from "@/backend/modules/groups/domain/invite-code";
 import type { Partner } from "@/backend/modules/groups/domain/partner";
 import type { GroupRepository } from "@/backend/modules/groups/ports/group-repository";
+import type { UnitOfWork } from "@/backend/shared/ports/unit-of-work";
 import { err, ok, type Result } from "@/lib/result";
 
 export type JoinGroupInput = {
@@ -12,9 +13,12 @@ export type JoinGroupInput = {
 
 /** Seats a partner in the group behind an invite code. */
 export class JoinGroup {
-  static inject = ["groups"] as const;
+  static inject = ["groups", "uow"] as const;
 
-  constructor(private readonly groups: GroupRepository) {}
+  constructor(
+    private readonly groups: GroupRepository,
+    private readonly uow: UnitOfWork,
+  ) {}
 
   /**
    * Joins the partner to the group. Joining a group you already belong to
@@ -27,9 +31,9 @@ export class JoinGroup {
   async execute(input: JoinGroupInput): Promise<Result<Group, GroupError>> {
     const code = InviteCode.from(input.code);
 
-    const group = await this.groups.findByInviteCode(code);
+    const invited = await this.groups.findByInviteCode(code);
 
-    if (!group) {
+    if (!invited) {
       return err({
         kind: "InviteNotFound",
         message: `no group for invite code ${code.value}`,
@@ -37,21 +41,27 @@ export class JoinGroup {
       });
     }
 
-    if (group.hasMember(input.partner.userId)) {
-      return ok(group);
-    }
+    return this.uow.run(async () => {
+      await this.groups.lock(invited.id);
 
-    const admitted = group.admit(input.partner);
+      const group = (await this.groups.findById(invited.id)) ?? invited;
 
-    if (!admitted.ok) {
+      if (group.hasMember(input.partner.userId)) {
+        return ok(group);
+      }
+
+      const admitted = group.admit(input.partner);
+
+      if (!admitted.ok) {
+        return admitted;
+      }
+
+      await this.groups.addMember(group.id, {
+        ...input.partner,
+        role: "member",
+      });
+
       return admitted;
-    }
-
-    await this.groups.addMember(group.id, {
-      ...input.partner,
-      role: "member",
     });
-
-    return admitted;
   }
 }

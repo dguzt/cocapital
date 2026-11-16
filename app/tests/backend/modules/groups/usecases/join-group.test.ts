@@ -1,4 +1,5 @@
 import { InMemoryGroups } from "@tests/backend/modules/groups/support/in-memory-groups";
+import { ImmediateUnitOfWork } from "@tests/support/immediate-unit-of-work";
 import { beforeEach, describe, expect, it } from "vitest";
 import { Group } from "@/backend/modules/groups/domain/group";
 import { JoinGroup } from "@/backend/modules/groups/usecases/join-group";
@@ -26,7 +27,7 @@ beforeEach(() => {
 
   groups.stored.push(group);
 
-  joinGroup = new JoinGroup(groups);
+  joinGroup = new JoinGroup(groups, new ImmediateUnitOfWork());
 });
 
 describe("JoinGroup", () => {

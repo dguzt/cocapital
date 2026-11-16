@@ -47,5 +47,8 @@ export const CreditSales = pgTable(
       .references(() => Movements.id),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
-  (t) => [index("credit_sales_group_idx").on(t.groupId)],
+  (t) => [
+    index("credit_sales_group_idx").on(t.groupId),
+    index("credit_sales_sale_movement_idx").on(t.saleMovementId),
+  ],
 );

@@ -185,4 +185,12 @@ export class DrizzleCreditSaleRepository implements CreditSaleRepository {
       CreditSaleMapper.toDomain(row.sale, row.buyerName, installments),
     );
   }
+
+  async lock(saleId: string): Promise<void> {
+    await this.db
+      .select({ id: CreditSales.id })
+      .from(CreditSales)
+      .where(eq(CreditSales.id, saleId))
+      .for("update");
+  }
 }

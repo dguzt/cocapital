@@ -1,5 +1,5 @@
 import type { CreditSaleRepository } from "@/backend/modules/inventory/ports/credit-sale-repository";
-import type { VoidEntry } from "@/backend/modules/movements/usecases/void-entry";
+import type { VoidEntries } from "@/backend/modules/movements/usecases/void-entries";
 
 export type VoidCreditSaleInput = {
   saleMovementId: string;
@@ -10,11 +10,11 @@ export type VoidCreditSaleInput = {
  * inventory, and every cobro's collect_sale movement takes its cash back out.
  */
 export class VoidCreditSale {
-  static inject = ["creditSales", "voidEntry"] as const;
+  static inject = ["creditSales", "voidEntries"] as const;
 
   constructor(
     private readonly creditSales: CreditSaleRepository,
-    private readonly voidEntry: VoidEntry,
+    private readonly voidEntries: VoidEntries,
   ) {}
 
   /**
@@ -33,15 +33,15 @@ export class VoidCreditSale {
       throw new Error("no credit sale owns this sell_on_credit movement");
     }
 
+    await this.creditSales.lock(saleId);
+
     const collectMovementIds =
       await this.creditSales.collectMovementIdsOf(saleId);
 
     await this.creditSales.void(saleId);
 
-    await this.voidEntry.execute({ movementId: input.saleMovementId });
-
-    for (const movementId of collectMovementIds) {
-      await this.voidEntry.execute({ movementId });
-    }
+    await this.voidEntries.execute({
+      movementIds: [input.saleMovementId, ...collectMovementIds],
+    });
   }
 }

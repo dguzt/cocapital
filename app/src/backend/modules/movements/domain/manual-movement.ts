@@ -18,12 +18,14 @@ export class ManualMovement implements NewMovement {
     readonly date: ISODate,
   ) {}
 
+  static readonly MAX_CONCEPT_LENGTH = 200;
+
   /**
    * Reads the form, amounts in soles. A cost only counts on a sale.
    *
    * @param form - Type, amount, optional cost and concept, and today's date.
-   * @returns The movement in cents, or `InvalidType`, `InvalidAmount` or
-   *   `InvalidCost`.
+   * @returns The movement in cents, or `InvalidType`, `InvalidAmount`,
+   *   `InvalidCost` or `ConceptTooLong`.
    */
   static parse(form: {
     type: string;
@@ -65,14 +67,16 @@ export class ManualMovement implements NewMovement {
       });
     }
 
-    return ok(
-      new ManualMovement(
-        type,
-        amount,
-        cost,
-        form.concept?.trim() || null,
-        form.today,
-      ),
-    );
+    const concept = form.concept?.trim() || null;
+
+    if (concept && concept.length > ManualMovement.MAX_CONCEPT_LENGTH) {
+      return err({
+        kind: "ConceptTooLong",
+        message: `concept must be at most ${ManualMovement.MAX_CONCEPT_LENGTH} characters`,
+        length: concept.length,
+      });
+    }
+
+    return ok(new ManualMovement(type, amount, cost, concept, form.today));
   }
 }

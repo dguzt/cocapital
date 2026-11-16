@@ -1,6 +1,7 @@
 import type { LoanError } from "@/backend/modules/loans/domain/errors";
 import type { LoanDetail } from "@/backend/modules/loans/domain/loan-detail";
 import type { InstallmentRepository } from "@/backend/modules/loans/ports/installment-repository";
+import type { LoanRepository } from "@/backend/modules/loans/ports/loan-repository";
 import type { AddMovement } from "@/backend/modules/movements/usecases/add-movement";
 import type { UnitOfWork } from "@/backend/shared/ports/unit-of-work";
 import type { ISODate } from "@/lib/dates";
@@ -28,6 +29,7 @@ type Collectable = {
 export class CollectInstallment {
   static inject = [
     "getLoanDetail",
+    "loans",
     "installments",
     "addMovement",
     "uow",
@@ -35,6 +37,7 @@ export class CollectInstallment {
 
   constructor(
     private readonly getLoanDetail: GetLoanDetail,
+    private readonly loans: LoanRepository,
     private readonly installments: InstallmentRepository,
     private readonly addMovement: AddMovement,
     private readonly uow: UnitOfWork,
@@ -52,15 +55,17 @@ export class CollectInstallment {
   async execute(
     input: CollectInstallmentInput,
   ): Promise<Result<{ amount: Cents }, LoanError>> {
-    const target = await this.findCollectable(input);
-
-    if (!target.ok) {
-      return target;
-    }
-
-    const { installment, borrowerName } = target.value;
-
     return this.uow.run(async () => {
+      await this.loans.lock(input.loanId);
+
+      const target = await this.findCollectable(input);
+
+      if (!target.ok) {
+        return target;
+      }
+
+      const { installment, borrowerName } = target.value;
+
       const repay = await this.addMovement.execute({
         groupId: input.groupId,
         userId: input.userId,

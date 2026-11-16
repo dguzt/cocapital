@@ -49,5 +49,8 @@ export const Loans = pgTable(
       .references(() => Movements.id),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
-  (t) => [index("loans_group_idx").on(t.groupId)],
+  (t) => [
+    index("loans_group_idx").on(t.groupId),
+    index("loans_lend_movement_idx").on(t.lendMovementId),
+  ],
 );

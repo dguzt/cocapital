@@ -10,6 +10,8 @@ export type CreditSaleError =
   | AppError<"InvalidInstallments", { reason: string }>
   | AppError<"ScheduleMismatch", { scheduled: number; expected: number }>
   | AppError<"ItemRequired">
+  | AppError<"ItemTooLong", { length: number }>
+  | AppError<"InvalidFrequency", { frequency: string }>
   | AppError<"CreditSaleNotFound", { saleId: string }>
   | AppError<"CreditSaleVoided", { saleId: string }>
   | AppError<"InstallmentNotCollectable", { installmentId: string }>;

@@ -5,6 +5,7 @@ import type { PendingChangeError } from "@/backend/modules/movements/domain/erro
 import { PendingChange } from "@/backend/modules/movements/domain/pending-change";
 import type { ChangeApplier } from "@/backend/modules/movements/ports/change-applier";
 import type { ChangeRepository } from "@/backend/modules/movements/ports/change-repository";
+import type { MovementRepository } from "@/backend/modules/movements/ports/movement-repository";
 import type { UnitOfWork } from "@/backend/shared/ports/unit-of-work";
 import { err, ok, type Result } from "@/lib/result";
 
@@ -21,10 +22,11 @@ export type DecideChangeInput = {
  * the same unit of work as the decision.
  */
 export class DecideChange {
-  static inject = ["changes", "applier", "uow"] as const;
+  static inject = ["changes", "movements", "applier", "uow"] as const;
 
   constructor(
     private readonly changes: ChangeRepository,
+    private readonly movements: MovementRepository,
     private readonly applier: ChangeApplier,
     private readonly uow: UnitOfWork,
   ) {}
@@ -58,12 +60,31 @@ export class DecideChange {
       return outcome;
     }
 
-    return this.uow.run(async () => {
-      await this.changes.decide(input.pendingId, {
+    return this.uow.run<{ applied: boolean }, PendingChangeError>(async () => {
+      const status = await this.movements.lock(change.movementId);
+
+      const decided = await this.changes.decide(input.pendingId, {
         status: outcome.value.pendingStatus,
         decidedBy: input.actorId,
         decidedAt: new Date(),
       });
+
+      if (!decided) {
+        return err({
+          kind: "AlreadyDecided",
+          message: "this change was already decided",
+          pendingId: input.pendingId,
+          status: "decided",
+        });
+      }
+
+      if (outcome.value.apply && status !== "active") {
+        return err({
+          kind: "MovementVoided",
+          message: "the movement was voided while this change waited",
+          movementId: change.movementId,
+        });
+      }
 
       if (outcome.value.apply) {
         await this.applier.apply(this.approvedChange(change, outcome.value));

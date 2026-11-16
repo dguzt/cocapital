@@ -7,6 +7,7 @@ import type {
   MovementStatus,
   MovementType,
 } from "./movement";
+import type { MovementEdit } from "./movement-edit";
 
 /**
  * A partner's request to edit or void a movement. Nothing changes until
@@ -25,8 +26,8 @@ export class ChangeProposal {
    * Proposes a change, if the movement can still take one.
    *
    * @param input - The movement and its current values, whether it already
-   *   has a change waiting for an OK, the kind of change, the new values for
-   *   an edit, and who proposes it.
+   *   has a change waiting for an OK, the kind of change, what an edit
+   *   changes, and who proposes it.
    * @returns The proposal, or `MovementVoided`, `ChangeAlreadyPending` or
    *   `MissingChanges`.
    */
@@ -38,10 +39,10 @@ export class ChangeProposal {
     };
     hasPendingChange: boolean;
     kind: ChangeKind;
-    after?: MovementSnapshot;
+    edit?: MovementEdit;
     actorId: string;
   }): Result<ChangeProposal, PendingChangeError> {
-    const { movement, hasPendingChange, kind, after, actorId } = input;
+    const { movement, hasPendingChange, kind, edit, actorId } = input;
 
     if (movement.status === "voided") {
       return err({
@@ -59,7 +60,7 @@ export class ChangeProposal {
       });
     }
 
-    if (kind === "edit" && !after) {
+    if (kind === "edit" && !edit) {
       return err({
         kind: "MissingChanges",
         message: "an edit must include the new values",
@@ -73,9 +74,23 @@ export class ChangeProposal {
         kind,
         actorId,
         movement.snapshot,
-        kind === "edit" ? (after ?? null) : null,
+        kind === "edit" && edit
+          ? ChangeProposal.edited(movement.snapshot, edit)
+          : null,
       ),
     );
+  }
+
+  private static edited(
+    before: MovementSnapshot,
+    edit: MovementEdit,
+  ): MovementSnapshot {
+    return {
+      ...before,
+      amount: edit.amount,
+      concept: edit.concept,
+      cost: before.type === "sell_inventory" ? edit.cost : before.cost,
+    };
   }
 
   /**

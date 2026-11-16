@@ -32,13 +32,14 @@ export class DrizzleChangeRepository implements ChangeRepository {
     return row !== undefined;
   }
 
-  async propose(change: ChangeProposal): Promise<{ id: string }> {
+  async propose(change: ChangeProposal): Promise<{ id: string } | null> {
     const [inserted] = await this.db
       .insert(MovementChanges)
       .values(change)
+      .onConflictDoNothing()
       .returning({ id: MovementChanges.id });
 
-    return inserted;
+    return inserted ?? null;
   }
 
   async findUnderDecision(
@@ -70,11 +71,19 @@ export class DrizzleChangeRepository implements ChangeRepository {
     };
   }
 
-  async decide(pendingId: string, decision: ChangeDecision): Promise<void> {
-    await this.db
+  async decide(pendingId: string, decision: ChangeDecision): Promise<boolean> {
+    const decided = await this.db
       .update(MovementChanges)
       .set(decision)
-      .where(eq(MovementChanges.id, pendingId));
+      .where(
+        and(
+          eq(MovementChanges.id, pendingId),
+          eq(MovementChanges.status, "pending"),
+        ),
+      )
+      .returning({ id: MovementChanges.id });
+
+    return decided.length > 0;
   }
 
   async listPending(groupId: string): Promise<PendingChangeItem[]> {

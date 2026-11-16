@@ -4,4 +4,5 @@ import type { AppError } from "@/lib/result";
 export type GroupError =
   | AppError<"InvalidGroupName">
   | AppError<"InviteNotFound", { code: string }>
-  | AppError<"GroupFull", { groupId: string }>;
+  | AppError<"GroupFull", { groupId: string }>
+  | AppError<"TooManyGroups", { userId: string }>;

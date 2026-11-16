@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/ui/submit-button";
 import type { Dictionary } from "@/i18n/dictionaries";
+import { messageFor } from "@/lib/message-for";
 
 export function Onboarding({
   userName,
@@ -48,7 +49,7 @@ export function Onboarding({
               </div>
               {error && (
                 <p className="text-sm text-destructive">
-                  {t.errors[error] ?? t.genericError}
+                  {messageFor(t.errors, error, t.genericError)}
                 </p>
               )}
               <SubmitButton className="h-12 w-full" pendingText={t.creating}>

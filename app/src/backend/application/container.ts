@@ -1,3 +1,4 @@
+import "server-only";
 import { createInjector } from "typed-inject";
 
 import { db } from "@/backend/infra/db/client";
@@ -6,6 +7,7 @@ import { ClerkIdentityProvider } from "@/backend/modules/accounts/adapters/out/c
 import { DrizzleUserRepository } from "@/backend/modules/accounts/adapters/out/drizzle/drizzle-user-repository";
 import { EnsureUser } from "@/backend/modules/accounts/usecases/ensure-user";
 import { GetCapitalSummary } from "@/backend/modules/capital/usecases/get-capital-summary";
+import { GetPanel } from "@/backend/modules/capital/usecases/get-panel";
 import { DrizzleContactRepository } from "@/backend/modules/contacts/adapters/out/drizzle/drizzle-contact-repository";
 import { ListContacts } from "@/backend/modules/contacts/usecases/list-contacts";
 import { ResolveContact } from "@/backend/modules/contacts/usecases/resolve-contact";
@@ -50,6 +52,7 @@ import { ListPendingChanges } from "@/backend/modules/movements/usecases/list-pe
 import { ProposeChange } from "@/backend/modules/movements/usecases/propose-change";
 import { ProposeSystemVoid } from "@/backend/modules/movements/usecases/propose-system-void";
 import { SubmitChange } from "@/backend/modules/movements/usecases/submit-change";
+import { VoidEntries } from "@/backend/modules/movements/usecases/void-entries";
 import { VoidEntry } from "@/backend/modules/movements/usecases/void-entry";
 import { ApplyApprovedChange } from "./apply-approved-change";
 
@@ -76,6 +79,7 @@ const injector = createInjector()
   .provideClass("resolveContact", ResolveContact)
   .provideClass("addMovement", AddMovement)
   .provideClass("voidEntry", VoidEntry)
+  .provideClass("voidEntries", VoidEntries)
   .provideClass("editEntry", EditEntry)
   .provideClass("getLoanDetail", GetLoanDetail)
   .provideClass("listMovements", ListMovements)
@@ -127,4 +131,5 @@ export const useCases = {
   getSaleTargetForMovement: injector.injectClass(GetSaleTargetForMovement),
 
   getCapitalSummary: injector.injectClass(GetCapitalSummary),
+  getPanel: injector.injectClass(GetPanel),
 } as const;

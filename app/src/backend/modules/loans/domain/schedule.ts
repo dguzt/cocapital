@@ -1,7 +1,7 @@
 import * as R from "remeda";
 
-import { addPeriods } from "@/lib/dates";
-import { type Cents, splitEvenly } from "@/lib/money";
+import { addPeriods, isCalendarDate } from "@/lib/dates";
+import { type Cents, MAX_CENTS, splitEvenly } from "@/lib/money";
 import { err, ok, type Result } from "@/lib/result";
 import type { LoanError, ScheduleError } from "./errors";
 import type { ScheduleInput } from "./schedule-input";
@@ -10,8 +10,6 @@ import type { ScheduledInstallment } from "./scheduled-installment";
 /** The cuotas a loan is paid back in, adding up to its capital plus interest. */
 export class Schedule {
   private static readonly MAX_INSTALLMENTS = 360;
-
-  private static readonly ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
   private constructor(
     readonly capital: Cents,
@@ -59,9 +57,10 @@ export class Schedule {
   }
 
   /**
-   * Accepts cuotas as the partner edited them, if they still add up: the
+   * Accepts cuotas as the partner edited them, if they still add up: a
+   * positive capital, 1 to 360 cuotas numbered in order on real days, the
    * principals sum to the capital, each cuota is principal plus interest,
-   * and every amount is positive.
+   * and no amount is negative.
    *
    * @param installments - The cuotas, possibly edited in the wizard.
    * @param capital - The loan's principal in cents.
@@ -71,11 +70,47 @@ export class Schedule {
     installments: readonly ScheduledInstallment[],
     capital: Cents,
   ): Result<Schedule, LoanError> {
+    if (!Number.isInteger(capital) || capital <= 0 || capital > MAX_CENTS) {
+      return err({
+        kind: "InvalidInstallments",
+        message: `capital must be a positive integer in cents, got ${capital}`,
+        reason: "capital",
+      });
+    }
+
     if (installments.length === 0) {
       return err({
         kind: "InvalidInstallments",
         message: "a loan needs at least one installment",
         reason: "empty",
+      });
+    }
+
+    if (installments.length > Schedule.MAX_INSTALLMENTS) {
+      return err({
+        kind: "InvalidInstallments",
+        message: `a loan has at most ${Schedule.MAX_INSTALLMENTS} installments`,
+        reason: "too-many",
+      });
+    }
+
+    const misnumbered = installments.some(
+      (row, index) => row.number !== index + 1,
+    );
+
+    if (misnumbered) {
+      return err({
+        kind: "InvalidInstallments",
+        message: "installments must be numbered 1 to n in order",
+        reason: "numbering",
+      });
+    }
+
+    if (installments.some((row) => !isCalendarDate(row.dueDate))) {
+      return err({
+        kind: "InvalidInstallments",
+        message: "every installment needs a real due date",
+        reason: "due-date",
       });
     }
 
@@ -90,14 +125,20 @@ export class Schedule {
     }
 
     const brokenRow = installments.some(
-      (row) => row.amount <= 0 || row.principal + row.interest !== row.amount,
+      (row) =>
+        !Number.isInteger(row.principal) ||
+        !Number.isInteger(row.interest) ||
+        row.principal < 0 ||
+        row.interest < 0 ||
+        row.amount <= 0 ||
+        row.principal + row.interest !== row.amount,
     );
 
     if (brokenRow) {
       return err({
         kind: "InvalidInstallments",
         message:
-          "each installment needs amount > 0 and principal+interest=amount",
+          "each installment needs whole non-negative principal and interest adding up to a positive amount",
         reason: "row-invariant",
       });
     }
@@ -143,10 +184,7 @@ export class Schedule {
       };
     }
 
-    if (
-      !Schedule.ISO_DATE.test(startDate) ||
-      Number.isNaN(Date.parse(startDate))
-    ) {
+    if (!isCalendarDate(startDate)) {
       return {
         kind: "InvalidStartDate",
         message: `invalid start date: ${startDate}`,

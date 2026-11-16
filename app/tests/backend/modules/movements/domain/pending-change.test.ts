@@ -21,7 +21,7 @@ describe("ChangeProposal.propose", () => {
       movement,
       hasPendingChange: false,
       kind: "edit",
-      after: edited,
+      edit: { amount: 4500, cost: null, concept: "aporte" },
       actorId: "ana",
     });
     expect(r.ok).toBe(true);
@@ -45,7 +45,7 @@ describe("ChangeProposal.propose", () => {
       movement,
       hasPendingChange: true,
       kind: "edit",
-      after: edited,
+      edit: { amount: 4500, cost: null, concept: "aporte" },
       actorId: "ana",
     });
     expect(!r.ok && r.error.kind === "ChangeAlreadyPending").toBe(true);

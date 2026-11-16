@@ -37,13 +37,21 @@ export class PendingChange {
    *
    * @param decision - Approve or reject.
    * @param actorId - The partner who decides.
-   * @returns What the decision does, or `AlreadyDecided`, `SelfApproval` or
-   *   `MissingChanges`.
+   * @returns What the decision does, or `InvalidDecision`, `AlreadyDecided`,
+   *   `SelfApproval` or `MissingChanges`.
    */
   decide(
     decision: "approve" | "reject",
     actorId: string,
   ): Result<DecisionOutcome, PendingChangeError> {
+    if (decision !== "approve" && decision !== "reject") {
+      return err({
+        kind: "InvalidDecision",
+        message: "a decision is either approve or reject",
+        pendingId: this.id,
+      });
+    }
+
     if (this.status !== "pending") {
       return err({
         kind: "AlreadyDecided",

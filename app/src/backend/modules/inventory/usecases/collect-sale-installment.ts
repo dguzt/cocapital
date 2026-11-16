@@ -41,28 +41,30 @@ export class CollectSaleInstallment {
   async execute(
     input: CollectSaleInstallmentInput,
   ): Promise<Result<{ amount: Cents; margin: Cents }, CreditSaleError>> {
-    const sale = await this.creditSales.findInGroup(
-      input.groupId,
-      input.saleId,
-    );
-
-    if (!sale) {
-      return err({
-        kind: "CreditSaleNotFound",
-        message: "credit sale not found",
-        saleId: input.saleId,
-      });
-    }
-
-    const collection = sale.collect(input.installmentId);
-
-    if (!collection.ok) {
-      return collection;
-    }
-
-    const { installment, costShare } = collection.value;
-
     return this.uow.run(async () => {
+      await this.creditSales.lock(input.saleId);
+
+      const sale = await this.creditSales.findInGroup(
+        input.groupId,
+        input.saleId,
+      );
+
+      if (!sale) {
+        return err({
+          kind: "CreditSaleNotFound",
+          message: "credit sale not found",
+          saleId: input.saleId,
+        });
+      }
+
+      const collection = sale.collect(input.installmentId);
+
+      if (!collection.ok) {
+        return collection;
+      }
+
+      const { installment, costShare } = collection.value;
+
       const movement = await this.addMovement.execute({
         groupId: input.groupId,
         userId: input.userId,
