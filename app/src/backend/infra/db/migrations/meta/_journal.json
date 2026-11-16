@@ -43,6 +43,13 @@
       "when": 1794804376233,
       "tag": "0005_movement_lookup_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794812213502,
+      "tag": "0006_rate_limit_windows",
+      "breakpoints": true
     }
   ]
 }

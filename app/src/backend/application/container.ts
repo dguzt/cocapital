@@ -4,8 +4,10 @@ import { createInjector } from "typed-inject";
 import { db } from "@/backend/infra/db/client";
 import { DrizzleUnitOfWork } from "@/backend/infra/db/drizzle-unit-of-work";
 import { ClerkIdentityProvider } from "@/backend/modules/accounts/adapters/out/clerk/clerk-identity-provider";
+import { DrizzleRateLimiter } from "@/backend/modules/accounts/adapters/out/drizzle/drizzle-rate-limiter";
 import { DrizzleUserRepository } from "@/backend/modules/accounts/adapters/out/drizzle/drizzle-user-repository";
 import { EnsureUser } from "@/backend/modules/accounts/usecases/ensure-user";
+import { ThrottleWrites } from "@/backend/modules/accounts/usecases/throttle-writes";
 import { GetCapitalSummary } from "@/backend/modules/capital/usecases/get-capital-summary";
 import { GetPanel } from "@/backend/modules/capital/usecases/get-panel";
 import { DrizzleContactRepository } from "@/backend/modules/contacts/adapters/out/drizzle/drizzle-contact-repository";
@@ -67,6 +69,7 @@ const injector = createInjector()
 
   .provideClass("users", DrizzleUserRepository)
   .provideClass("identity", ClerkIdentityProvider)
+  .provideClass("rateLimiter", DrizzleRateLimiter)
   .provideClass("groups", DrizzleGroupRepository)
   .provideClass("movements", DrizzleMovementRepository)
   .provideClass("changes", DrizzleChangeRepository)
@@ -98,6 +101,7 @@ const injector = createInjector()
 
 export const useCases = {
   ensureUser: injector.injectClass(EnsureUser),
+  throttleWrites: injector.injectClass(ThrottleWrites),
 
   listMyGroups: injector.injectClass(ListMyGroups),
   getGroupOf: injector.injectClass(GetGroupOf),

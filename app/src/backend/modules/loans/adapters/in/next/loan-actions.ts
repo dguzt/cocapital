@@ -19,6 +19,12 @@ import { todayInLima } from "@/lib/dates";
 export async function createLoanAction(groupId: string, input: NewLoan) {
   const { user, group } = await requireMembership(groupId);
 
+  const throttled = await useCases.throttleWrites.execute({ userId: user.id });
+
+  if (!throttled.ok) {
+    return { ok: false as const, error: throttled.error.kind };
+  }
+
   const result = await useCases.createLoan.execute({
     ...input,
     groupId: group.id,
@@ -49,6 +55,12 @@ export async function collectInstallmentAction(
 ) {
   const { user, group } = await requireMembership(groupId);
 
+  const throttled = await useCases.throttleWrites.execute({ userId: user.id });
+
+  if (!throttled.ok) {
+    return { ok: false as const, error: throttled.error.kind };
+  }
+
   const result = await useCases.collectInstallment.execute({
     groupId: group.id,
     userId: user.id,
@@ -76,6 +88,12 @@ export async function collectInstallmentAction(
  */
 export async function proposeVoidLoanAction(groupId: string, loanId: string) {
   const { user, group } = await requireMembership(groupId);
+
+  const throttled = await useCases.throttleWrites.execute({ userId: user.id });
+
+  if (!throttled.ok) {
+    return { ok: false as const, error: throttled.error.kind };
+  }
 
   const result = await useCases.proposeVoidLoan.execute({
     groupId: group.id,

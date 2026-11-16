@@ -23,6 +23,12 @@ export async function createCreditSaleAction(
 ) {
   const { user, group } = await requireMembership(groupId);
 
+  const throttled = await useCases.throttleWrites.execute({ userId: user.id });
+
+  if (!throttled.ok) {
+    return { ok: false as const, error: throttled.error.kind };
+  }
+
   const result = await useCases.createCreditSale.execute({
     ...input,
     groupId: group.id,
@@ -52,6 +58,12 @@ export async function collectSaleInstallmentAction(
   installmentId: string,
 ) {
   const { user, group } = await requireMembership(groupId);
+
+  const throttled = await useCases.throttleWrites.execute({ userId: user.id });
+
+  if (!throttled.ok) {
+    return { ok: false as const, error: throttled.error.kind };
+  }
 
   const result = await useCases.collectSaleInstallment.execute({
     groupId: group.id,
@@ -85,6 +97,12 @@ export async function replanCreditSaleAction(
 ) {
   const { user, group } = await requireMembership(groupId);
 
+  const throttled = await useCases.throttleWrites.execute({ userId: user.id });
+
+  if (!throttled.ok) {
+    return { ok: false as const, error: throttled.error.kind };
+  }
+
   const result = await useCases.replanCreditSale.execute({
     groupId: group.id,
     userId: user.id,
@@ -114,6 +132,12 @@ export async function proposeVoidCreditSaleAction(
   saleId: string,
 ) {
   const { user, group } = await requireMembership(groupId);
+
+  const throttled = await useCases.throttleWrites.execute({ userId: user.id });
+
+  if (!throttled.ok) {
+    return { ok: false as const, error: throttled.error.kind };
+  }
 
   const result = await useCases.proposeVoidCreditSale.execute({
     groupId: group.id,

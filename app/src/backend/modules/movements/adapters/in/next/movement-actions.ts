@@ -29,6 +29,12 @@ export async function addMovementAction(
 ) {
   const { user, group } = await requireMembership(groupId);
 
+  const throttled = await useCases.throttleWrites.execute({ userId: user.id });
+
+  if (!throttled.ok) {
+    return { ok: false as const, error: throttled.error.kind };
+  }
+
   const validated = ManualMovement.parse({ ...input, today: todayInLima() });
 
   if (!validated.ok) {
@@ -61,6 +67,12 @@ export async function proposeEditAction(
   input: { amountSoles: string; concept: string; costSoles?: string },
 ) {
   const { user, group } = await requireMembership(groupId);
+
+  const throttled = await useCases.throttleWrites.execute({ userId: user.id });
+
+  if (!throttled.ok) {
+    return { ok: false as const, error: throttled.error.kind };
+  }
 
   const amount = solesToCents(input.amountSoles);
 
@@ -107,6 +119,12 @@ export async function proposeEditAction(
 export async function proposeVoidAction(groupId: string, movementId: string) {
   const { user, group } = await requireMembership(groupId);
 
+  const throttled = await useCases.throttleWrites.execute({ userId: user.id });
+
+  if (!throttled.ok) {
+    return { ok: false as const, error: throttled.error.kind };
+  }
+
   const result = await useCases.proposeChange.execute({
     groupId: group.id,
     actorId: user.id,
@@ -138,6 +156,12 @@ export async function decideChangeAction(
   decision: "approve" | "reject",
 ) {
   const { user, group } = await requireMembership(groupId);
+
+  const throttled = await useCases.throttleWrites.execute({ userId: user.id });
+
+  if (!throttled.ok) {
+    return { ok: false as const, error: throttled.error.kind };
+  }
 
   const result = await useCases.decideChange.execute({
     groupId: group.id,

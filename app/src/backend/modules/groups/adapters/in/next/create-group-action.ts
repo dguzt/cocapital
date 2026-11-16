@@ -15,6 +15,12 @@ import { groupPath } from "@/lib/group-path";
 export async function createGroupAction(formData: FormData) {
   const user = await requireUser();
 
+  const throttled = await useCases.throttleWrites.execute({ userId: user.id });
+
+  if (!throttled.ok) {
+    redirect(`/grupos/nuevo?error=${throttled.error.kind}`);
+  }
+
   const result = await useCases.createGroup.execute({
     creator: {
       userId: user.id,

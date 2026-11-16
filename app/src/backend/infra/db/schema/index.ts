@@ -1,3 +1,4 @@
+export * from "@/backend/modules/accounts/adapters/out/drizzle/rate-limit-windows.table";
 export * from "@/backend/modules/accounts/adapters/out/drizzle/users.table";
 export * from "@/backend/modules/contacts/adapters/out/drizzle/contacts.table";
 export * from "@/backend/modules/groups/adapters/out/drizzle/groups.table";
