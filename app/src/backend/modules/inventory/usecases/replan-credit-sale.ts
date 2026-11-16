@@ -36,28 +36,30 @@ export class ReplanCreditSale {
   async execute(
     input: ReplanCreditSaleInput,
   ): Promise<Result<{ fromCount: number; toCount: number }, CreditSaleError>> {
-    const sale = await this.creditSales.findInGroup(
-      input.groupId,
-      input.saleId,
-    );
-
-    if (!sale) {
-      return err({
-        kind: "CreditSaleNotFound",
-        message: "credit sale not found",
-        saleId: input.saleId,
-      });
-    }
-
-    const replan = sale.replan(input.installments);
-
-    if (!replan.ok) {
-      return replan;
-    }
-
-    const { installments, fromCount, toCount } = replan.value;
-
     return this.uow.run(async () => {
+      await this.creditSales.lock(input.saleId);
+
+      const sale = await this.creditSales.findInGroup(
+        input.groupId,
+        input.saleId,
+      );
+
+      if (!sale) {
+        return err({
+          kind: "CreditSaleNotFound",
+          message: "credit sale not found",
+          saleId: input.saleId,
+        });
+      }
+
+      const replan = sale.replan(input.installments);
+
+      if (!replan.ok) {
+        return replan;
+      }
+
+      const { installments, fromCount, toCount } = replan.value;
+
       await this.creditSales.replacePending(sale.id, installments);
 
       await this.planChanges.record({

@@ -128,22 +128,11 @@ export function MovementDialog({
 
   function submitEdit() {
     startTransition(async () => {
-      const result = await proposeEditAction(
-        groupId,
-        movement.id,
-        {
-          amountSoles: draft.amount,
-          concept: draft.concept,
-          costSoles: draft.cost || undefined,
-        },
-        {
-          type: movement.type,
-          amount: movement.amount,
-          cost: movement.cost,
-          concept: movement.concept,
-          date: movement.date,
-        },
-      );
+      const result = await proposeEditAction(groupId, movement.id, {
+        amountSoles: draft.amount,
+        concept: draft.concept,
+        costSoles: draft.cost || undefined,
+      });
       if (result.ok) {
         setOpen(false);
         toast.success(result.applied ? t.changeApplied : t.changeSent);

@@ -101,6 +101,7 @@ export const es = {
     placeholder: "Ej. Inversiones D&R",
     errors: {
       InvalidGroupName: "El nombre debe tener entre 1 y 40 caracteres.",
+      TooManyGroups: "Ya estás en 20 grupos, el máximo.",
     } as Record<string, string>,
     genericError: "Algo salió mal. Intenta de nuevo.",
     creating: "Creando grupo…",
@@ -245,6 +246,7 @@ export const es = {
     errors: {
       InvalidAmount: "Ingresa un monto válido en soles.",
       InvalidType: "Elige un tipo de movimiento.",
+      ConceptTooLong: "El concepto puede tener hasta 200 caracteres.",
     } as Record<string, string>,
     genericError: "Algo salió mal.",
   },
@@ -496,6 +498,8 @@ export const es = {
       ScheduleMismatch: "Las cuotas no suman el precio.",
       ContactNameRequired: "Elige o escribe el nombre del comprador.",
       ItemRequired: "Escribe qué vendes.",
+      ItemTooLong: "Describe lo que vendes en hasta 120 caracteres.",
+      ContactTooLong: "El nombre o el teléfono es demasiado largo.",
       InvalidCost: "El costo debe ser un número válido.",
       InvalidDownPayment: "El pago inicial debe ser menor que el precio.",
     } as Record<string, string>,

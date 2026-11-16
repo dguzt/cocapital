@@ -23,12 +23,11 @@ export default async function PanelPage({
   const { user, group } = await requireMembership(groupId);
 
   const today = todayInLima();
-  const [movements, installments, pendingChanges, capital] = await Promise.all([
-    useCases.listMovements.execute({ groupId: group.id }),
-    useCases.listGroupInstallments.execute({ groupId: group.id }),
-    useCases.listPendingChanges.execute({ groupId: group.id }),
-    useCases.getCapitalSummary.execute({ groupId: group.id }),
-  ]);
+  const [{ movements, installments, capital }, pendingChanges] =
+    await Promise.all([
+      useCases.getPanel.execute({ groupId: group.id }),
+      useCases.listPendingChanges.execute({ groupId: group.id }),
+    ]);
   const t = await getDictionary();
   const overdueCount = installments.filter(
     (i) => i.status === "pending" && isOverdue(i.dueDate, today),

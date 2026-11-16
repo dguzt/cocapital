@@ -3,8 +3,9 @@ import type { PendingChangeError } from "@/backend/modules/movements/domain/erro
 import type { MovementType } from "@/backend/modules/movements/domain/movement";
 import type { ChangeApplier } from "@/backend/modules/movements/ports/change-applier";
 import type { ChangeRepository } from "@/backend/modules/movements/ports/change-repository";
+import type { MovementRepository } from "@/backend/modules/movements/ports/movement-repository";
 import type { UnitOfWork } from "@/backend/shared/ports/unit-of-work";
-import { ok, type Result } from "@/lib/result";
+import { err, ok, type Result } from "@/lib/result";
 
 export type SubmitChangeInput = {
   proposal: ChangeProposal;
@@ -22,10 +23,11 @@ export type SubmittedChange = {
  * author and applied at once, so the history still records it.
  */
 export class SubmitChange {
-  static inject = ["changes", "applier", "uow"] as const;
+  static inject = ["changes", "movements", "applier", "uow"] as const;
 
   constructor(
     private readonly changes: ChangeRepository,
+    private readonly movements: MovementRepository,
     private readonly applier: ChangeApplier,
     private readonly uow: UnitOfWork,
   ) {}
@@ -40,14 +42,32 @@ export class SubmitChange {
   async execute(
     input: SubmitChangeInput,
   ): Promise<Result<SubmittedChange, PendingChangeError>> {
-    if (!input.alone) {
-      const stored = await this.changes.propose(input.proposal);
+    const { proposal } = input;
 
-      return ok({ pendingId: stored.id, applied: false });
+    if (!input.alone) {
+      const stored = await this.changes.propose(proposal);
+
+      return stored
+        ? ok({ pendingId: stored.id, applied: false })
+        : this.alreadyPending(proposal.movementId);
     }
 
     return this.uow.run(async () => {
-      const stored = await this.changes.propose(input.proposal);
+      const status = await this.movements.lock(proposal.movementId);
+
+      if (status !== "active") {
+        return err({
+          kind: "MovementVoided",
+          message: "cannot modify a voided movement",
+          movementId: proposal.movementId,
+        });
+      }
+
+      const stored = await this.changes.propose(proposal);
+
+      if (!stored) {
+        return this.alreadyPending(proposal.movementId);
+      }
 
       await this.changes.decide(stored.id, {
         status: "approved",
@@ -60,6 +80,16 @@ export class SubmitChange {
       );
 
       return ok({ pendingId: stored.id, applied: true });
+    });
+  }
+
+  private alreadyPending(
+    movementId: string,
+  ): Result<SubmittedChange, PendingChangeError> {
+    return err({
+      kind: "ChangeAlreadyPending",
+      message: "this movement already has a change awaiting approval",
+      movementId,
     });
   }
 }

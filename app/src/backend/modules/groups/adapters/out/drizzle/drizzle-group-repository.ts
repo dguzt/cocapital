@@ -106,4 +106,12 @@ export class DrizzleGroupRepository implements GroupRepository {
 
     return rows.map((row) => GroupMapper.toDomain(row, members));
   }
+
+  async lock(groupId: string): Promise<void> {
+    await this.db
+      .select({ id: Groups.id })
+      .from(Groups)
+      .where(eq(Groups.id, groupId))
+      .for("update");
+  }
 }

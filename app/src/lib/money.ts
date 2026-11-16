@@ -1,11 +1,39 @@
 /** Money as whole cents: S/ 36.66 is 3666. */
 export type Cents = number;
 
-/** Parse user-entered soles ("36.66", "1,234.5") into cents. NaN-safe. */
-export function solesToCents(input: string | number): Cents | null {
-  const n = typeof input === "number" ? input : Number(input.replace(/,/g, ""));
-  if (!Number.isFinite(n) || n < 0) return null;
-  return Math.round(n * 100);
+/** The largest amount the ledger stores: S/ 20,000,000.00. */
+export const MAX_CENTS = 2_000_000_000;
+
+const SOLES = /^\d+(\.\d+)?$/;
+
+/**
+ * Parses soles typed by a partner ("36.66", "1,234.5") into cents.
+ *
+ * @param input - The soles, as typed or as a number.
+ * @returns The cents, or null when it is not a plain non-negative amount up to {@link MAX_CENTS}.
+ */
+export function solesToCents(input: unknown): Cents | null {
+  if (typeof input === "number") {
+    return toCents(input);
+  }
+
+  if (typeof input !== "string") {
+    return null;
+  }
+
+  const plain = input.trim().replace(/,/g, "");
+
+  return SOLES.test(plain) ? toCents(Number(plain)) : null;
+}
+
+function toCents(soles: number): Cents | null {
+  if (!Number.isFinite(soles) || soles < 0) {
+    return null;
+  }
+
+  const cents = Math.round(soles * 100);
+
+  return cents > MAX_CENTS ? null : cents;
 }
 
 /** Format cents for display: 123456 → "S/ 1,234.56". */

@@ -8,4 +8,5 @@ export type PendingChangeError =
   | AppError<"MissingChanges", { movementId: string }>
   | AppError<"ChangeNotFound", { pendingId: string }>
   | AppError<"AlreadyDecided", { pendingId: string; status: string }>
-  | AppError<"SelfApproval", { pendingId: string; actorId: string }>;
+  | AppError<"SelfApproval", { pendingId: string; actorId: string }>
+  | AppError<"InvalidDecision", { pendingId: string }>;

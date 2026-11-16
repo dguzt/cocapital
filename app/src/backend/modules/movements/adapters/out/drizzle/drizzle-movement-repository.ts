@@ -1,9 +1,12 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 
 import type { Database } from "@/backend/infra/db/client";
 import { Users } from "@/backend/modules/accounts/adapters/out/drizzle/users.table";
 import type { LedgerMovement } from "@/backend/modules/movements/domain/ledger-movement";
-import type { MovementSnapshot } from "@/backend/modules/movements/domain/movement";
+import type {
+  MovementSnapshot,
+  MovementStatus,
+} from "@/backend/modules/movements/domain/movement";
 import type { MovementEntry } from "@/backend/modules/movements/domain/movement-entry";
 import type { StoredMovement } from "@/backend/modules/movements/domain/stored-movement";
 import type { MovementRepository } from "@/backend/modules/movements/ports/movement-repository";
@@ -50,14 +53,39 @@ export class DrizzleMovementRepository implements MovementRepository {
       .where(eq(Movements.id, movementId));
   }
 
+  async voidMany(movementIds: readonly string[]): Promise<void> {
+    if (movementIds.length === 0) {
+      return;
+    }
+
+    await this.db
+      .update(Movements)
+      .set({ status: "voided" })
+      .where(inArray(Movements.id, [...movementIds]));
+  }
+
   async applyEdit(
     movementId: string,
     snapshot: MovementSnapshot,
   ): Promise<void> {
     await this.db
       .update(Movements)
-      .set({ ...snapshot })
+      .set({
+        amount: snapshot.amount,
+        cost: snapshot.cost,
+        concept: snapshot.concept,
+      })
       .where(eq(Movements.id, movementId));
+  }
+
+  async lock(movementId: string): Promise<MovementStatus | null> {
+    const [row] = await this.db
+      .select({ status: Movements.status })
+      .from(Movements)
+      .where(eq(Movements.id, movementId))
+      .for("update");
+
+    return row?.status ?? null;
   }
 
   private ledger() {

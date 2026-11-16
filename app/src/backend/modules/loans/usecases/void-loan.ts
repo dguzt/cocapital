@@ -1,6 +1,6 @@
 import type { InstallmentRepository } from "@/backend/modules/loans/ports/installment-repository";
 import type { LoanRepository } from "@/backend/modules/loans/ports/loan-repository";
-import type { VoidEntry } from "@/backend/modules/movements/usecases/void-entry";
+import type { VoidEntries } from "@/backend/modules/movements/usecases/void-entries";
 
 export type VoidLoanInput = {
   lendMovementId: string;
@@ -12,12 +12,12 @@ export type VoidLoanInput = {
  * back out.
  */
 export class VoidLoan {
-  static inject = ["loans", "installments", "voidEntry"] as const;
+  static inject = ["loans", "installments", "voidEntries"] as const;
 
   constructor(
     private readonly loans: LoanRepository,
     private readonly installments: InstallmentRepository,
-    private readonly voidEntry: VoidEntry,
+    private readonly voidEntries: VoidEntries,
   ) {}
 
   /**
@@ -34,14 +34,14 @@ export class VoidLoan {
       throw new Error("no loan owns this lend movement");
     }
 
+    await this.loans.lock(loanId);
+
     const repayMovementIds = await this.installments.repayMovementIdsOf(loanId);
 
     await this.loans.void(loanId);
 
-    await this.voidEntry.execute({ movementId: input.lendMovementId });
-
-    for (const movementId of repayMovementIds) {
-      await this.voidEntry.execute({ movementId });
-    }
+    await this.voidEntries.execute({
+      movementIds: [input.lendMovementId, ...repayMovementIds],
+    });
   }
 }

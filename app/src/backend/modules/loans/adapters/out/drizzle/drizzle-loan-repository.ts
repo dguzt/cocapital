@@ -80,6 +80,16 @@ export class DrizzleLoanRepository implements LoanRepository {
     return inserted.id;
   }
 
+  async lock(loanId: string): Promise<"active" | "voided" | null> {
+    const [row] = await this.db
+      .select({ status: Loans.status })
+      .from(Loans)
+      .where(eq(Loans.id, loanId))
+      .for("update");
+
+    return row?.status ?? null;
+  }
+
   async void(loanId: string): Promise<void> {
     await this.db
       .update(Loans)

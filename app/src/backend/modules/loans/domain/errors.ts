@@ -10,4 +10,5 @@ export type LoanError =
   | AppError<"LoanNotFound", { loanId: string }>
   | AppError<"LoanAlreadyVoided", { loanId: string }>
   | AppError<"InvalidInstallments", { reason: string }>
+  | AppError<"InvalidLoanTerms", { reason: string }>
   | AppError<"InstallmentNotCollectable", { installmentId: string }>;

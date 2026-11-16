@@ -35,5 +35,10 @@ export const CreditSaleInstallments = pgTable(
       () => Movements.id,
     ),
   },
-  (t) => [index("credit_sale_installments_sale_idx").on(t.saleId)],
+  (t) => [
+    index("credit_sale_installments_sale_idx").on(t.saleId),
+    index("credit_sale_installments_collect_movement_idx").on(
+      t.collectMovementId,
+    ),
+  ],
 );

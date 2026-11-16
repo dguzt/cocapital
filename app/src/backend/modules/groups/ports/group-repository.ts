@@ -42,4 +42,11 @@ export interface GroupRepository {
    * @param member - The partner and the seat they take.
    */
   addMember(groupId: string, member: Member): Promise<void>;
+
+  /**
+   * Holds the group until the unit of work ends, so seats are counted one join at a time.
+   *
+   * @param groupId - The group.
+   */
+  lock(groupId: string): Promise<void>;
 }

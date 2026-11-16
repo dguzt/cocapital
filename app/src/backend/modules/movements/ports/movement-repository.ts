@@ -1,5 +1,8 @@
 import type { LedgerMovement } from "@/backend/modules/movements/domain/ledger-movement";
-import type { MovementSnapshot } from "@/backend/modules/movements/domain/movement";
+import type {
+  MovementSnapshot,
+  MovementStatus,
+} from "@/backend/modules/movements/domain/movement";
 import type { MovementEntry } from "@/backend/modules/movements/domain/movement-entry";
 import type { StoredMovement } from "@/backend/modules/movements/domain/stored-movement";
 
@@ -47,4 +50,19 @@ export interface MovementRepository {
    * @param snapshot - Its new amount, cost, concept and date.
    */
   applyEdit(movementId: string, snapshot: MovementSnapshot): Promise<void>;
+
+  /**
+   * Holds the movement until the unit of work ends, so no one else changes it meanwhile.
+   *
+   * @param movementId - The movement.
+   * @returns Its status, or null when it does not exist.
+   */
+  lock(movementId: string): Promise<MovementStatus | null>;
+
+  /**
+   * Marks several movements voided in one write.
+   *
+   * @param movementIds - The movements.
+   */
+  voidMany(movementIds: readonly string[]): Promise<void>;
 }

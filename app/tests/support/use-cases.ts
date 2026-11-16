@@ -40,7 +40,11 @@ export const proposeMovementChange = (
     movementId,
     alone,
     kind,
-    after,
+    edit: after && {
+      amount: after.amount,
+      cost: after.cost,
+      concept: after.concept,
+    },
   });
 
 export const decideMovementChange = (

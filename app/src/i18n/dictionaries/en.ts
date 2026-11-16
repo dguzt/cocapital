@@ -104,6 +104,7 @@ export const en: Dictionary = {
     placeholder: "E.g. D&R Investments",
     errors: {
       InvalidGroupName: "The name must be 1 to 40 characters.",
+      TooManyGroups: "You're already in 20 groups, the maximum.",
     },
     genericError: "Something went wrong. Try again.",
     creating: "Creating group…",
@@ -249,6 +250,7 @@ export const en: Dictionary = {
     errors: {
       InvalidAmount: "Enter a valid amount in soles.",
       InvalidType: "Pick a movement type.",
+      ConceptTooLong: "The concept can be up to 200 characters.",
     },
     genericError: "Something went wrong.",
   },
@@ -494,6 +496,8 @@ export const en: Dictionary = {
       ScheduleMismatch: "The installments don't add up to the price.",
       ContactNameRequired: "Pick or type the buyer's name.",
       ItemRequired: "Write what you're selling.",
+      ItemTooLong: "Describe what you're selling in up to 120 characters.",
+      ContactTooLong: "The name or phone is too long.",
       InvalidCost: "The cost must be a valid number.",
       InvalidDownPayment: "The down payment must be less than the price.",
     },

@@ -7,7 +7,8 @@ import type { InstallmentRepository } from "@/backend/modules/loans/ports/instal
 import type { LoanRepository } from "@/backend/modules/loans/ports/loan-repository";
 import type { AddMovement } from "@/backend/modules/movements/usecases/add-movement";
 import type { UnitOfWork } from "@/backend/shared/ports/unit-of-work";
-import { ok, type Result } from "@/lib/result";
+import { isCalendarDate, isFrequency } from "@/lib/dates";
+import { err, ok, type Result } from "@/lib/result";
 
 export type CreateLoanInput = NewLoan & {
   groupId: string;
@@ -47,6 +48,16 @@ export class CreateLoan {
   async execute(
     input: CreateLoanInput,
   ): Promise<Result<{ loanId: string }, LoanError | ContactError>> {
+    const brokenTerm = this.brokenTerm(input);
+
+    if (brokenTerm) {
+      return err({
+        kind: "InvalidLoanTerms",
+        message: `invalid loan terms: ${brokenTerm}`,
+        reason: brokenTerm,
+      });
+    }
+
     const schedule = Schedule.of(input.installments, input.capital);
 
     if (!schedule.ok) {
@@ -91,5 +102,21 @@ export class CreateLoan {
         return ok({ loanId });
       },
     );
+  }
+
+  private brokenTerm(input: NewLoan): string | null {
+    if (!Number.isInteger(input.rateBps) || input.rateBps < 0) {
+      return "rate";
+    }
+
+    if (!isFrequency(input.frequency)) {
+      return "frequency";
+    }
+
+    if (!isCalendarDate(input.startDate)) {
+      return "start-date";
+    }
+
+    return null;
   }
 }

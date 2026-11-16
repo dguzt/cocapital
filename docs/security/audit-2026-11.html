@@ -1,0 +1,292 @@
+<title>Auditoría de seguridad CoCapital</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Layout: one reading column; summary strip, then findings ledger grouped by severity, then method and what was ruled out. */
+:root {
+  --bg: #f6f7f5; --surface: #ffffff; --fg: #1b2420; --muted: #5d6b64; --line: #dde3df;
+  --accent: #1f6f5c;
+  --crit: #b3261e; --crit-bg: #fbe9e7; --med: #9a5b00; --med-bg: #fdf1dc; --low: #3d5a80; --low-bg: #e8eef6;
+  --ok: #1f6f5c; --ok-bg: #e3f2ec; --info: #5d6b64; --info-bg: #eceeed;
+  --display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121715; --surface: #1a211e; --fg: #e4ebe7; --muted: #9aa8a1; --line: #2c3631;
+  --accent: #5cc2a5;
+  --crit: #ff8a80; --crit-bg: #3a1c1a; --med: #f0b45a; --med-bg: #34280f; --low: #9bb8e0; --low-bg: #1c2633;
+  --ok: #5cc2a5; --ok-bg: #16302a; --info: #9aa8a1; --info-bg: #222a27; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #121715; --surface: #1a211e; --fg: #e4ebe7; --muted: #9aa8a1; --line: #2c3631;
+  --accent: #5cc2a5;
+  --crit: #ff8a80; --crit-bg: #3a1c1a; --med: #f0b45a; --med-bg: #34280f; --low: #9bb8e0; --low-bg: #1c2633;
+  --ok: #5cc2a5; --ok-bg: #16302a; --info: #9aa8a1; --info-bg: #222a27; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font: 15px/1.55 var(--body); }
+.wrap { max-width: 980px; margin: 0 auto; padding-block: 32px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 36px; }
+h1, h2 { font-family: var(--display); text-wrap: balance; margin: 0; }
+h1 { font-size: 30px; line-height: 1.15; }
+h2 { font-size: 20px; }
+p { margin: 0; max-width: 68ch; }
+.muted { color: var(--muted); }
+code, .mono { font-family: var(--mono); font-size: 0.86em; }
+header { display: grid; gap: 10px; }
+.eyebrow { font: 500 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 2px; }
+.stat b { font: 600 26px var(--display); font-variant-numeric: tabular-nums; }
+.stat span { font-size: 13px; color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.filters button { font: 500 13px var(--body); background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.filters button[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.filters button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pill { display: inline-block; font: 500 11px var(--mono); letter-spacing: .05em; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
+.sev-alta { color: var(--crit); background: var(--crit-bg); }
+.sev-media { color: var(--med); background: var(--med-bg); }
+.sev-baja { color: var(--low); background: var(--low-bg); }
+.sev-info { color: var(--info); background: var(--info-bg); }
+.st-fixed { color: var(--ok); background: var(--ok-bg); }
+.st-open { color: var(--med); background: var(--med-bg); }
+.st-follow { color: var(--info); background: var(--info-bg); }
+.list { display: grid; gap: 10px; }
+details.f { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; border-left: 4px solid var(--line); }
+details.f[data-sev="alta"] { border-left-color: var(--crit); }
+details.f[data-sev="media"] { border-left-color: var(--med); }
+details.f[data-sev="baja"] { border-left-color: var(--low); }
+details.f summary { list-style: none; cursor: pointer; padding: 12px 16px; display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: start; }
+details.f summary::-webkit-details-marker { display: none; }
+.fid { font: 500 13px var(--mono); color: var(--muted); padding-top: 2px; }
+.ftitle { font-weight: 600; min-width: 0; }
+.ftitle small { display: block; font-weight: 400; color: var(--muted); font-size: 13px; margin-top: 2px; }
+.tags { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.fbody { padding: 0 16px 16px 92px; display: grid; gap: 10px; font-size: 14px; }
+.fbody dl { display: grid; grid-template-columns: 110px 1fr; gap: 6px 14px; margin: 0; }
+.fbody dt { color: var(--muted); font-size: 13px; }
+.fbody dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+pre { margin: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; overflow-x: auto; font: 12.5px/1.5 var(--mono); }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: grid; gap: 8px; align-content: start; }
+.card ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14px; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 560px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 500 12px var(--mono); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+tr:last-child td { border-bottom: 0; }
+td.num { font-variant-numeric: tabular-nums; text-align: right; }
+section { display: grid; gap: 14px; }
+@media (max-width: 600px) {
+  details.f summary { grid-template-columns: 1fr; gap: 6px; }
+  .tags { justify-content: flex-start; }
+  .fbody { padding: 0 16px 16px 16px; }
+  .fbody dl { grid-template-columns: 1fr; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Rama security/baseline · 15 nov 2026</div>
+    <h1>Auditoría de seguridad de CoCapital</h1>
+    <p class="muted">Cuatro frentes auditados en paralelo. Cada hallazgo de esta página tiene un test local que fallaba contra el código de <code>main</code>. Las sospechas que no se pudieron reproducir están en la sección de descartados, con el test que lo demuestra.</p>
+  </header>
+
+  <div class="strip" id="strip"></div>
+
+  <section>
+    <h2>Hallazgos</h2>
+    <div class="filters" role="group" aria-label="Filtrar por severidad">
+      <button type="button" data-filter="all" aria-pressed="true">Todos</button>
+      <button type="button" data-filter="alta" aria-pressed="false">Alta</button>
+      <button type="button" data-filter="media" aria-pressed="false">Media</button>
+      <button type="button" data-filter="baja" aria-pressed="false">Baja</button>
+      <button type="button" data-filter="info" aria-pressed="false">Higiene</button>
+    </div>
+    <div class="list" id="list"></div>
+  </section>
+
+  <section>
+    <h2>Cómo se probó</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Frente</th><th>Modelo · esfuerzo</th><th>Cobertura</th><th class="num">Tests</th><th class="num">Fallaban</th></tr></thead>
+        <tbody>
+          <tr><td>A · Fuga entre grupos y auth</td><td>Opus · high</td><td>Las 14 server actions, todas las páginas de <code>/g/[groupId]</code>, <code>join</code>, <code>og</code>, el proxy y todos los métodos de repositorio</td><td class="num">47</td><td class="num">4</td></tr>
+          <tr><td>B · Libro de movimientos y validación</td><td>Opus · high</td><td>Todos los casos de uso que escriben, todas las entradas de las actions y carreras reales con <code>Promise.all</code> contra Postgres</td><td class="num">74</td><td class="num">37</td></tr>
+          <tr><td>C · Secretos, configuración y headers</td><td>Sonnet · high</td><td>Historial de git, bundle de <code>next build</code>, <code>curl -I</code> contra <code>next start</code>, DTOs que llegan al cliente</td><td class="num">8</td><td class="num">8</td></tr>
+          <tr><td>D · Dependencias y recursos</td><td>Sonnet · high</td><td><code>npm audit</code> con alcance de cada advisory, conteo de consultas por página y <code>EXPLAIN</code> sobre 60k filas</td><td class="num">17</td><td class="num">15</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted">Base de datos: rama <code>test</code> de Neon, nunca dev ni prod. Las corridas de integración se hicieron por turnos con un lock porque cada test vacía la base. Después, Claude volvió a correr toda la suite para confirmar los rojos.</p>
+  </section>
+
+  <section>
+    <h2>Descartado con evidencia</h2>
+    <div class="grid2">
+      <div class="card">
+        <b>Aislamiento entre grupos</b>
+        <ul>
+          <li>Ninguna action ni página deja leer o escribir datos de otro grupo. 15 tests comparan el grupo B antes y después de cada llamada.</li>
+          <li>Las consultas sin <code>groupId</code> solo se llaman con ids que salen de una búsqueda ya filtrada por grupo.</li>
+          <li>Un anónimo o un no-socio recibe el mismo 404 exista o no el grupo.</li>
+          <li>Códigos de invitación: 31⁸ combinaciones, coincidencia exacta, sin prefijos ni comodines.</li>
+          <li>El proxy protege <code>/g</code>, <code>/join</code> y <code>/grupos/nuevo</code>. Solo son públicas <code>/</code>, <code>/og</code> y sign-in/up.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <b>Libro de movimientos</b>
+        <ul>
+          <li>Nadie puede aprobar su propia propuesta, aprobar dos veces ni aprobar algo ya rechazado.</li>
+          <li>Una cuota no se cobra dos veces, ni siquiera con dos cobros simultáneos.</li>
+          <li>Un fallo a mitad de un caso de uso revierte todo (unit of work).</li>
+          <li>Un grupo de dos socios nunca se trata como si tuviera uno solo.</li>
+          <li>Montos negativos, cero, NaN o Infinity se rechazan en los movimientos manuales.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <b>Secretos y cliente</b>
+        <ul>
+          <li>Ningún secreto en las 80 commits de historial. Los <code>.env</code> nunca se versionaron.</li>
+          <li>Ni <code>DATABASE_URL</code> ni <code>CLERK_SECRET_KEY</code> aparecen en <code>.next/static</code>.</li>
+          <li>No se publican source maps al navegador.</li>
+          <li>Solo DTOs llegan al cliente, sin emails ni clerkIds de otros socios.</li>
+          <li>No hay open redirect en el código propio y <code>?l=</code> solo acepta es/en.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <b>Dependencias y rendimiento</b>
+        <ul>
+          <li>Ningún N+1 en las lecturas: el número de consultas no crece con las filas.</li>
+          <li>Las lecturas por grupo usan índice, sin Seq Scan.</li>
+          <li>De 26 advisories de producción, 24 no tienen camino de ejecución en la app: vienen de la CLI de shadcn, del build o de features que no usamos.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const S = { fixed: ["Arreglado", "st-fixed"], open: ["Confirmado", "st-open"], follow: ["Fuera de este PR", "st-follow"] };
+const F = [
+  { id: "A1·B1", sev: "alta", st: "fixed", t: "Editar un movimiento permite reescribir cualquier columna", s: "Mover un movimiento al libro de otro grupo, firmarlo como otro socio o cambiarle el tipo",
+    where: "movement-actions.ts:80 confía en el <code>before</code> que manda el cliente; drizzle-movement-repository.ts:59 hace <code>.set({ ...snapshot })</code>",
+    proof: "tenancy/movement-edit-mass-assignment.int.test.ts (4) · ledger/movement-actions.int.test.ts (7)",
+    out: "expected [ …(7) ] to not include '14997085-…'   // el movimiento de A aparece en el libro de B",
+    fix: "El servidor arma <code>after</code> desde el movimiento guardado y solo cambia monto, concepto y costo. <code>applyEdit</code> escribe solo esas columnas y filtra por grupo." },
+  { id: "B2", sev: "alta", st: "fixed", t: "Dos decisiones simultáneas sobre un mismo cambio se aplican las dos", s: "Aprobar y rechazar a la vez: el movimiento queda anulado y el historial dice «rechazado»",
+    where: "decide-change.ts:42 lee el estado fuera de la transacción; drizzle-change-repository.ts:74 actualiza sin <code>status = 'pending'</code>",
+    proof: "ledger/approvals.int.test.ts · 5 de 5 rondas",
+    out: "approve.ok=true reject.ok=true status=rejected voided=true",
+    fix: "Decidir con <code>UPDATE … WHERE status = 'pending' RETURNING</code> dentro de la transacción. Sin fila devuelta, error <code>AlreadyDecided</code>." },
+  { id: "B5·D6", sev: "alta", st: "fixed", t: "Un préstamo acepta capital negativo y cuotas sin límite", s: "Un capital de −10 000 registra un desembolso negativo que crea caja de la nada. Una sola petición escribe 2000 cuotas",
+    where: "loans/domain/schedule.ts:70 (<code>Schedule.of</code>) y credit-sale-plan.ts:93 no validan signo, tasa, numeración ni cantidad",
+    proof: "ledger/loans.int.test.ts (6) · resources/unbounded.int.test.ts (2)",
+    out: "createLoan with 2000 cuotas -> ACCEPTED",
+    fix: "Capital positivo, principal e interés ≥ 0, de 1 a 360 cuotas numeradas 1..n y tasa entera ≥ 0, en el dominio." },
+  { id: "D1", sev: "alta", st: "fixed", t: "Next 16.2.10 tiene dos DoS en server actions", s: "GHSA-p3m5-59mp-jv5r y GHSA-m99w-x7hq-7vfj, sin workaround; cualquier cuenta gratis alcanza las actions",
+    where: "package.json · <code>next 16.2.10</code>",
+    proof: "npm audit, con el rango afectado, más 4 archivos <code>\"use server\"</code>",
+    out: "next <16.4.1 · Server Actions CPU exhaustion · fix 16.4.1",
+    fix: "Subir Next a 16.4.x." },
+  { id: "B4", sev: "media", st: "fixed", t: "En un grupo de un solo socio, dos cambios simultáneos se aplican los dos", s: "Una edición y una anulación a la vez dejan un movimiento anulado y editado",
+    where: "submit-change.ts:49 revisa el estado antes de la transacción",
+    proof: "ledger/approvals.int.test.ts (2)", out: "2 approved history rows",
+    fix: "Bloquear la fila del movimiento (<code>FOR UPDATE</code>) y volver a revisar dentro de la transacción." },
+  { id: "B6", sev: "media", st: "fixed", t: "Cobrar mientras se anula el préstamo deja un cobro vivo", s: "La caja queda inflada con una cuota de un préstamo anulado",
+    where: "collect-installment.ts:55 y void-loan.ts:37 sin bloqueo",
+    proof: "ledger/loans.int.test.ts", out: "round 0: voided loan with 1 live repay",
+    fix: "<code>FOR UPDATE</code> sobre el préstamo en cobrar y anular. Lo mismo en ventas a crédito." },
+  { id: "B8", sev: "media", st: "fixed", t: "Dos re-planes simultáneos duplican la deuda del comprador", s: "Una venta de S/ 100 queda debiendo S/ 180",
+    where: "replan-credit-sale.ts:39 lee fuera de la transacción",
+    proof: "ledger/credit-sales.int.test.ts", out: "expected 18000 to be 10000",
+    fix: "<code>FOR UPDATE</code> sobre la venta y volver a leer las cuotas pendientes dentro de la transacción." },
+  { id: "B13", sev: "media", st: "fixed", t: "Joins simultáneos pasan el límite de 10 socios", s: "12 socios en un grupo de capacidad 10",
+    where: "join-group.ts:44 cuenta y luego inserta",
+    proof: "ledger/groups.int.test.ts", out: "expected 12 to be less than or equal to 10",
+    fix: "Bloquear la fila del grupo antes de contar." },
+  { id: "C1", sev: "media", st: "fixed", t: "La app no envía headers de seguridad", s: "Se puede incrustar en un iframe y engañar al socio para que pulse aprobar o anular. Anuncia X-Powered-By",
+    where: "next.config.ts sin <code>headers()</code> ni <code>poweredByHeader: false</code>",
+    proof: "config/security-headers.test.ts (3) · curl -I sobre next start", out: "X-Powered-By: Next.js   // único header de seguridad presente",
+    fix: "<code>frame-ancestors 'none'</code>, X-Frame-Options, nosniff, Referrer-Policy y <code>poweredByHeader: false</code>." },
+  { id: "D10", sev: "media", st: "fixed", t: "Faltan índices en las búsquedas por movimiento", s: "Anular o deshacer un cobro recorre las filas de todos los grupos",
+    where: "loans.lend_movement_id, credit_sales.sale_movement_id, installments.repay_movement_id, credit_sale_installments.collect_movement_id",
+    proof: "resources/indexes.int.test.ts · EXPLAIN con 60k filas", out: "Seq Scan on installments",
+    fix: "Migración con los 4 índices." },
+  { id: "D7·B11", sev: "media", st: "fixed", t: "Los textos no tienen límite de largo", s: "Se guardan conceptos y nombres de 200 000 caracteres",
+    where: "manual-movement.ts:73, create-credit-sale.ts:52, Contact.create",
+    proof: "resources/round-trips.int.test.ts · ledger/movement-actions.int.test.ts", out: "200k-char concept stored: true",
+    fix: "Límites en el dominio, como <code>Group.MAX_NAME_LENGTH</code>." },
+  { id: "D3", sev: "media", st: "follow", t: "Las listas cargan todo el historial en cada petición", s: "El Panel lee el libro completo y todas las cuotas",
+    where: "listByGroup de movimientos, cuotas, re-planes y ventas",
+    proof: "resources/unbounded.int.test.ts (3)", out: "expected 601 to be less than or equal to 100",
+    fix: "Paginación y resumen de capital con SUM en SQL. Es una decisión de UI, así que queda fuera de este PR." },
+  { id: "D9", sev: "media", st: "follow", t: "No hay rate limit en ninguna action", s: "Un socio puede crear filas sin freno",
+    where: "Sin limitador en src ni en la configuración",
+    proof: "Búsqueda en el código, más D6, D7 y D8", out: "—",
+    fix: "Limitador por usuario (Upstash o Vercel KV). Requiere infraestructura nueva: fuera de este PR." },
+  { id: "D8", sev: "baja", st: "fixed", t: "Un socio puede fundar grupos sin límite", s: "25 de 25 intentos creados",
+    where: "create-group.ts", proof: "resources/round-trips.int.test.ts", out: "groups founded by one user: 25 of 25",
+    fix: "Tope de grupos por usuario." },
+  { id: "B3", sev: "baja", st: "fixed", t: "Dos propuestas simultáneas sobre un movimiento dan error 500", s: "El índice único salva los datos, pero el error no se maneja",
+    where: "propose-change.ts:79, propose-system-void.ts:63", proof: "ledger/approvals.int.test.ts", out: "expected [ 'rejected', 'fulfilled' ]",
+    fix: "Traducir la violación 23505 a <code>ChangeAlreadyPending</code>." },
+  { id: "B7", sev: "baja", st: "fixed", t: "Anular un cobro de un préstamo ya anulado reabre la cuota", s: "Queda una cuota pendiente en un préstamo muerto",
+    where: "decide-change.ts no revisa que el movimiento siga activo", proof: "ledger/loans.int.test.ts", out: "expected true to be false",
+    fix: "Dentro de la transacción, error <code>MovementVoided</code> si ya está anulado." },
+  { id: "B9", sev: "baja", st: "fixed", t: "Fechas imposibles y frecuencias inválidas dan error 500", s: "<code>2027-02-30</code> pasa la validación",
+    where: "IsoDate.isValid usa Date.parse", proof: "ledger/loans.int.test.ts (4) · ledger/credit-sales.int.test.ts (4)", out: "thrown: Failed query: insert into \"loans\" …",
+    fix: "Validar la fecha con ida y vuelta, la frecuencia contra la lista y los céntimos como enteros." },
+  { id: "B10·D11", sev: "baja", st: "fixed", t: "El parseo de montos acepta hexadecimal y no tiene tope", s: "«0x10» se registra como S/ 16; montos fuera de int4 revientan con la consulta en el mensaje",
+    where: "src/lib/money.ts:6 usa <code>Number()</code>", proof: "ledger/movement-actions.int.test.ts (4) · resources", out: "[ { ok: true }, { ok: true } ]",
+    fix: "Regex estricta, solo strings y un tope dentro de int4." },
+  { id: "B12", sev: "baja", st: "fixed", t: "Cualquier decisión distinta de «reject» aprueba", s: "Un valor inesperado del cliente aprueba el cambio",
+    where: "pending-change.ts:65", proof: "ledger/approvals.int.test.ts", out: "expected 'voided' to be 'active'",
+    fix: "Aprobar solo con <code>decision === 'approve'</code>." },
+  { id: "C2", sev: "baja", st: "fixed", t: "?error=__proto__ tumba la página de nuevo grupo", s: "Solo afecta al propio usuario con sesión",
+    where: "onboarding.tsx:51", proof: "config/error-param-lookup.test.ts (5)", out: "Objects are not valid as a React child",
+    fix: "<code>Object.hasOwn</code> antes de leer el diccionario." },
+  { id: "D4·D5", sev: "baja", st: "fixed", t: "Lecturas y escrituras de más", s: "El Panel lee el libro dos veces; anular hace un UPDATE por cuota",
+    where: "g/[groupId]/page.tsx:26, void-loan.ts:43, void-credit-sale.ts:43", proof: "resources/round-trips.int.test.ts (3)", out: "void loan queries: 2 cuotas = 13 | 8 cuotas = 19",
+    fix: "Derivar el capital de lo ya leído y <code>voidMany(ids)</code>." },
+  { id: "H1", sev: "info", st: "fixed", t: "Sin guarda server-only", s: "Hoy nada se filtra, pero un import futuro desde el cliente no fallaría en el build",
+    where: "infra/db/client.ts, application/container.ts", proof: "Build sin fuga (grep en .next/static)", out: "—",
+    fix: "<code>import \"server-only\"</code> en esos módulos." },
+  { id: "D2", sev: "info", st: "fixed", t: "shadcn está en dependencies", s: "Arrastra 19 de los 26 advisories de producción sin usarse en runtime",
+    where: "package.json", proof: "npm ls --omit=dev", out: "—", fix: "Moverlo a devDependencies." },
+  { id: "Obs", sev: "info", st: "follow", t: "Observaciones sin probar", s: "Invitaciones que no expiran, id no-UUID que da 500 y el <code>redirect_url</code> de Clerk en el navegador",
+    where: "join/[code], prestamos/[id], ventas/[id]", proof: "Sin test todavía", out: "—", fix: "Decidir en producto si las invitaciones expiran." },
+];
+const SEV = { alta: "Alta", media: "Media", baja: "Baja", info: "Higiene" };
+const list = document.getElementById("list");
+list.innerHTML = F.map((f) => `
+  <details class="f" data-sev="${f.sev}">
+    <summary>
+      <span class="fid">${f.id}</span>
+      <span class="ftitle">${f.t}<small>${f.s}</small></span>
+      <span class="tags"><span class="pill sev-${f.sev}">${SEV[f.sev]}</span><span class="pill ${S[f.st][1]}">${S[f.st][0]}</span></span>
+    </summary>
+    <div class="fbody">
+      <dl>
+        <dt>Causa</dt><dd>${f.where}</dd>
+        <dt>Prueba</dt><dd class="mono">${f.proof}</dd>
+        <dt>Arreglo</dt><dd>${f.fix}</dd>
+      </dl>
+      ${f.out !== "—" ? `<pre>${f.out.replace(/</g, "&lt;")}</pre>` : ""}
+    </div>
+  </details>`).join("");
+
+const count = (fn) => F.filter(fn).length;
+document.getElementById("strip").innerHTML = [
+  [F.length - 1, "hallazgos con prueba"],
+  [count((f) => f.sev === "alta"), "de severidad alta"],
+  [count((f) => f.st === "fixed"), "arreglados en este PR"],
+  [count((f) => f.st === "follow"), "fuera de este PR"],
+].map(([n, l]) => `<div class="stat"><b>${n}</b><span>${l}</span></div>`).join("");
+
+document.querySelectorAll(".filters button").forEach((b) => b.addEventListener("click", () => {
+  document.querySelectorAll(".filters button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  const v = b.dataset.filter;
+  list.querySelectorAll("details.f").forEach((d) => { d.hidden = v !== "all" && d.dataset.sev !== v; });
+}));
+</script>

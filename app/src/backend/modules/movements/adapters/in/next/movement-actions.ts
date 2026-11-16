@@ -6,7 +6,6 @@ import {
   revalidateGroup,
 } from "@/backend/modules/groups/adapters/in/next/membership";
 import { ManualMovement } from "@/backend/modules/movements/domain/manual-movement";
-import type { MovementSnapshot } from "@/backend/modules/movements/domain/movement";
 import { todayInLima } from "@/lib/dates";
 import { solesToCents } from "@/lib/money";
 
@@ -54,14 +53,12 @@ export async function addMovementAction(
  * @param groupId - The group the partner works in.
  * @param movementId - The movement.
  * @param input - The new amount, concept and cost, in soles.
- * @param before - The movement as the partner saw it.
  * @returns Whether it was applied at once, or the kind of error.
  */
 export async function proposeEditAction(
   groupId: string,
   movementId: string,
   input: { amountSoles: string; concept: string; costSoles?: string },
-  before: MovementSnapshot,
 ) {
   const { user, group } = await requireMembership(groupId);
 
@@ -77,20 +74,17 @@ export async function proposeEditAction(
     return { ok: false as const, error: "InvalidCost" };
   }
 
-  const after: MovementSnapshot = {
-    ...before,
-    amount,
-    concept: input.concept.trim() || null,
-    cost: before.type === "sell_inventory" ? cost : before.cost,
-  };
-
   const result = await useCases.proposeChange.execute({
     groupId: group.id,
     actorId: user.id,
     alone: group.isAlone(),
     movementId,
     kind: "edit",
-    after,
+    edit: {
+      amount,
+      cost,
+      concept: input.concept.trim() || null,
+    },
   });
 
   if (!result.ok) {

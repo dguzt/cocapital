@@ -97,4 +97,11 @@ export interface CreditSaleRepository {
    * @param saleId - The sale.
    */
   void(saleId: string): Promise<void>;
+
+  /**
+   * Holds the sale until the unit of work ends, so no one collects, re-plans or voids it meanwhile.
+   *
+   * @param saleId - The sale.
+   */
+  lock(saleId: string): Promise<void>;
 }

@@ -4,6 +4,10 @@ import type { ContactSnapshot } from "./contact-snapshot";
 
 /** Someone the group deals with: a borrower of a loan, a buyer of a sale. */
 export class Contact {
+  private static readonly MAX_NAME_LENGTH = 80;
+
+  private static readonly MAX_PHONE_LENGTH = 30;
+
   private constructor(
     readonly id: string,
     readonly groupId: string,
@@ -15,8 +19,8 @@ export class Contact {
    * Adds a person to the group's contacts.
    *
    * @param entry - The group, the name as typed and an optional phone.
-   * @returns The contact with a fresh id, or `ContactNameRequired` when the
-   *   name is blank.
+   * @returns The contact with a fresh id, `ContactNameRequired` when the
+   *   name is blank, or `ContactTooLong`.
    */
   static create(entry: {
     groupId: string;
@@ -32,14 +36,25 @@ export class Contact {
       });
     }
 
-    return ok(
-      new Contact(
-        crypto.randomUUID(),
-        entry.groupId,
-        name,
-        entry.phone?.trim() || null,
-      ),
-    );
+    const phone = entry.phone?.trim() || null;
+
+    if (name.length > Contact.MAX_NAME_LENGTH) {
+      return err({
+        kind: "ContactTooLong",
+        message: `a name can be at most ${Contact.MAX_NAME_LENGTH} characters`,
+        field: "name",
+      });
+    }
+
+    if (phone && phone.length > Contact.MAX_PHONE_LENGTH) {
+      return err({
+        kind: "ContactTooLong",
+        message: `a phone can be at most ${Contact.MAX_PHONE_LENGTH} characters`,
+        field: "phone",
+      });
+    }
+
+    return ok(new Contact(crypto.randomUUID(), entry.groupId, name, phone));
   }
 
   /**

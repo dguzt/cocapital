@@ -30,4 +30,6 @@ export class InMemoryGroups implements GroupRepository {
   async addMember(groupId: string, member: Member) {
     this.addedSeats.push({ groupId, member });
   }
+
+  async lock() {}
 }

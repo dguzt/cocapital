@@ -47,4 +47,12 @@ export interface LoanRepository {
    * @param loanId - The loan.
    */
   void(loanId: string): Promise<void>;
+
+  /**
+   * Holds the loan until the unit of work ends, so no one collects or voids it meanwhile.
+   *
+   * @param loanId - The loan.
+   * @returns Its status, or null when it does not exist.
+   */
+  lock(loanId: string): Promise<"active" | "voided" | null>;
 }

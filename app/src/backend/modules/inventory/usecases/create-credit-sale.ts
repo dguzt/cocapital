@@ -7,6 +7,7 @@ import type { NewCreditSale } from "@/backend/modules/inventory/domain/new-credi
 import type { CreditSaleRepository } from "@/backend/modules/inventory/ports/credit-sale-repository";
 import type { AddMovement } from "@/backend/modules/movements/usecases/add-movement";
 import type { UnitOfWork } from "@/backend/shared/ports/unit-of-work";
+import { isCalendarDate, isFrequency } from "@/lib/dates";
 import { err, ok, type Result } from "@/lib/result";
 import type { CollectSaleInstallment } from "./collect-sale-installment";
 
@@ -22,6 +23,8 @@ type CreateCreditSaleError = CreditSaleError | ContactError;
  * receivable; the margin only enters the capital as each cuota is collected.
  */
 export class CreateCreditSale {
+  private static readonly MAX_ITEM_LENGTH = 120;
+
   static inject = [
     "creditSales",
     "resolveContact",
@@ -55,6 +58,30 @@ export class CreateCreditSale {
       return err({
         kind: "ItemRequired",
         message: "a credit sale needs to say what was sold",
+      });
+    }
+
+    if (item.length > CreateCreditSale.MAX_ITEM_LENGTH) {
+      return err({
+        kind: "ItemTooLong",
+        message: `the item can be at most ${CreateCreditSale.MAX_ITEM_LENGTH} characters`,
+        length: item.length,
+      });
+    }
+
+    if (!isFrequency(input.frequency)) {
+      return err({
+        kind: "InvalidFrequency",
+        message: `unknown frequency: ${input.frequency}`,
+        frequency: String(input.frequency),
+      });
+    }
+
+    if (!isCalendarDate(input.startDate)) {
+      return err({
+        kind: "InvalidStartDate",
+        message: `invalid start date: ${input.startDate}`,
+        startDate: String(input.startDate),
       });
     }
 

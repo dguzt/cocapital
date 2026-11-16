@@ -4,4 +4,5 @@ import type { AppError } from "@/lib/result";
 export type NewMovementError =
   | AppError<"InvalidType", { type: string }>
   | AppError<"InvalidAmount", { input: string }>
-  | AppError<"InvalidCost", { input: string }>;
+  | AppError<"InvalidCost", { input: string }>
+  | AppError<"ConceptTooLong", { length: number }>;

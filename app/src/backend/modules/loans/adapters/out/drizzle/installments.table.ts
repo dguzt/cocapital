@@ -34,5 +34,8 @@ export const Installments = pgTable(
     /** The repay movement of the collection; null while pending. */
     repayMovementId: uuid("repay_movement_id").references(() => Movements.id),
   },
-  (t) => [index("installments_loan_idx").on(t.loanId)],
+  (t) => [
+    index("installments_loan_idx").on(t.loanId),
+    index("installments_repay_movement_idx").on(t.repayMovementId),
+  ],
 );

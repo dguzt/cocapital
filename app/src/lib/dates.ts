@@ -11,6 +11,34 @@ export const FREQUENCIES: Frequency[] = [
   "monthly",
 ];
 
+const CALENDAR_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Tells a real calendar day written as YYYY-MM-DD; "2027-02-30" is not one.
+ *
+ * @param value - Anything a partner sent.
+ * @returns True for a day that exists.
+ */
+export function isCalendarDate(value: unknown): value is ISODate {
+  if (typeof value !== "string" || !CALENDAR_DATE.test(value)) {
+    return false;
+  }
+
+  const day = new Date(`${value}T00:00:00Z`);
+
+  return !Number.isNaN(day.getTime()) && day.toISOString().startsWith(value);
+}
+
+/**
+ * Tells one of the frequencies a schedule can repeat at.
+ *
+ * @param value - Anything a partner sent.
+ * @returns True for daily, weekly, biweekly or monthly.
+ */
+export function isFrequency(value: unknown): value is Frequency {
+  return FREQUENCIES.some((known) => known === value);
+}
+
 /** Today as a calendar date in Lima, regardless of server timezone. */
 export function todayInLima(): ISODate {
   // en-CA locale formats as YYYY-MM-DD.
