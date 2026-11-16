@@ -1,5 +1,3 @@
-import * as R from "remeda";
-
 import type { LoanListItem } from "@/backend/modules/loans/domain/loan-list-item";
 import type { LoanRepository } from "@/backend/modules/loans/ports/loan-repository";
 import type { ISODate } from "@/lib/dates";
@@ -22,27 +20,6 @@ export class ListLoans {
    * @returns One item per loan, newest first.
    */
   async execute(input: ListLoansInput): Promise<LoanListItem[]> {
-    const rows = await this.loans.listSchedules(input.groupId);
-
-    return R.pipe(
-      rows,
-      R.groupBy((row) => row.id),
-      R.entries(),
-      R.map(([id, cuotas]) => {
-        const pending = cuotas.filter((row) => row.instStatus === "pending");
-
-        return {
-          id,
-          borrowerName: cuotas[0].borrowerName,
-          capital: cuotas[0].capital,
-          status: cuotas[0].status,
-          collectedCount: cuotas.length - pending.length,
-          totalCount: cuotas.length,
-          overdueCount: pending.filter((row) => row.instDue < input.today)
-            .length,
-          pendingAmount: R.sumBy(pending, (row) => row.instAmount),
-        };
-      }),
-    );
+    return this.loans.listItems(input.groupId, input.today);
   }
 }

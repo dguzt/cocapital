@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 
 import type { Database } from "@/backend/infra/db/client";
 import { Users } from "@/backend/modules/accounts/adapters/out/drizzle/users.table";
@@ -6,6 +6,7 @@ import { Contacts } from "@/backend/modules/contacts/adapters/out/drizzle/contac
 import type { PlanChange } from "@/backend/modules/inventory/domain/plan-change";
 import type { PlanChangeEntry } from "@/backend/modules/inventory/domain/plan-change-entry";
 import type { PlanChangeRepository } from "@/backend/modules/inventory/ports/plan-change-repository";
+import type { PageRequest } from "@/lib/page";
 import { CreditSalePlanChanges } from "./credit-sale-plan-changes.table";
 import { CreditSales } from "./credit-sales.table";
 
@@ -18,7 +19,11 @@ export class DrizzlePlanChangeRepository implements PlanChangeRepository {
     await this.db.insert(CreditSalePlanChanges).values(entry);
   }
 
-  async listByGroup(groupId: string): Promise<PlanChange[]> {
+  async listPage(groupId: string, page: PageRequest): Promise<PlanChange[]> {
+    const olderThanAfter = page.after
+      ? sql`(${CreditSalePlanChanges.createdAt}, ${CreditSalePlanChanges.id}) < (SELECT p.created_at, p.id FROM credit_sale_plan_changes p WHERE p.id = ${page.after})`
+      : undefined;
+
     return this.db
       .select({
         id: CreditSalePlanChanges.id,
@@ -34,7 +39,11 @@ export class DrizzlePlanChangeRepository implements PlanChangeRepository {
       .innerJoin(CreditSales, eq(CreditSales.id, CreditSalePlanChanges.saleId))
       .innerJoin(Contacts, eq(Contacts.id, CreditSales.buyerId))
       .innerJoin(Users, eq(Users.id, CreditSalePlanChanges.userId))
-      .where(eq(CreditSales.groupId, groupId))
-      .orderBy(desc(CreditSalePlanChanges.createdAt));
+      .where(and(eq(CreditSales.groupId, groupId), olderThanAfter))
+      .orderBy(
+        desc(CreditSalePlanChanges.createdAt),
+        desc(CreditSalePlanChanges.id),
+      )
+      .limit(page.limit);
   }
 }

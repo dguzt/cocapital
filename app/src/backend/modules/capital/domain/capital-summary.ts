@@ -44,8 +44,10 @@ export class CapitalSummary {
    * of credit sales is receivable; interest and margin enter the total only
    * once collected.
    *
-   * @param movements - Every movement of the group.
-   * @param installments - Every cuota of its live loans.
+   * @param movements - Every movement of the group, one by one or added up
+   *   by type and status.
+   * @param installments - Every cuota of its live loans, one by one or added
+   *   up by status.
    * @returns The capital summary.
    */
   static derive(

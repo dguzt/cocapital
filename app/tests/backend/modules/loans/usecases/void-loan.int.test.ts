@@ -13,9 +13,9 @@ import {
   createGroup,
   createLoan,
   decideMovementChange,
+  getCapitalSummary,
   getLoanDetail,
   joinGroup,
-  listGroupInstallments,
   listLoans,
   listMovements,
   listPendingChanges,
@@ -24,7 +24,6 @@ import {
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/backend/infra/db/client";
 import { Users } from "@/backend/infra/db/schema";
-import { CapitalSummary } from "@/backend/modules/capital/domain/capital-summary";
 import { Schedule } from "@/backend/modules/loans/domain/schedule";
 import { ManualMovement } from "@/backend/modules/movements/domain/manual-movement";
 import { truncateAll } from "@/test/truncate";
@@ -77,10 +76,7 @@ async function seedLoan(groupId: string, userId: string) {
 }
 
 async function capitalOf(groupId: string) {
-  return CapitalSummary.derive(
-    await listMovements(groupId),
-    await listGroupInstallments(groupId),
-  );
+  return getCapitalSummary(groupId);
 }
 
 beforeEach(truncateAll);

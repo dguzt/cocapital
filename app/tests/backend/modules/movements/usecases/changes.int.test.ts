@@ -6,9 +6,9 @@ import {
   createGroup,
   createLoan,
   decideMovementChange,
+  getCapitalSummary,
   getLoanDetail,
   joinGroup,
-  listGroupInstallments,
   listMovementHistory,
   listMovements,
   listPendingChanges,
@@ -208,10 +208,7 @@ async function seedLoan() {
 }
 
 async function capitalOf(groupId: string) {
-  return CapitalSummary.derive(
-    await listMovements(groupId),
-    await listGroupInstallments(groupId),
-  );
+  return getCapitalSummary(groupId);
 }
 
 describe("Deshacer cobro: anular un repay devuelve la cuota a pendiente", () => {

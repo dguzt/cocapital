@@ -1,6 +1,7 @@
 import type { LoanEntry } from "@/backend/modules/loans/domain/loan-entry";
 import type { LoanHeader } from "@/backend/modules/loans/domain/loan-header";
-import type { LoanScheduleRow } from "@/backend/modules/loans/domain/loan-schedule-row";
+import type { LoanListItem } from "@/backend/modules/loans/domain/loan-list-item";
+import type { ISODate } from "@/lib/dates";
 
 /** Storage of loans. */
 export interface LoanRepository {
@@ -26,12 +27,13 @@ export interface LoanRepository {
   ): Promise<string | null>;
 
   /**
-   * Lists every cuota of every loan of the group.
+   * Lists the group's loans with their cuotas counted and added up.
    *
    * @param groupId - The group.
-   * @returns One row per cuota, newest loan first.
+   * @param today - Today's date in Lima, to count overdue cuotas.
+   * @returns One item per loan, newest first.
    */
-  listSchedules(groupId: string): Promise<LoanScheduleRow[]>;
+  listItems(groupId: string, today: ISODate): Promise<LoanListItem[]>;
 
   /**
    * Stores a new loan.

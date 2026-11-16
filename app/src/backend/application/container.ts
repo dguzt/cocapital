@@ -35,12 +35,13 @@ import { VoidCreditSale } from "@/backend/modules/inventory/usecases/void-credit
 import { DrizzleInstallmentRepository } from "@/backend/modules/loans/adapters/out/drizzle/drizzle-installment-repository";
 import { DrizzleLoanRepository } from "@/backend/modules/loans/adapters/out/drizzle/drizzle-loan-repository";
 import { CollectInstallment } from "@/backend/modules/loans/usecases/collect-installment";
+import { CountOverdueInstallments } from "@/backend/modules/loans/usecases/count-overdue-installments";
 import { CreateLoan } from "@/backend/modules/loans/usecases/create-loan";
 import { GetLoanDetail } from "@/backend/modules/loans/usecases/get-loan-detail";
 import { GetLoanTargetForMovement } from "@/backend/modules/loans/usecases/get-loan-target-for-movement";
-import { ListGroupInstallments } from "@/backend/modules/loans/usecases/list-group-installments";
 import { ListLoans } from "@/backend/modules/loans/usecases/list-loans";
 import { ProposeVoidLoan } from "@/backend/modules/loans/usecases/propose-void-loan";
+import { TotalInstallments } from "@/backend/modules/loans/usecases/total-installments";
 import { UndoCollection } from "@/backend/modules/loans/usecases/undo-collection";
 import { VoidLoan } from "@/backend/modules/loans/usecases/void-loan";
 import { DrizzleChangeRepository } from "@/backend/modules/movements/adapters/out/drizzle/drizzle-change-repository";
@@ -54,6 +55,7 @@ import { ListPendingChanges } from "@/backend/modules/movements/usecases/list-pe
 import { ProposeChange } from "@/backend/modules/movements/usecases/propose-change";
 import { ProposeSystemVoid } from "@/backend/modules/movements/usecases/propose-system-void";
 import { SubmitChange } from "@/backend/modules/movements/usecases/submit-change";
+import { TotalMovements } from "@/backend/modules/movements/usecases/total-movements";
 import { VoidEntries } from "@/backend/modules/movements/usecases/void-entries";
 import { VoidEntry } from "@/backend/modules/movements/usecases/void-entry";
 import { ApplyApprovedChange } from "./apply-approved-change";
@@ -86,7 +88,9 @@ const injector = createInjector()
   .provideClass("editEntry", EditEntry)
   .provideClass("getLoanDetail", GetLoanDetail)
   .provideClass("listMovements", ListMovements)
-  .provideClass("listGroupInstallments", ListGroupInstallments)
+  .provideClass("totalMovements", TotalMovements)
+  .provideClass("totalInstallments", TotalInstallments)
+  .provideClass("getCapitalSummary", GetCapitalSummary)
   .provideClass("collectSaleInstallment", CollectSaleInstallment)
 
   .provideClass("undoCollection", UndoCollection)
@@ -121,7 +125,7 @@ export const useCases = {
   getLoanTargetForMovement: injector.injectClass(GetLoanTargetForMovement),
   getLoanDetail: injector.resolve("getLoanDetail"),
   listLoans: injector.injectClass(ListLoans),
-  listGroupInstallments: injector.resolve("listGroupInstallments"),
+  countOverdueInstallments: injector.injectClass(CountOverdueInstallments),
 
   listContacts: injector.injectClass(ListContacts),
 
@@ -134,6 +138,6 @@ export const useCases = {
   listPlanChanges: injector.injectClass(ListPlanChanges),
   getSaleTargetForMovement: injector.injectClass(GetSaleTargetForMovement),
 
-  getCapitalSummary: injector.injectClass(GetCapitalSummary),
+  getCapitalSummary: injector.resolve("getCapitalSummary"),
   getPanel: injector.injectClass(GetPanel),
 } as const;

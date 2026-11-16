@@ -4,11 +4,10 @@ import { useCases } from "@/backend/application/container";
 import { toUserView } from "@/backend/modules/accounts/adapters/in/next/user-view";
 import { toGroupView } from "@/backend/modules/groups/adapters/in/next/group-view";
 import { requireMembership } from "@/backend/modules/groups/adapters/in/next/membership";
-import { toCreditSaleView } from "@/backend/modules/inventory/adapters/in/next/credit-sale-view";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
 import { getDictionary } from "@/i18n/get-dictionary";
-import { isOverdue, todayInLima } from "@/lib/dates";
+import { todayInLima } from "@/lib/dates";
 import { groupPath } from "@/lib/group-path";
 import { formatCents } from "@/lib/money";
 
@@ -20,14 +19,10 @@ export default async function SalesPage({
   const { groupId } = await params;
   const { user, group } = await requireMembership(groupId);
   const today = todayInLima();
-  const [sales, installments] = await Promise.all([
-    useCases.listCreditSales.execute({ groupId: group.id }),
-    useCases.listGroupInstallments.execute({ groupId: group.id }),
+  const [sales, overdueCount] = await Promise.all([
+    useCases.listCreditSales.execute({ groupId: group.id, today }),
+    useCases.countOverdueInstallments.execute({ groupId: group.id, today }),
   ]);
-  const overdueCount = installments.filter(
-    (i) => i.status === "pending" && isOverdue(i.dueDate, today),
-  ).length;
-  const views = sales.map((sale) => toCreditSaleView(sale, today));
   const t = (await getDictionary()).sales;
 
   return (
@@ -46,7 +41,7 @@ export default async function SalesPage({
         </Button>
       }
     >
-      {views.length === 0 ? (
+      {sales.length === 0 ? (
         <section className="flex max-w-2xl flex-col items-center rounded-2xl border border-dashed border-input p-12 text-center">
           <div className="flex size-14 items-center justify-center rounded-2xl bg-emerald-400/15 text-2xl text-emerald-400">
             →
@@ -63,7 +58,7 @@ export default async function SalesPage({
         </section>
       ) : (
         <ul className="max-w-2xl space-y-2.5">
-          {views.map((sale) => {
+          {sales.map((sale) => {
             const voided = sale.status === "voided";
             return (
               <li key={sale.id}>

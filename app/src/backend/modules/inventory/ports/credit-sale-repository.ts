@@ -1,5 +1,7 @@
 import type { CreditSale } from "@/backend/modules/inventory/domain/credit-sale";
 import type { CreditSaleInstallment } from "@/backend/modules/inventory/domain/credit-sale-installment";
+import type { CreditSaleListItem } from "@/backend/modules/inventory/domain/credit-sale-list-item";
+import type { ISODate } from "@/lib/dates";
 
 /** Storage of credit sales and their cuotas. */
 export interface CreditSaleRepository {
@@ -20,12 +22,13 @@ export interface CreditSaleRepository {
   findInGroup(groupId: string, saleId: string): Promise<CreditSale | null>;
 
   /**
-   * Lists a group's credit sales.
+   * Lists a group's credit sales with their cuotas counted and added up.
    *
    * @param groupId - The group.
-   * @returns Its sales with their cuotas, newest first.
+   * @param today - Today's date in Lima, to count overdue cuotas.
+   * @returns One item per sale, newest first.
    */
-  listByGroup(groupId: string): Promise<CreditSale[]>;
+  listItems(groupId: string, today: ISODate): Promise<CreditSaleListItem[]>;
 
   /**
    * Finds the credit sale a sell_on_credit movement booked.

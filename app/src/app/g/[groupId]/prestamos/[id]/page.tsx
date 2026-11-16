@@ -35,12 +35,10 @@ export default async function LoanDetailPage({
   const today = todayInLima();
   const copy = await getDictionary();
   const t = copy.loans;
-  const groupInstallments = await useCases.listGroupInstallments.execute({
+  const overdueCount = await useCases.countOverdueInstallments.execute({
     groupId: group.id,
+    today,
   });
-  const overdueCount = groupInstallments.filter(
-    (i) => i.status === "pending" && isOverdue(i.dueDate, today),
-  ).length;
 
   // A "deshacer cobro" is proposed on the cuota's repay movement, but the user
   // looks for it HERE — so surface it on the cuota it will undo.

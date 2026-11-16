@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 
 import type { Database } from "@/backend/infra/db/client";
 import { Users } from "@/backend/modules/accounts/adapters/out/drizzle/users.table";
@@ -8,8 +8,10 @@ import type {
   MovementStatus,
 } from "@/backend/modules/movements/domain/movement";
 import type { MovementEntry } from "@/backend/modules/movements/domain/movement-entry";
+import type { MovementTotal } from "@/backend/modules/movements/domain/movement-total";
 import type { StoredMovement } from "@/backend/modules/movements/domain/stored-movement";
 import type { MovementRepository } from "@/backend/modules/movements/ports/movement-repository";
+import type { PageRequest } from "@/lib/page";
 import { Movements } from "./movements.table";
 
 export class DrizzleMovementRepository implements MovementRepository {
@@ -17,10 +19,33 @@ export class DrizzleMovementRepository implements MovementRepository {
 
   constructor(private readonly db: Database) {}
 
-  async listByGroup(groupId: string): Promise<LedgerMovement[]> {
+  async listPage(
+    groupId: string,
+    page: PageRequest,
+  ): Promise<LedgerMovement[]> {
+    const olderThanAfter = page.after
+      ? sql`(${Movements.createdAt}, ${Movements.id}) < (SELECT m.created_at, m.id FROM movements m WHERE m.id = ${page.after})`
+      : undefined;
+
     return this.ledger()
+      .where(and(eq(Movements.groupId, groupId), olderThanAfter))
+      .orderBy(desc(Movements.createdAt), desc(Movements.id))
+      .limit(page.limit);
+  }
+
+  async totalsByGroup(groupId: string): Promise<MovementTotal[]> {
+    return this.db
+      .select({
+        type: Movements.type,
+        status: Movements.status,
+        amount: sql<number>`sum(${Movements.amount})`.mapWith(Number),
+        cost: sql<number>`sum(coalesce(${Movements.cost}, ${Movements.amount}))`.mapWith(
+          Number,
+        ),
+      })
+      .from(Movements)
       .where(eq(Movements.groupId, groupId))
-      .orderBy(desc(Movements.createdAt));
+      .groupBy(Movements.type, Movements.status);
   }
 
   async findInGroup(

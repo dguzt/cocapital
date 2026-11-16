@@ -1,10 +1,11 @@
-import { and, asc, eq, isNotNull, ne } from "drizzle-orm";
+import { and, asc, count, eq, isNotNull, lt, ne, sql } from "drizzle-orm";
 
 import type { Database } from "@/backend/infra/db/client";
 import type { Installment } from "@/backend/modules/loans/domain/installment";
-import type { InstallmentTerm } from "@/backend/modules/loans/domain/installment-term";
+import type { InstallmentTotal } from "@/backend/modules/loans/domain/installment-total";
 import type { Schedule } from "@/backend/modules/loans/domain/schedule";
 import type { InstallmentRepository } from "@/backend/modules/loans/ports/installment-repository";
+import type { ISODate } from "@/lib/dates";
 import { Installments } from "./installments.table";
 import { Loans } from "./loans.table";
 
@@ -21,17 +22,34 @@ export class DrizzleInstallmentRepository implements InstallmentRepository {
       .orderBy(asc(Installments.number));
   }
 
-  async listTermsByGroup(groupId: string): Promise<InstallmentTerm[]> {
+  async totalsByGroup(groupId: string): Promise<InstallmentTotal[]> {
     return this.db
       .select({
-        principal: Installments.principal,
-        interest: Installments.interest,
         status: Installments.status,
-        dueDate: Installments.dueDate,
+        principal: sql<number>`sum(${Installments.principal})`.mapWith(Number),
+        interest: sql<number>`sum(${Installments.interest})`.mapWith(Number),
       })
       .from(Installments)
       .innerJoin(Loans, eq(Loans.id, Installments.loanId))
-      .where(and(eq(Loans.groupId, groupId), ne(Loans.status, "voided")));
+      .where(and(eq(Loans.groupId, groupId), ne(Loans.status, "voided")))
+      .groupBy(Installments.status);
+  }
+
+  async countOverdue(groupId: string, today: ISODate): Promise<number> {
+    const [row] = await this.db
+      .select({ overdue: count() })
+      .from(Installments)
+      .innerJoin(Loans, eq(Loans.id, Installments.loanId))
+      .where(
+        and(
+          eq(Loans.groupId, groupId),
+          ne(Loans.status, "voided"),
+          eq(Installments.status, "pending"),
+          lt(Installments.dueDate, today),
+        ),
+      );
+
+    return row.overdue;
   }
 
   async repayMovementIdsOf(loanId: string): Promise<string[]> {

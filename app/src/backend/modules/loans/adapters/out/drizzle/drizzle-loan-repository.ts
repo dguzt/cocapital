@@ -1,11 +1,12 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq, sql } from "drizzle-orm";
 
 import type { Database } from "@/backend/infra/db/client";
 import { Contacts } from "@/backend/modules/contacts/adapters/out/drizzle/contacts.table";
 import type { LoanEntry } from "@/backend/modules/loans/domain/loan-entry";
 import type { LoanHeader } from "@/backend/modules/loans/domain/loan-header";
-import type { LoanScheduleRow } from "@/backend/modules/loans/domain/loan-schedule-row";
+import type { LoanListItem } from "@/backend/modules/loans/domain/loan-list-item";
 import type { LoanRepository } from "@/backend/modules/loans/ports/loan-repository";
+import type { ISODate } from "@/lib/dates";
 import { Installments } from "./installments.table";
 import { Loans } from "./loans.table";
 
@@ -53,21 +54,32 @@ export class DrizzleLoanRepository implements LoanRepository {
     return row?.id ?? null;
   }
 
-  async listSchedules(groupId: string): Promise<LoanScheduleRow[]> {
+  async listItems(groupId: string, today: ISODate): Promise<LoanListItem[]> {
+    const pending = sql`${Installments.status} = 'pending'`;
+
     return this.db
       .select({
         id: Loans.id,
+        borrowerName: Contacts.name,
         capital: Loans.capital,
         status: Loans.status,
-        borrowerName: Contacts.name,
-        instStatus: Installments.status,
-        instAmount: Installments.amount,
-        instDue: Installments.dueDate,
+        collectedCount:
+          sql<number>`count(*) FILTER (WHERE NOT ${pending})`.mapWith(Number),
+        totalCount: count(),
+        overdueCount:
+          sql<number>`count(*) FILTER (WHERE ${pending} AND ${Installments.dueDate} < ${today})`.mapWith(
+            Number,
+          ),
+        pendingAmount:
+          sql<number>`coalesce(sum(${Installments.amount}) FILTER (WHERE ${pending}), 0)`.mapWith(
+            Number,
+          ),
       })
       .from(Loans)
       .innerJoin(Contacts, eq(Contacts.id, Loans.borrowerId))
       .innerJoin(Installments, eq(Installments.loanId, Loans.id))
       .where(eq(Loans.groupId, groupId))
+      .groupBy(Loans.id, Contacts.name)
       .orderBy(desc(Loans.createdAt));
   }
 

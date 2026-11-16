@@ -222,3 +222,45 @@ describe("CapitalSummary.derive — credit sales", () => {
     expect(s.expectedSalesMargin).toBe(0);
   });
 });
+
+describe("CapitalSummary.derive — totals added up by the database", () => {
+  it("gives the same summary from totals by type and status as from each row", () => {
+    const rows: CapitalMovement[] = [
+      mv("contribute", 50000),
+      mv("contribute", 20000, { status: "voided" }),
+      mv("buy_inventory", 20000),
+      mv("sell_inventory", 12000, { cost: 9000 }),
+      mv("sell_inventory", 5000),
+      mv("sell_on_credit", 10000, { cost: 6000 }),
+      mv("collect_sale", 4000, { cost: 2400 }),
+      mv("collect_sale", 2000, { cost: 1200 }),
+      mv("lend", 30000),
+      mv("repay", 8250, { cost: 7500 }),
+      mv("expense", 1000),
+    ];
+
+    const totals = Object.values(
+      Object.groupBy(rows, (row) => `${row.type}:${row.status}`),
+    ).map((group = []) => ({
+      type: group[0].type,
+      status: group[0].status,
+      amount: group.reduce((sum, row) => sum + row.amount, 0),
+      cost: group.reduce((sum, row) => sum + (row.cost ?? row.amount), 0),
+    }));
+
+    const cuotas = [
+      inst(7500, 750, "collected"),
+      inst(7500, 750, "pending"),
+      inst(7500, 750, "pending"),
+    ];
+
+    const cuotaTotals = [
+      inst(7500, 750, "collected"),
+      inst(15000, 1500, "pending"),
+    ];
+
+    expect(CapitalSummary.derive(totals, cuotaTotals)).toEqual(
+      CapitalSummary.derive(rows, cuotas),
+    );
+  });
+});

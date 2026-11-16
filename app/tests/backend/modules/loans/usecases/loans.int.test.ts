@@ -5,17 +5,16 @@ import {
   collectInstallment,
   createGroup,
   createLoan,
+  getCapitalSummary,
   getLoanDetail,
   getLoanTargetForMovement,
   listContacts,
-  listGroupInstallments,
   listLoans,
   listMovements,
 } from "@tests/support/use-cases";
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/backend/infra/db/client";
 import { Users } from "@/backend/infra/db/schema";
-import { CapitalSummary } from "@/backend/modules/capital/domain/capital-summary";
 import { Schedule } from "@/backend/modules/loans/domain/schedule";
 import type { ScheduleInput } from "@/backend/modules/loans/domain/schedule-input";
 import { ManualMovement } from "@/backend/modules/movements/domain/manual-movement";
@@ -79,8 +78,7 @@ describe("lending lifecycle", () => {
     expect(ledger[0].amount).toBe(30000);
 
     // Capital: cash 200, lent 300, total unchanged at 500
-    const terms1 = await listGroupInstallments(group.id);
-    const cap1 = CapitalSummary.derive(ledger, terms1);
+    const cap1 = await getCapitalSummary(group.id);
     expect(cap1.cash).toBe(20000);
     expect(cap1.lent).toBe(30000);
     expect(cap1.total).toBe(50000);
@@ -118,10 +116,7 @@ describe("lending lifecycle", () => {
     });
 
     // Capital realized the interest: total 500 + 7.50
-    const cap2 = CapitalSummary.derive(
-      ledger2,
-      await listGroupInstallments(group.id),
-    );
+    const cap2 = await getCapitalSummary(group.id);
     expect(cap2.cash).toBe(28250);
     expect(cap2.lent).toBe(22500);
     expect(cap2.collectedInterest).toBe(750);

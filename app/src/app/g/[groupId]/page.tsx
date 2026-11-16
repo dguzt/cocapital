@@ -11,7 +11,7 @@ import { PendingApprovals } from "@/components/movements/pending-approvals";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
 import { getDictionary } from "@/i18n/get-dictionary";
-import { isOverdue, todayInLima } from "@/lib/dates";
+import { todayInLima } from "@/lib/dates";
 import { groupPath } from "@/lib/group-path";
 
 export default async function PanelPage({
@@ -23,15 +23,13 @@ export default async function PanelPage({
   const { user, group } = await requireMembership(groupId);
 
   const today = todayInLima();
-  const [{ movements, installments, capital }, pendingChanges] =
+  const [{ movements, capital }, overdueCount, pendingChanges] =
     await Promise.all([
       useCases.getPanel.execute({ groupId: group.id }),
+      useCases.countOverdueInstallments.execute({ groupId: group.id, today }),
       useCases.listPendingChanges.execute({ groupId: group.id }),
     ]);
   const t = await getDictionary();
-  const overdueCount = installments.filter(
-    (i) => i.status === "pending" && isOverdue(i.dueDate, today),
-  ).length;
   const approvalsForMe = pendingChanges.filter((c) => c.proposedBy !== user.id);
   const pendingIds = pendingChanges.map((c) => c.movementId);
 

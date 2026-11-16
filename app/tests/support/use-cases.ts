@@ -17,8 +17,8 @@ export const addMovement = (
   input: NewMovement,
 ) => useCases.addMovement.execute({ ...input, groupId, userId });
 
-export const listMovements = (groupId: string) =>
-  useCases.listMovements.execute({ groupId });
+export const listMovements = (groupId: string, after?: string) =>
+  useCases.listMovements.execute({ groupId, after });
 
 export const listPendingChanges = (groupId: string) =>
   useCases.listPendingChanges.execute({ groupId });
@@ -99,8 +99,11 @@ export const listLoans = (groupId: string, today: ISODate) =>
 export const listContacts = (groupId: string) =>
   useCases.listContacts.execute({ groupId });
 
-export const listGroupInstallments = (groupId: string) =>
-  useCases.listGroupInstallments.execute({ groupId });
+export const countOverdueInstallments = (groupId: string, today: ISODate) =>
+  useCases.countOverdueInstallments.execute({ groupId, today });
+
+export const getCapitalSummary = (groupId: string) =>
+  useCases.getCapitalSummary.execute({ groupId });
 
 type SeededUser = { id: string; name: string };
 
@@ -156,8 +159,8 @@ export const proposeVoidCreditSale = (
 export const getCreditSale = (groupId: string, saleId: string) =>
   useCases.getCreditSale.execute({ groupId, saleId });
 
-export const listCreditSales = (groupId: string) =>
-  useCases.listCreditSales.execute({ groupId });
+export const listCreditSales = (groupId: string, today: ISODate) =>
+  useCases.listCreditSales.execute({ groupId, today });
 
 export const listPlanChanges = (groupId: string) =>
   useCases.listPlanChanges.execute({ groupId });

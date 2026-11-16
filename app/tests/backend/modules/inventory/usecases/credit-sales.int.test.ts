@@ -10,12 +10,12 @@ import {
   createCreditSale,
   createGroup,
   decideMovementChange,
+  getCapitalSummary,
   getCreditSale,
   getSaleTargetForMovement,
   joinGroup,
   listContacts,
   listCreditSales,
-  listGroupInstallments,
   listMovements,
   listPendingChanges,
   listPlanChanges,
@@ -26,7 +26,6 @@ import {
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/backend/infra/db/client";
 import { Users } from "@/backend/infra/db/schema";
-import { CapitalSummary } from "@/backend/modules/capital/domain/capital-summary";
 import type { NewCreditSale } from "@/backend/modules/inventory/domain/new-credit-sale";
 import { ManualMovement } from "@/backend/modules/movements/domain/manual-movement";
 import { truncateAll } from "@/test/truncate";
@@ -86,10 +85,7 @@ const LICUADORA: NewCreditSale = {
 };
 
 async function capitalOf(groupId: string) {
-  return CapitalSummary.derive(
-    await listMovements(groupId),
-    await listGroupInstallments(groupId),
-  );
+  return getCapitalSummary(groupId);
 }
 
 async function sellLicuadora(groupId: string, userId: string) {
@@ -408,10 +404,13 @@ describe("anular una venta en cuotas", () => {
 
     await sellLicuadora(group.id, ana.id);
 
-    const sales = await listCreditSales(group.id);
+    const sales = await listCreditSales(group.id, TODAY);
 
     expect(sales).toHaveLength(1);
-    expect(sales[0].collectedAmount()).toBe(2000);
-    expect(sales[0].pendingAmount()).toBe(8000);
+    expect(sales[0]).toMatchObject({
+      buyerName: "Juan",
+      pendingAmount: 8000,
+      settled: false,
+    });
   });
 });

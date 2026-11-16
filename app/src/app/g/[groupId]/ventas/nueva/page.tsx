@@ -6,7 +6,7 @@ import { requireMembership } from "@/backend/modules/groups/adapters/in/next/mem
 import { NewSale } from "@/components/sales/new-sale";
 import { AppShell } from "@/components/shell/app-shell";
 import { getDictionary } from "@/i18n/get-dictionary";
-import { isOverdue, todayInLima } from "@/lib/dates";
+import { todayInLima } from "@/lib/dates";
 
 export default async function NewSalePage({
   params,
@@ -16,13 +16,10 @@ export default async function NewSalePage({
   const { groupId } = await params;
   const { user, group } = await requireMembership(groupId);
   const today = todayInLima();
-  const [contacts, installments] = await Promise.all([
+  const [contacts, overdueCount] = await Promise.all([
     useCases.listContacts.execute({ groupId: group.id }),
-    useCases.listGroupInstallments.execute({ groupId: group.id }),
+    useCases.countOverdueInstallments.execute({ groupId: group.id, today }),
   ]);
-  const overdueCount = installments.filter(
-    (i) => i.status === "pending" && isOverdue(i.dueDate, today),
-  ).length;
   const t = (await getDictionary()).sales;
 
   return (

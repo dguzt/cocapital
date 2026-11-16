@@ -227,6 +227,7 @@ export const es = {
     toLent: "→ Prestado",
     planChanged: "Plan cambiado",
     installmentCounts: (from: number, to: number) => `${from} → ${to} cuotas`,
+    loadMore: "Ver más",
     okPending: "OK pendiente",
     columns: {
       movement: "Movimiento",
